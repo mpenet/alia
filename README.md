@@ -94,7 +94,7 @@ First some [API docs](http://mpenet.github.com/alia).
 
   (def prepared-statement (alia/prepare "select * from users where user_name=?;"))
   (-> prepared-statement
-      (alia/bind "mpenet") ;; if you have more args: (alia/bind "foo" "bar" 1 (java.util.Date.)) etc...
+      (alia/bind "frodo") ;; if you have more args: (alia/bind "foo" "bar" 1 (java.util.Date.)) etc...
       alia/execute)
   >> [[{:name "user_name", :value "frodo"}
        {:name "first_name", :value "Frodo"}
@@ -109,7 +109,7 @@ First some [API docs](http://mpenet.github.com/alia).
 
   ;; if you prefer array-maps:
   (-> prepared-statement
-      (alia/bind "mpenet")
+      (alia/bind "frodo")
       alia/execute
       alia/rows->map-coll)
 
