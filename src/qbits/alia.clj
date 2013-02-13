@@ -66,7 +66,7 @@
           options))
 
 (defn cluster
-  "Returns a new cluster instance"
+  "Returns a new com.datastax.driver.core/Cluster instance"
   [hosts & {:as options
             :keys [pre-build-fn]
             :or {pre-build-fn identity}}]
@@ -76,7 +76,9 @@
       .build))
 
 (defn ^Session connect
-  "only 1 ks per session, so this needs to be separate"
+  "Returns a new com.datastax.driver.core/Session instance. We need to
+have this separate in order to allow users to connect to multiple
+keyspaces from a single cluster instance"
   ([^Cluster cluster keyspace]
      (.connect cluster keyspace))
   ([^Cluster cluster]
@@ -85,12 +87,14 @@
 (def ^:dynamic *session*)
 
 (defmacro with-session
-  "Binds consistency level for the enclosed body"
+  "Binds qbits.alia/*session*"
   [session & body]
   `(binding [qbits.alia/*session* ~session]
      ~@body))
 
 (defn shutdown
+  "Shutdowns Session or Cluster instance, clearing the underlying
+pools/connections"
   ([cluster-or-session]
      (.shutdown cluster-or-session))
   ([]
@@ -120,7 +124,16 @@
     async-result))
 
 (defn execute
-  [& args]
+  "Executes querys against a session. Returns a collection of rows.
+   The first argument can be either a Session instance or the query
+directly.
+If you chose the latter the Session must be bound with
+`with-session`.
+If you pass :async? true, or if you provide
+a :success/:error callback this will be asynchronous, returning a
+promise and triggering the handler provided if any.  Also accepts a
+custom :executor (java.util.concurrent.ExecutorService instance) to be
+used for the asynchronous queries."  [& args]
   (let [[^Session session query & {:keys [async? success error executor]
                                    :or {executor (knit/executor :cached)}}]
         (if (even? (count args))
@@ -136,12 +149,16 @@
                              (.execute session ^Query query))))))
 
 (defn prepare
+  "Returns a com.datastax.driver.core.PreparedStatement instance to be
+used in `execute` after it's been bound with `bind`"
   ([^Session session ^String query]
      (.prepare session query))
   ([^String query]
      (prepare *session* query)))
 
 (defn bind
+  "Returns a com.datastax.driver.core.BoundStatement instance to be
+  used with `execute`"
   [^PreparedStatement prepared-statement & values]
   (.bind prepared-statement (to-array (map codec/encode values))))
 
@@ -158,5 +175,7 @@
        result-set))
 
 (defn rows->map-coll
+  "Converts rows returned from execute into a collection of maps,
+  instead of 2d collection with maps per entry"
   [rows]
   (map #(into (array-map) (map (juxt :name :value) %)) rows))
