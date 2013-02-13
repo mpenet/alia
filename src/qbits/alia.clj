@@ -117,12 +117,13 @@ pools/connections"
     (Futures/addCallback
      rs-future
      (reify FutureCallback
-       (onSuccess [this result]
+       (onSuccess [_ result]
          (let [result (result-set->clojure (.get ^ResultSetFuture rs-future))]
            (deliver async-result result)
            (when (fn? success)
              (success result))))
-       (onFailure [this err]
+       (onFailure [_ err]
+         (deliver async-result err)
          (when (fn? error)
            (error err))))
      executor)
