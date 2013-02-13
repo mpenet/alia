@@ -3,31 +3,34 @@
             [qbits.alia.codec :as codec])
   (:import [com.datastax.driver.core
             Cluster
-            Session
+            Cluster$Builder
+            ColumnDefinitions$Definition
             DataType
-            DataType$Name]))
-
-;; (prn DataType/set)
+            DataType$Name
+            HostDistance
+            PreparedStatement
+            ProtocolOptions$Compression
+            Query
+            ResultSet
+            ResultSetFuture
+            Row
+            Session
+            SocketOptions]
+           [com.google.common.util.concurrent Futures FutureCallback]))
 
 (declare result-set->clojure)
 
-(defmulti set-builder-option (fn [k builder option] k))
+(defmulti set-builder-option (fn [k ^Cluster$Builder builder option] k))
 
 (defmethod set-builder-option :contact-points
   [_ builder hosts]
-  (.addContactPoints builder (into-array (if (sequential? hosts) hosts [hosts]))))
+  (.addContactPoints ^Cluster$Builder builder
+                     ^"[Ljava.lang.String;"
+                     (into-array (if (sequential? hosts) hosts [hosts]))))
 
 (defmethod set-builder-option :port
   [_ builder port]
-  (.withPort builder (int port)))
-
-(defmethod set-builder-option :load-balancing-policy
-  [_ builder policy]
-  builder)
-
-(defmethod set-builder-option :reconnecting-policy
-  [_ builder policy]
-  builder)
+  (.withPort ^Cluster$Builder builder (int port)))
 
 (defmethod set-builder-option :load-balancing-policy
   [_ builder policy]
@@ -37,32 +40,39 @@
   [_ builder options]
   builder)
 
-(defmethod set-builder-option :socket-options
-  [_ builder options]
-  builder)
-
 (defmethod set-builder-option :metrics?
   [_ builder metrics?]
   (when (not metrics?)
-    (.withoutMetrics builder)))
+    (.withoutMetrics ^Cluster$Builder builder)))
 
 (defmethod set-builder-option :auth-info
   [_ builder options]
   builder)
 
+
+(def compression {:none ProtocolOptions$Compression/NONE
+                  :snappy ProtocolOptions$Compression/SNAPPY})
+
+(defmethod set-builder-option :compression
+  [_ builder option]
+  (.withCompression builder (compression option)))
+
 (defn set-builder-options
+  ^Cluster$Builder
   [builder options]
   (reduce (fn [builder [k option]]
-            (prn (format "Setting %s %s" k option))
             (set-builder-option k builder option))
           builder
           options))
 
 (defn cluster
   "Returns a new cluster instance"
-  [hosts & {:as options}]
+  [hosts & {:as options
+            :keys [pre-build-fn]
+            :or {pre-build-fn identity}}]
   (-> (Cluster/builder)
       (set-builder-options (assoc options :contact-points hosts))
+      pre-build-fn
       .build))
 
 (defn ^Session connect
@@ -77,31 +87,57 @@
   (.shutdown cluster-or-session))
 
 (defn prepare [session query]
-  (.prepare session query))
+  (.prepare ^Session session query))
 
-(def ^:dynamic *default-async-executor* (knit/executor :cached))
+(defn execute-async-
+  [rs-future executor success error]
+  (let [async-result (promise)]
+    (Futures/addCallback
+     rs-future
+     (reify FutureCallback
+       (onSuccess [this result]
+         (let [result (result-set->clojure (.get ^ResultSetFuture rs-future))]
+           (deliver async-result result)
+           (when (fn? success)
+             (success result))))
+       (onFailure [this err]
+         (when (fn? error)
+           (error err))))
+     executor)
+    async-result))
 
 (defn execute
-  [^Cluster cluster query & {:keys [callback async-executor]
-                             :or [async-executor *default-async-executor*]}]
-  (if callback
-    (let [async-result (promise)
-          rs-future (.executeAsync cluster query)]
-      (.addListener rs-future
-                    (fn []
-                      (let [result (result-set->clojure (.get rs-future))]
-                        (deliver async-result result)
-                        (callback result)))))
-    (-> (.execute cluster query)
-        result-set->clojure)))
+  [^Session session query & {:keys [async? success error executor]
+                             :or {executor (knit/executor :cached)}}]
+  (if (or success async?)
+    (execute-async- (if (= String (type query))
+                      (.executeAsync session ^String query)
+                      (.executeAsync session ^Query query))
+                    executor success error)
+    (result-set->clojure (if (= String (type query))
+                           (.execute session ^String query)
+                           (.execute session ^Query query)))))
+
+(defn prepare
+  [^Session session ^String query]
+  (.prepare session query))
+
+(defn bind
+  [^PreparedStatement prepared-statement & values]
+  (.bind prepared-statement (to-array (map codec/encode values))))
 
 (defn result-set->clojure
   [result-set]
-  (map (fn [row]
+  (map (fn [^Row row]
          (let [cdef (.getColumnDefinitions row)]
            (map-indexed
             (fn [idx col]
-              {:name (.getName cdef idx)
-               :value (codec/decode row (int idx) (.getType cdef idx))})
+              (let [idx (int idx)]
+                {:name (.getName cdef idx)
+                 :value (codec/decode row idx (.getType cdef idx))}))
             cdef)))
        result-set))
+
+(defn rows->map-coll
+  [rows]
+  (map #(into (array-map) (map (juxt :name :value) %)) rows))
