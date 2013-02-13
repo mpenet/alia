@@ -1,5 +1,7 @@
 # alia [![Build Status](https://secure.travis-ci.org/mpenet/alia.png?branch=master)](http://travis-ci.org/mpenet/alia)
 
+> Coan-Teen, the female death spirit who walks without feet.
+
 Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github.com/datastax/java-driver).
 
 !! Early release, [datastax/java-driver](https://github.com/datastax/java-driver) is still not published on maven and in active developpement.
