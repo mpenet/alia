@@ -109,8 +109,11 @@ pools/connections"
 (defonce default-async-executor (knit/executor :cached))
 
 (defn execute-async
-  [rs-future executor success error]
-  (let [async-result (promise)]
+  [query executor success error]
+  (let [rs-future (if (= String (type query))
+                    (.executeAsync session ^String query)
+                    (.executeAsync session ^Query query))
+        async-result (promise)]
     (Futures/addCallback
      rs-future
      (reify FutureCallback
@@ -141,11 +144,8 @@ used for the asynchronous queries."  [& args]
         (if (even? (count args))
           args
           (conj args *session*))]
-    (if (or success async?)
-      (execute-async (if (= String (type query))
-                       (.executeAsync session ^String query)
-                       (.executeAsync session ^Query query))
-                     executor success error)
+    (if (or success async? error)
+      (execute-async query executor success error)
       (result-set->clojure (if (= String (type query))
                              (.execute session ^String query)
                              (.execute session ^Query query))))))
