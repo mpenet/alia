@@ -151,15 +151,18 @@ pools/connections"
 
 (defn execute
   "Executes querys against a session. Returns a collection of rows.
-   The first argument can be either a Session instance or the query
+The first argument can be either a Session instance or the query
 directly.
+
 If you chose the latter the Session must be bound with
 `with-session`.
-If you pass :async? true, or if you provide
-a :success/:error callback this will be asynchronous, returning a
-promise and triggering the handler provided if any.  Also accepts a
+
+If you pass :async? true, or if you provide a :success/:error callback
+this will be asynchronous, returning a promise and triggering the
+handler provided if any.  Also accepts a
 custom :executor (java.util.concurrent.ExecutorService instance) to be
-used for the asynchronous queries."  [& args]
+used for the asynchronous queries."
+  [& args]
   (let [[^Session session query & {:keys [async? success error executor]
                                    :or {executor default-async-executor}}]
         (if (even? (count args))
