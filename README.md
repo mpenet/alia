@@ -66,13 +66,13 @@ First some [API docs](http://mpenet.github.com/alia).
 ;; keyspaces from the same cluster definition
 (def session (alia/connect cluster))
 
-(alia/execute session "CREATE KEYSPACE alia WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};")
+(alia/execute session "CREATE KEYSPACE alia
+                       WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};")
 
 ;; every function that requires session as first argument can be also
 ;; used without this argument if you provide a binding (valid for alia/execute, alia/prepare, alia/bind):
 
 (alia/with-session session
-   (alia/execute "CREATE KEYSPACE alia WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};")
    (alia/execute "USE alia;")
    (alia/execute "CREATE TABLE users (user_name varchar,
                                      first_name varchar,
