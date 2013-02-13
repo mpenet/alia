@@ -1,24 +1,26 @@
 (ns qbits.alia
-  (:require [qbits.knit :as knit]
-            [qbits.alia.codec :as codec])
-  (:import [com.datastax.driver.core
-            Cluster
-            Cluster$Builder
-            ColumnDefinitions$Definition
-            DataType
-            DataType$Name
-            HostDistance
-            PreparedStatement
-            ProtocolOptions$Compression
-            Query
-            ResultSet
-            ResultSetFuture
-            Row
-            Session
-            SocketOptions]
-           [com.google.common.util.concurrent Futures FutureCallback]))
-
-(declare result-set->clojure)
+  (:require
+   [qbits.knit :as knit]
+   [qbits.alia.codec :as codec])
+  (:import
+   [com.datastax.driver.core
+    Cluster
+    Cluster$Builder
+    ColumnDefinitions$Definition
+    DataType
+    DataType$Name
+    HostDistance
+    PreparedStatement
+    ProtocolOptions$Compression
+    Query
+    ResultSet
+    ResultSetFuture
+    Row
+    Session
+    SocketOptions]
+   [com.google.common.util.concurrent
+    Futures
+    FutureCallback]))
 
 (defmulti set-builder-option (fn [k ^Cluster$Builder builder option] k))
 
@@ -106,6 +108,18 @@ pools/connections"
   ([query]
      (prepare *session* query)))
 
+(defn result-set->clojure
+  [result-set]
+  (map (fn [^Row row]
+         (let [cdef (.getColumnDefinitions row)]
+           (map-indexed
+            (fn [idx col]
+              (let [idx (int idx)]
+                {:name (.getName cdef idx)
+                 :value (codec/decode row idx (.getType cdef idx))}))
+            cdef)))
+       result-set))
+
 (defonce default-async-executor (knit/executor :cached))
 
 (defn execute-async
@@ -168,18 +182,6 @@ used in `execute` after it's been bound with `bind`"
   used with `execute`"
   [^PreparedStatement prepared-statement & values]
   (.bind prepared-statement (to-array (map codec/encode values))))
-
-(defn result-set->clojure
-  [result-set]
-  (map (fn [^Row row]
-         (let [cdef (.getColumnDefinitions row)]
-           (map-indexed
-            (fn [idx col]
-              (let [idx (int idx)]
-                {:name (.getName cdef idx)
-                 :value (codec/decode row idx (.getType cdef idx))}))
-            cdef)))
-       result-set))
 
 (defn rows->maps
   "Converts rows returned from execute into a collection of maps,

@@ -1,8 +1,9 @@
 (ns qbits.alia.codec
-  (:import [com.datastax.driver.core
-            DataType
-            DataType$Name
-            Row]))
+  (:import
+   [com.datastax.driver.core
+    DataType
+    DataType$Name
+    Row]))
 
 (defmacro make-decoders [row idx col-type & specs]
   (reduce (fn [m [decoder-type# form#]]
