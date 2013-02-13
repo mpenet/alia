@@ -82,9 +82,7 @@
   ([^Cluster cluster]
      (.connect cluster)))
 
-(def ^{:dynamic true
-       :tag "com.datastax.driver.core.Session"}
-  *session*)
+(def ^:dynamic *session*)
 
 (defmacro with-session
   "Binds consistency level for the enclosed body"
