@@ -64,6 +64,10 @@
   (encode [x]
     (.toDate x))
 
+  com.eaio.uuid.UUID
+  (encode [x]
+    (java.util.UUID/fromString (str x)))
+
   Object
   (encode [x] x)
 

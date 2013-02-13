@@ -1,7 +1,8 @@
 (ns qbits.alia.core-test
   (:use clojure.test
         clojure.data
-        qbits.alia))
+        qbits.alia
+        qbits.tardis))
 
 (def ^:dynamic *cluster*)
 
@@ -51,7 +52,8 @@
                      {:name "valid" :value true}
                      {:name "amap", :value {"foo" 1 "bar" 2}}
                      {:name "tags" :value [1 2 3]}
-                     {:name "auuid" :value #uuid "42048d2d-c135-4c18-aa3a-e38a6d3be7f1"}]
+                     {:name "auuid" :value #uuid "42048d2d-c135-4c18-aa3a-e38a6d3be7f1"}
+                     {:name "tuuid" :value #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"}]
                     [{:name "user_name", :value "frodo"}
                      {:name "first_name", :value "Frodo"}
                      {:name "last_name", :value "Baggins"}
@@ -61,7 +63,8 @@
                      {:name "emails", :value #{"baggins@gmail.com" "f@baggins.com"}}
                      {:name "amap", :value {"foo" 1 "bar" 2}}
                      {:name "tags" :value [4 5 6]}
-                     {:name "auuid" :value #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892"}]])
+                     {:name "auuid" :value #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892"}
+                     {:name "tuuid" :value #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"}]])
 
 ;; helpers
 (def execute->map (comp rows->maps execute))
@@ -83,6 +86,7 @@
                 first_name varchar,
                 last_name varchar,
                 auuid uuid,
+                tuuid timeuuid,
                 birth_year bigint,
                 created timestamp,
                 valid boolean,
@@ -93,10 +97,10 @@
               );")
         (execute "CREATE INDEX ON users (birth_year);")
 
-        (execute "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid,valid)
-       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], '1f84b56b-5481-4ee4-8236-8a3831ee5892', true);")
-        (execute "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, valid)
-       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], '42048d2d-c135-4c18-aa3a-e38a6d3be7f1', true);")
+        (execute "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid)
+       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], '1f84b56b-5481-4ee4-8236-8a3831ee5892', 'e34288d0-7617-11e2-9243-0024d70cf6c4', true);")
+        (execute "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid)
+       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], '42048d2d-c135-4c18-aa3a-e38a6d3be7f1', 'e34288d0-7617-11e2-9243-0024d70cf6c4', true);")
 
         ;; do the thing
         (test-runner)
@@ -124,8 +128,7 @@
 (deftest test-prepared
   (let [s-simple (prepare "select * from users;")
         s-parameterized-simple (prepare "select * from users where user_name=?;")
-        s-parameterized-bigint (prepare "select * from users where birth_year=?;")
-        s-prepare-types (prepare "INSERT INTO users (user_name, auuid, created, valid) VALUES(?, ?, ?, ?);")
+        s-prepare-types (prepare "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid) VALUES(?, ?, ?, ?, ?, ?);")
         ;; s-parameterized-set (prepare  "select * from users where emails=?;")
         ;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
         ]
@@ -134,11 +137,11 @@
            (execute->map (bind s-parameterized-simple "mpenet"))))
     (is (= [(first user-data-set-as-map)]
            (execute->map (bind s-parameterized-simple :mpenet))))
-    (is (= [(first user-data-set-as-map)]
-           (execute->map (bind s-parameterized-bigint 0))))
     (is (= [] (execute (bind s-prepare-types
                                        "foobar"
+                                       0
                                        #uuid "b474e171-7757-449a-87be-d2797d1336e3"
+                                       (qbits.tardis/to-uuid "e34288d0-7617-11e2-9243-0024d70cf6c4")
                                        (java.util.Date.)
                                        false))))
     (execute  "delete from users where user_name = 'foobar';") ;; cleanup
