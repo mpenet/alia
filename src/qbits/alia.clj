@@ -106,7 +106,9 @@ pools/connections"
   ([query]
      (prepare *session* query)))
 
-(defn execute-async-
+(defonce default-async-executor (knit/executor :cached))
+
+(defn execute-async
   [rs-future executor success error]
   (let [async-result (promise)]
     (Futures/addCallback
@@ -135,15 +137,15 @@ promise and triggering the handler provided if any.  Also accepts a
 custom :executor (java.util.concurrent.ExecutorService instance) to be
 used for the asynchronous queries."  [& args]
   (let [[^Session session query & {:keys [async? success error executor]
-                                   :or {executor (knit/executor :cached)}}]
+                                   :or {executor default-async-executor}}]
         (if (even? (count args))
           args
           (conj args *session*))]
     (if (or success async?)
-      (execute-async- (if (= String (type query))
-                        (.executeAsync session ^String query)
-                        (.executeAsync session ^Query query))
-                      executor success error)
+      (execute-async (if (= String (type query))
+                       (.executeAsync session ^String query)
+                       (.executeAsync session ^Query query))
+                     executor success error)
       (result-set->clojure (if (= String (type query))
                              (.execute session ^String query)
                              (.execute session ^Query query))))))
