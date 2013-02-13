@@ -110,7 +110,7 @@ pools/connections"
 
 (defn execute-async
   [^Session session query executor success error]
-  (let [rs-future (if (= String (type query))
+  (let [rs-future (if (string? query)
                     (.executeAsync session ^String query)
                     (.executeAsync session ^Query query))
         async-result (promise)]
@@ -130,7 +130,7 @@ pools/connections"
 
 (defn execute-sync
   [^Session session query]
-  (result-set->clojure (if (= String (type query))
+  (result-set->clojure (if (string? query)
                          (.execute session ^String query)
                          (.execute session ^Query query))))
 
