@@ -174,7 +174,7 @@ used in `execute` after it's been bound with `bind`"
             cdef)))
        result-set))
 
-(defn rows->map-coll
+(defn rows->maps
   "Converts rows returned from execute into a collection of maps,
   instead of 2d collection with maps per entry"
   [rows]

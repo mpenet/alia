@@ -64,8 +64,8 @@
                      {:name "auuid" :value #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892"}]])
 
 ;; helpers
-(def execute->map (comp rows->map-coll execute))
-(def user-data-set-as-map (rows->map-coll user-data-set))
+(def execute->map (comp rows->maps execute))
+(def user-data-set-as-map (rows->maps user-data-set))
 
 (use-fixtures
   :once
@@ -113,11 +113,11 @@
 (deftest test-async-execute
   ;; promise
   (is (= user-data-set-as-map
-         (rows->map-coll @(execute *session* "select * from users;" :async? true))))
+         (rows->maps @(execute *session* "select * from users;" :async? true))))
   ;; callback
   (let [p (promise)]
     (execute *session* "select * from users;"
-             :success (fn [r] (deliver p (rows->map-coll r))))
+             :success (fn [r] (deliver p (rows->maps r))))
     (is (= user-data-set-as-map @p))))
 
 
@@ -153,4 +153,4 @@
 
 (deftest test-rows-to-map
   (is (= [{1 2, 2 3}]
-         (rows->map-coll [[{:name 1 :value 2} {:name 2 :value 3}]]))))
+         (rows->maps [[{:name 1 :value 2} {:name 2 :value 3}]]))))
