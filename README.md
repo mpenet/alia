@@ -111,7 +111,7 @@ First some [API docs](http://mpenet.github.com/alia).
   (-> prepared-statement
       (alia/bind "frodo")
       alia/execute
-      alia/rows->map-coll)
+      alia/rows->maps)
 
   >> ({"created" nil,
        "last_name" "Baggins",
