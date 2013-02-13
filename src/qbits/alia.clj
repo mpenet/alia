@@ -128,6 +128,12 @@ pools/connections"
      executor)
     async-result))
 
+(defn execute-sync
+  [^Session session query]
+  (result-set->clojure (if (= String (type query))
+                         (.execute session ^String query)
+                         (.execute session ^Query query))))
+
 (defn execute
   "Executes querys against a session. Returns a collection of rows.
    The first argument can be either a Session instance or the query
@@ -146,9 +152,7 @@ used for the asynchronous queries."  [& args]
           (conj args *session*))]
     (if (or success async? error)
       (execute-async session query executor success error)
-      (result-set->clojure (if (= String (type query))
-                             (.execute session ^String query)
-                             (.execute session ^Query query))))))
+      (execute-sync session query))))
 
 (defn prepare
   "Returns a com.datastax.driver.core.PreparedStatement instance to be
