@@ -61,72 +61,76 @@ reliable and stable.
 (def session (alia/connect cluster))
 
 (alia/execute session "CREATE KEYSPACE alia WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};")
-(alia/execute session "USE alia;")
-(alia/execute *session*
-"CREATE TABLE users (user_name varchar,
-                    first_name varchar,
-                    last_name varchar,
-                    auuid uuid,
-                    birth_year bigint,
-                    created timestamp,
-                    valid boolean,
-                    emails set<text>,
-                    tags list<bigint>,
-                    amap map<varchar, bigint>,
-                    PRIMARY KEY (user_name));")
 
+;; every function that requires session as first argument can be also
+;; used without this argument if you provide a binding (valid for alia/execute, alia/prepare, alia/bind):
 
-(alia/execute session
-"INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid,valid)
- VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], '1f84b56b-5481-4ee4-8236-8a3831ee5892', true);")
+(alia/with-session session
+    (alia/execute "CREATE KEYSPACE alia WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};")
+    (alia/execute "USE alia;")
+    (alia/execute "CREATE TABLE users (user_name varchar,
+                                     first_name varchar,
+                                     last_name varchar,
+                                     auuid uuid,
+                                     birth_year bigint,
+                                     created timestamp,
+                                     valid boolean,
+                                     emails set<text>,
+                                     tags list<bigint>,
+                                     amap map<varchar, bigint>,
+                                     PRIMARY KEY (user_name));")
 
-(def prepared-statement (alia/prepare session "select * from users where user_name=?;"))
-(-> prepared-statement
-    (alia/bind "mpenet") ;; if you have more args: (alia/bind "foo" "bar" 1 (java.util.Date.)) etc...
-    (alia/execute))
+    (alia/execute "INSERT INTO users
+    (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid,valid)
+    VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], '1f84b56b-5481-4ee4-8236-8a3831ee5892', true);")
 
->> [[{:name "user_name", :value "frodo"}
-     {:name "first_name", :value "Frodo"}
-     {:name "last_name", :value "Baggins"}
-     {:name "birth_year", :value 1}
-     {:name "created" :value nil}
-     {:name "valid" :value true}
-     {:name "emails", :value #{"baggins@gmail.com" "f@baggins.com"}}
-     {:name "amap", :value {"foo" 1 "bar" 2}}
-     {:name "tags" :value [4 5 6]}
-     {:name "auuid" :value #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892"}]]
+    (def prepared-statement (alia/prepare "select * from users where user_name=?;"))
+    (-> prepared-statement
+        (alia/bind "mpenet") ;; if you have more args: (alia/bind "foo" "bar" 1 (java.util.Date.)) etc...
+        alia/execute)
 
-;; if you prefer array-maps:
-(-> prepared-statement
-    (alia/bind "mpenet")
-    alia/execute
-    alia/rows->map-coll)
+    >> [[{:name "user_name", :value "frodo"}
+         {:name "first_name", :value "Frodo"}
+         {:name "last_name", :value "Baggins"}
+         {:name "birth_year", :value 1}
+         {:name "created" :value nil}
+         {:name "valid" :value true}
+         {:name "emails", :value #{"baggins@gmail.com" "f@baggins.com"}}
+         {:name "amap", :value {"foo" 1 "bar" 2}}
+         {:name "tags" :value [4 5 6]}
+         {:name "auuid" :value #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892"}]]
 
->> ({"created" nil,
-     "last_name" "Baggins",
-     "emails" #{"baggins@gmail.com" "f@baggins.com"},
-     "tags" [4 5 6],
-     "first_name" "Frodo",
-     "amap" {"foo" 1, "bar" 2},
-     "auuid" #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892",
-     "valid" true,
-     "birth_year" 1,
-     "user_name" "frodo"})
+    ;; if you prefer array-maps:
+    (-> prepared-statement
+        (alia/bind "mpenet")
+        alia/execute
+        alia/rows->map-coll)
 
-;; asynchronous interface
+    >> ({"created" nil,
+         "last_name" "Baggins",
+         "emails" #{"baggins@gmail.com" "f@baggins.com"},
+         "tags" [4 5 6],
+         "first_name" "Frodo",
+         "amap" {"foo" 1, "bar" 2},
+         "auuid" #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892",
+         "valid" true,
+         "birth_year" 1,
+         "user_name" "frodo"})
 
-;; via a clojure promise
-(def result (alia/execute session "select * from users;"
-                          :async? true))
+    ;; asynchronous interface
 
-;; blocks until realized
-@result
+    ;; via a clojure promise
+    (def result (alia/execute "select * from users;" :async? true))
 
-;; or using success/error handlers (it still returns a promise just like before)
-(alia/execute session "select * from users;"
-              :success (fn [r] (do-something-with-result r)
-              :error (fn [e] (print "fail!"))))
+    ;; blocks until realized
+    @result
 
+    ;; or using success/error handlers (it still returns a promise just like before)
+    (alia/execute "select * from users;"
+                  :success (fn [r] (do-something-with-result r)
+                  :error (fn [e] (print "fail!"))))
+
+) ;; binding
 
 ;; cleanup
 (shutdown session)

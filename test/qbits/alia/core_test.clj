@@ -4,8 +4,6 @@
         qbits.alia))
 
 (def ^:dynamic *cluster*)
-(def ^:dynamic *session*)
-
 
 ;; <native-type> ::= ascii
 ;;                 | bigint
@@ -74,7 +72,7 @@
   (fn [test-runner]
     ;; prepare the thing
     (binding [*cluster* (cluster "127.0.0.1" :port 9042)]
-      (binding [*session* (connect *cluster*)]
+      (with-session (connect *cluster*)
         (try (execute *session* "DROP KEYSPACE alia;")
              (catch Exception _ nil))
         (execute *session* "CREATE KEYSPACE alia

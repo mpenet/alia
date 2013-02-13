@@ -55,7 +55,7 @@
 
 (defmethod set-builder-option :compression
   [_ builder option]
-  (.withCompression builder (compression option)))
+  (.withCompression ^Cluster$Builder builder (compression option)))
 
 (defn set-builder-options
   ^Cluster$Builder
@@ -72,7 +72,7 @@
             :or {pre-build-fn identity}}]
   (-> (Cluster/builder)
       (set-builder-options (assoc options :contact-points hosts))
-      pre-build-fn
+      ^Cluster$Builder (pre-build-fn)
       .build))
 
 (defn ^Session connect
@@ -82,12 +82,27 @@
   ([^Cluster cluster]
      (.connect cluster)))
 
-(defn shutdown
-  [cluster-or-session]
-  (.shutdown cluster-or-session))
+(def ^{:dynamic true
+       :tag "com.datastax.driver.core.Session"}
+  *session*)
 
-(defn prepare [session query]
-  (.prepare ^Session session query))
+(defmacro with-session
+  "Binds consistency level for the enclosed body"
+  [session & body]
+  `(binding [qbits.alia/*session* ~session]
+     ~@body))
+
+(defn shutdown
+  ([cluster-or-session]
+     (.shutdown cluster-or-session))
+  ([]
+     (.shutdown *session*)))
+
+(defn prepare
+  ([session query]
+     (.prepare ^Session session query))
+  ([query]
+     (prepare *session* query)))
 
 (defn execute-async-
   [rs-future executor success error]
@@ -107,20 +122,26 @@
     async-result))
 
 (defn execute
-  [^Session session query & {:keys [async? success error executor]
-                             :or {executor (knit/executor :cached)}}]
-  (if (or success async?)
-    (execute-async- (if (= String (type query))
-                      (.executeAsync session ^String query)
-                      (.executeAsync session ^Query query))
-                    executor success error)
-    (result-set->clojure (if (= String (type query))
-                           (.execute session ^String query)
-                           (.execute session ^Query query)))))
+  [& args]
+  (let [[^Session session query & {:keys [async? success error executor]
+                                   :or {executor (knit/executor :cached)}}]
+        (if (even? (count args))
+          args
+          (conj args *session*))]
+    (if (or success async?)
+      (execute-async- (if (= String (type query))
+                        (.executeAsync session ^String query)
+                        (.executeAsync session ^Query query))
+                      executor success error)
+      (result-set->clojure (if (= String (type query))
+                             (.execute session ^String query)
+                             (.execute session ^Query query))))))
 
 (defn prepare
-  [^Session session ^String query]
-  (.prepare session query))
+  ([^Session session ^String query]
+     (.prepare session query))
+  ([^String query]
+     (prepare *session* query)))
 
 (defn bind
   [^PreparedStatement prepared-statement & values]
