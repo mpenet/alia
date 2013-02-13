@@ -7,5 +7,9 @@
                  [cc.qbits/knit "0.2.1"]
                  [com.datastax.cassandra/cassandra-driver-core "0.1.0-SNAPSHOT"]
                  [clj-time "0.4.4"]]
-  :warn-on-reflection true
-  )
+  :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
+             :1.5  {:dependencies [[org.clojure/clojure "1.5.0-master-SNAPSHOT"]]}
+             :test {:dependencies []}}
+  :codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master"
+          :src-linenum-anchor-prefix "L"}
+  :warn-on-reflection true)
