@@ -51,7 +51,10 @@ reliable and stable.
 
 ## Show me some code!
 
+First some [API docs](http://mpenet.github.com/alia).
+
 ```clojure
+
 (require '[qbits.alia :as alia] )
 
 (def cluster (alia/cluster "localhost"))
