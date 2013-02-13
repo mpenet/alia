@@ -7,4 +7,5 @@
                  [cc.qbits/knit "0.2.1"]
                  [com.datastax.cassandra/cassandra-driver-core "0.1.0-SNAPSHOT"]
                  [clj-time "0.4.4"]]
-  :warn-on-reflection true)
+  ;; :warn-on-reflection true
+  )
