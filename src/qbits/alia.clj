@@ -1,7 +1,8 @@
 (ns qbits.alia
   (:require
    [qbits.knit :as knit]
-   [qbits.alia.codec :as codec])
+   [qbits.alia.codec :as codec]
+   [qbits.alia.utils :as utils])
   (:import
    [com.datastax.driver.core
     Cluster
@@ -10,6 +11,7 @@
     DataType
     DataType$Name
     HostDistance
+    PoolingOptions
     PreparedStatement
     ProtocolOptions$Compression
     Query
@@ -21,6 +23,9 @@
    [com.google.common.util.concurrent
     Futures
     FutureCallback]))
+
+(def host-distance (utils/enum-values->map (HostDistance/values)))
+(def compression (utils/enum-values->map (ProtocolOptions$Compression/values)))
 
 (defmulti set-builder-option (fn [k ^Cluster$Builder builder option] k))
 
@@ -39,7 +44,20 @@
   builder)
 
 (defmethod set-builder-option :pooling-options
-  [_ builder options]
+  [_ ^Cluster$Builder builder options]
+  (let [^PoolingOptions po (.poolingOptions builder)]
+    (when-let [[dist value] (:core-connections-per-host options)]
+      (.setCoreConnectionsPerHost po (host-distance dist) (int value)))
+    (when-let [[dist value] (:max-connections-per-host options)]
+      (.setMaxConnectionsPerHost po (host-distance dist) (int value)))
+    (when-let [[dist value] (:max-simultaneous-requests-per-connection options)]
+      (.setMaxSimultaneousRequestsPerConnectionTreshold po
+                                                        (host-distance dist)
+                                                        (int value)))
+    (when-let [[dist value] (:min-simultaneous-requests-per-connection options)]
+      (.setMinSimultaneousRequestsPerConnectionTreshold po
+                                                        (host-distance dist)
+                                                        (int value))))
   builder)
 
 (defmethod set-builder-option :metrics?
@@ -50,10 +68,6 @@
 (defmethod set-builder-option :auth-info
   [_ builder options]
   builder)
-
-
-(def compression {:none ProtocolOptions$Compression/NONE
-                  :snappy ProtocolOptions$Compression/SNAPPY})
 
 (defmethod set-builder-option :compression
   [_ builder option]
