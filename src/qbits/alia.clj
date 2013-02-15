@@ -20,6 +20,7 @@
     Row
     Session
     SocketOptions]
+   [com.datastax.driver.core.policies LoadBalancingPolicy]
    [com.google.common.util.concurrent
     Futures
     FutureCallback]))
@@ -40,7 +41,8 @@
   (.withPort ^Cluster$Builder builder (int port)))
 
 (defmethod set-builder-option! :load-balancing-policy
-  [_ builder policy]
+  [_ ^Cluster$Builder builder ^LoadBalancingPolicy policy]
+  (.withLoadBalancingPolicy builder policy)
   builder)
 
 (defmethod set-builder-option! :pooling-options
