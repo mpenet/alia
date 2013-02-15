@@ -28,10 +28,9 @@ aspects.
 
 If you want a Thrift based client for Clojure you could give a try to [casyn](https://github.com/mpenet/casyn)
 
-## What Alia can do and cannot do but will do in the future
+## What Alia can do and will do soon.
 
-It's relatively low level for now, but it's quite complete, very
-reliable and stable.
+It's relatively low level for now.
 
 ### Can do
 
@@ -47,8 +46,9 @@ reliable and stable.
 
 ### Will do soon
 
-* Query generation from a cute korma'ish dsl.
-* Support for more external lib data types (joda time is already supported)
+* Query generation from a cute korma'ish dsl (in developement here: [hayt](https://github.com/mpenet/hayt))
+* Support for more external lib data types (joda time and
+  com.eaio.uuid's are already supported)
 * More sugar around retry/pooling/balancing options
 * Proper documentation
 
