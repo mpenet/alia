@@ -2,7 +2,7 @@
   (:require
    [qbits.knit :as knit]
    [qbits.alia.codec :as codec]
-   [qbits.alia.utils :as utils])
+   [qbits.alia.cluster-options :as copt])
   (:import
    [com.datastax.driver.core
     Cluster
@@ -20,79 +20,9 @@
     Row
     Session
     SocketOptions]
-   [com.datastax.driver.core.policies
-    LoadBalancingPolicy
-    ReconnectionPolicy
-    RetryPolicy]
    [com.google.common.util.concurrent
     Futures
     FutureCallback]))
-
-(def host-distance (utils/enum-values->map (HostDistance/values)))
-(def compression (utils/enum-values->map (ProtocolOptions$Compression/values)))
-
-(defmulti set-builder-option! (fn [k ^Cluster$Builder builder option] k))
-
-(defmethod set-builder-option! :contact-points
-  [_ builder hosts]
-  (.addContactPoints ^Cluster$Builder builder
-                     ^"[Ljava.lang.String;"
-                     (into-array (if (sequential? hosts) hosts [hosts]))))
-
-(defmethod set-builder-option! :port
-  [_ builder port]
-  (.withPort ^Cluster$Builder builder (int port)))
-
-(defmethod set-builder-option! :load-balancing-policy
-  [_ ^Cluster$Builder builder ^LoadBalancingPolicy policy]
-  (.withLoadBalancingPolicy builder policy))
-
-(defmethod set-builder-option! :reconnection-policy
-  [_ ^Cluster$Builder builder ^ReconnectionPolicy policy]
-  (.withReconnectionPolicy builder policy))
-
-(defmethod set-builder-option! :retry-policy
-  [_ ^Cluster$Builder builder ^RetryPolicy policy]
-  (.withRetryPolicy builder policy))
-
-(defmethod set-builder-option! :pooling-options
-  [_ ^Cluster$Builder builder options]
-  (let [^PoolingOptions po (.poolingOptions builder)]
-    (when-let [[dist value] (:core-connections-per-host options)]
-      (.setCoreConnectionsPerHost po (host-distance dist) (int value)))
-    (when-let [[dist value] (:max-connections-per-host options)]
-      (.setMaxConnectionsPerHost po (host-distance dist) (int value)))
-    (when-let [[dist value] (:max-simultaneous-requests-per-connection options)]
-      (.setMaxSimultaneousRequestsPerConnectionTreshold po
-                                                        (host-distance dist)
-                                                        (int value)))
-    (when-let [[dist value] (:min-simultaneous-requests-per-connection options)]
-      (.setMinSimultaneousRequestsPerConnectionTreshold po
-                                                        (host-distance dist)
-                                                        (int value))))
-  builder)
-
-(defmethod set-builder-option! :metrics?
-  [_ ^Cluster$Builder builder metrics?]
-  (when (not metrics?)
-    (.withoutMetrics builder))
-  builder)
-
-(defmethod set-builder-option! :auth-info
-  [_ ^Cluster$Builder builder auth-info-provider]
-  (.withAuthInfoProvider builder auth-info-provider))
-
-(defmethod set-builder-option! :compression
-  [_ ^Cluster$Builder builder option]
-  (.withCompression builder (compression option)))
-
-(defn set-builder-options!
-  ^Cluster$Builder
-  [^Cluster$Builder builder options]
-  (reduce (fn [builder [k option]]
-            (set-builder-option! k builder option))
-          builder
-          options))
 
 (defn cluster
   "Returns a new com.datastax.driver.core/Cluster instance"
@@ -100,7 +30,7 @@
             :keys [pre-build-fn]
             :or {pre-build-fn identity}}]
   (-> (Cluster/builder)
-      (set-builder-options! (assoc options :contact-points hosts))
+      (copt/set-cluster-options! (assoc options :contact-points hosts))
       ^Cluster$Builder (pre-build-fn)
       .build))
 
