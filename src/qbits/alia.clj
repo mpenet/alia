@@ -27,23 +27,23 @@
 (def host-distance (utils/enum-values->map (HostDistance/values)))
 (def compression (utils/enum-values->map (ProtocolOptions$Compression/values)))
 
-(defmulti set-builder-option (fn [k ^Cluster$Builder builder option] k))
+(defmulti set-builder-option! (fn [k ^Cluster$Builder builder option] k))
 
-(defmethod set-builder-option :contact-points
+(defmethod set-builder-option! :contact-points
   [_ builder hosts]
   (.addContactPoints ^Cluster$Builder builder
                      ^"[Ljava.lang.String;"
                      (into-array (if (sequential? hosts) hosts [hosts]))))
 
-(defmethod set-builder-option :port
+(defmethod set-builder-option! :port
   [_ builder port]
   (.withPort ^Cluster$Builder builder (int port)))
 
-(defmethod set-builder-option :load-balancing-policy
+(defmethod set-builder-option! :load-balancing-policy
   [_ builder policy]
   builder)
 
-(defmethod set-builder-option :pooling-options
+(defmethod set-builder-option! :pooling-options
   [_ ^Cluster$Builder builder options]
   (let [^PoolingOptions po (.poolingOptions builder)]
     (when-let [[dist value] (:core-connections-per-host options)]
@@ -60,24 +60,24 @@
                                                         (int value))))
   builder)
 
-(defmethod set-builder-option :metrics?
-  [_ builder metrics?]
+(defmethod set-builder-option! :metrics?
+  [_ ^Cluster$Builder builder metrics?]
   (when (not metrics?)
-    (.withoutMetrics ^Cluster$Builder builder)))
+    (.withoutMetrics builder)))
 
-(defmethod set-builder-option :auth-info
-  [_ builder options]
+(defmethod set-builder-option! :auth-info
+  [_ ^Cluster$Builder builder options]
   builder)
 
-(defmethod set-builder-option :compression
-  [_ builder option]
-  (.withCompression ^Cluster$Builder builder (compression option)))
+(defmethod set-builder-option! :compression
+  [_ ^Cluster$Builder builder option]
+  (.withCompression builder (compression option)))
 
-(defn set-builder-options
+(defn set-builder-options!
   ^Cluster$Builder
-  [builder options]
+  [^Cluster$Builder builder options]
   (reduce (fn [builder [k option]]
-            (set-builder-option k builder option))
+            (set-builder-option! k builder option))
           builder
           options))
 
@@ -87,7 +87,7 @@
             :keys [pre-build-fn]
             :or {pre-build-fn identity}}]
   (-> (Cluster/builder)
-      (set-builder-options (assoc options :contact-points hosts))
+      (set-builder-options! (assoc options :contact-points hosts))
       ^Cluster$Builder (pre-build-fn)
       .build))
 
