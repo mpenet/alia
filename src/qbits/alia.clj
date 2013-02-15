@@ -20,7 +20,10 @@
     Row
     Session
     SocketOptions]
-   [com.datastax.driver.core.policies LoadBalancingPolicy]
+   [com.datastax.driver.core.policies
+    LoadBalancingPolicy
+    ReconnectionPolicy
+    RetryPolicy]
    [com.google.common.util.concurrent
     Futures
     FutureCallback]))
@@ -42,8 +45,15 @@
 
 (defmethod set-builder-option! :load-balancing-policy
   [_ ^Cluster$Builder builder ^LoadBalancingPolicy policy]
-  (.withLoadBalancingPolicy builder policy)
-  builder)
+  (.withLoadBalancingPolicy builder policy))
+
+(defmethod set-builder-option! :reconnection-policy
+  [_ ^Cluster$Builder builder ^ReconnectionPolicy policy]
+  (.withReconnectionPolicy builder policy))
+
+(defmethod set-builder-option! :retry-policy
+  [_ ^Cluster$Builder builder ^RetryPolicy policy]
+  (.withRetryPolicy builder policy))
 
 (defmethod set-builder-option! :pooling-options
   [_ ^Cluster$Builder builder options]
@@ -65,11 +75,12 @@
 (defmethod set-builder-option! :metrics?
   [_ ^Cluster$Builder builder metrics?]
   (when (not metrics?)
-    (.withoutMetrics builder)))
+    (.withoutMetrics builder))
+  builder)
 
 (defmethod set-builder-option! :auth-info
-  [_ ^Cluster$Builder builder options]
-  builder)
+  [_ ^Cluster$Builder builder auth-info-provider]
+  (.withAuthInfoProvider builder auth-info-provider))
 
 (defmethod set-builder-option! :compression
   [_ ^Cluster$Builder builder option]
