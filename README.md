@@ -19,9 +19,6 @@ asynchronous APIs, is likely to become the standard client for java
 (it's the only one I know that use the new protocol) and you can trust
 [datastax](http://datastax.com/) people to improve and maintain it.
 
-Their driver is very complete, alia's code without the tests is around
-200 lines.
-
 Thrift clients are still very relevant though, CQL3 brings a lot of
 high level features, but for now it still feels incomplete on some
 aspects.
@@ -62,16 +59,16 @@ First some [API docs](http://mpenet.github.com/alia).
 
 (def cluster (alia/cluster "localhost"))
 
-;; sessions are separate so that you can interact with multiple
+;; Sessions are separate so that you can interact with multiple
 ;; keyspaces from the same cluster definition
 (def session (alia/connect cluster))
 
 (alia/execute session "CREATE KEYSPACE alia
                        WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};")
 
-;; every function that requires session as first argument can be also
-;; used without this argument if you provide a binding (valid for alia/execute, alia/prepare, alia/bind):
-
+;; Every function that requires session as first argument can be also
+;; used without this argument if you provide a binding (valid for
+;; alia/execute, alia/prepare, alia/bind):
 (alia/with-session session
    (alia/execute "USE alia;")
    (alia/execute "CREATE TABLE users (user_name varchar,
@@ -94,7 +91,7 @@ First some [API docs](http://mpenet.github.com/alia).
 
   (def prepared-statement (alia/prepare "select * from users where user_name=?;"))
   (-> prepared-statement
-      (alia/bind "frodo") ;; if you have more args: (alia/bind "foo" "bar" 1 (java.util.Date.)) etc...
+      (alia/bind "frodo") ;; If you have more args: (alia/bind "foo" "bar" 1 (java.util.Date.)) etc...
       alia/execute)
   >> [[{:name "user_name", :value "frodo"}
        {:name "first_name", :value "Frodo"}
@@ -107,7 +104,7 @@ First some [API docs](http://mpenet.github.com/alia).
        {:name "tags" :value [4 5 6]}
        {:name "auuid" :value #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892"}]]
 
-  ;; if you prefer array-maps:
+  ;; or if you prefer array-maps you can use rows->maps
   (-> prepared-statement
       (alia/bind "frodo")
       alia/execute
@@ -124,19 +121,20 @@ First some [API docs](http://mpenet.github.com/alia).
        "birth_year" 1,
        "user_name" "frodo"})
 
-  ;; asynchronous interface
+  ;; Asynchronous interface:
 
-  ;; via a clojure promise
+  ;; If you pass async? true then execute returns
+  ;; a [promise](http://clojuredocs.org/clojure_core/clojure.core/promise) (non blocking)
   (def result (alia/execute "select * from users;" :async? true))
 
-  ;; blocks until realized
+  ;; To get the result once it's realized we can dereference it, which
+  ;; is a blocking operation
   @result
 
   ;; or using success/error handlers (it still returns a promise just like before)
   (alia/execute "select * from users;"
                 :success (fn [r] (do-something-with-result r)
-                :error (fn [e] (print "fail!"))))
-) ;; binding
+                :error (fn [e] (print "fail!")))))
 
 ;; cleanup
 (shutdown session)
@@ -153,7 +151,7 @@ manually until it gets publised (it is still in developpement).
 
 ```bash
 git clone git@github.com:datastax/java-driver.git
-cd driver-core
+cd java-driver/driver-core
 mvn install -DskipTests
 ```
 
