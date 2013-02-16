@@ -16,7 +16,7 @@ very promising.
 It's built on top of the new binary protocol, can handle all the
 pooling/balancing/failover for you, is very active, has synchronous and
 asynchronous APIs, is likely to become the standard client for java
-(it's the only one I know that use the new protocol) and you can trust
+(it's the only one I know that uses the new protocol) and you can trust
 [datastax](http://datastax.com/) people to improve and maintain it.
 
 Thrift clients are still very relevant though, CQL3 brings a lot of
