@@ -6,6 +6,7 @@
     HostDistance
     PoolingOptions
     ProtocolOptions$Compression
+    SimpleAuthInfoProvider
     SocketOptions]
    [com.datastax.driver.core.policies
     LoadBalancingPolicy
@@ -63,8 +64,8 @@
   builder)
 
 (defmethod set-cluster-option! :auth-info
-  [_ ^Cluster$Builder builder auth-info-provider]
-  (.withAuthInfoProvider builder auth-info-provider))
+  [_ ^Cluster$Builder builder auth-map]
+  (.withAuthInfoProvider builder (SimpleAuthInfoProvider. auth-map)))
 
 (defmethod set-cluster-option! :compression
   [_ ^Cluster$Builder builder option]
