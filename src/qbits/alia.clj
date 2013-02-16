@@ -29,6 +29,7 @@
    [java.nio ByteBuffer]))
 
 (def ^:dynamic *consistency* :one)
+(def consistency-levels (utils/enum-values->map (ConsistencyLevel/values)))
 
 (defmacro with-consistency
   "Binds qbits.alia/*consistency*"
@@ -36,7 +37,13 @@
   `(binding [qbits.alia/*consistency* ~consistency]
      ~@body))
 
-(def consistency-levels (utils/enum-values->map (ConsistencyLevel/values)))
+(defn set-consistency!
+  "Sets the consistency globally"
+  [consistency]
+  (alter-var-root #'*consistency*
+                  (constantly consistency)
+                  (when (thread-bound? #'*consistency*)
+                    (set! *consistency* consistency))))
 
 (defn cluster
   "Returns a new com.datastax.driver.core/Cluster instance"
