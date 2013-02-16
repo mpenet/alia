@@ -2,12 +2,14 @@
   (:require
    [qbits.knit :as knit]
    [qbits.alia.codec :as codec]
+   [qbits.alia.utils :as utils]
    [qbits.alia.cluster-options :as copt])
   (:import
    [com.datastax.driver.core
     Cluster
     Cluster$Builder
     ColumnDefinitions$Definition
+    ConsistencyLevel
     DataType
     DataType$Name
     HostDistance
@@ -19,10 +21,22 @@
     ResultSetFuture
     Row
     Session
+    SimpleStatement
     SocketOptions]
    [com.google.common.util.concurrent
     Futures
-    FutureCallback]))
+    FutureCallback]
+   [java.nio ByteBuffer]))
+
+(def ^:dynamic *consistency* :one)
+
+(defmacro with-consistency
+  "Binds qbits.alia/*consistency*"
+  [consistency & body]
+  `(binding [qbits.alia/*consistency* ~consistency]
+     ~@body))
+
+(def consistency-levels (utils/enum-values->map (ConsistencyLevel/values)))
 
 (defn cluster
   "Returns a new com.datastax.driver.core/Cluster instance"
@@ -62,10 +76,10 @@ keyspaces from a single cluster instance"
 (defn shutdown
   "Shutdowns Session or Cluster instance, clearing the underlying
 pools/connections"
-  ([cluster-or-session]
+  ([^Session cluster-or-session]
      (.shutdown cluster-or-session))
   ([]
-     (.shutdown *session*)))
+     (shutdown *session*)))
 
 (defn prepare
   ([session query]
@@ -88,10 +102,9 @@ pools/connections"
 (defonce default-async-executor (knit/executor :cached))
 
 (defn execute-async
-  [^Session session query executor success error]
-  (let [rs-future (if (string? query)
-                    (.executeAsync session ^String query)
-                    (.executeAsync session ^Query query))
+  [^Session session ^SimpleStatement statement executor success error]
+  (let [rs-future
+        (.executeAsync session (SimpleStatement. statement))
         async-result (promise)]
     (Futures/addCallback
      rs-future
@@ -109,10 +122,8 @@ pools/connections"
     async-result))
 
 (defn execute-sync
-  [^Session session query]
-  (result-set->clojure (if (string? query)
-                         (.execute session ^String query)
-                         (.execute session ^Query query))))
+  [^Session session ^SimpleStatement statement]
+  (result-set->clojure (.execute session statement)))
 
 (defn execute
   "Executes querys against a session. Returns a collection of rows.
@@ -128,11 +139,24 @@ handler provided if any.  Also accepts a
 custom :executor (java.util.concurrent.ExecutorService instance) to be
 used for the asynchronous queries."
   [& args]
-  (let [[^Session session query & {:keys [async? success error executor]
-                                   :or {executor default-async-executor}}]
+  (let [[^Session session query & {:keys [async? success error executor
+                                          consistency routing-key retry-policy
+                                          tracing?]
+                                   :or {executor default-async-executor
+                                        consistency *consistency*}}]
         (if (even? (count args))
           args
-          (conj args *session*))]
+          (conj args *session*))
+        statement (SimpleStatement. query)]
+    (when retry-policy
+      (.setRetryPolicy statement retry-policy))
+    (when routing-key
+      (.setRoutingKey statement ^ByteBuffer routing-key))
+    (when tracing?
+      (.enableTracing statement))
+
+    (.setConsistencyLevel statement (consistency-levels consistency))
+
     (if (or success async? error)
       (execute-async session query executor success error)
       (execute-sync session query))))

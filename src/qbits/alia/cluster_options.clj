@@ -1,4 +1,5 @@
 (ns qbits.alia.cluster-options
+  (:require [qbits.alia.utils :as utils])
   (:import
    [com.datastax.driver.core
     Cluster$Builder
@@ -11,19 +12,8 @@
     ReconnectionPolicy
     RetryPolicy]))
 
-(defn enum-values->map
-  [enum-values]
-  (reduce
-   (fn [m hd]
-     (assoc m (-> (.name ^Enum hd)
-                  (.toLowerCase)
-                  keyword)
-            hd))
-   {}
-   enum-values))
-
-(def host-distance (enum-values->map (HostDistance/values)))
-(def compression (enum-values->map (ProtocolOptions$Compression/values)))
+(def host-distance (utils/enum-values->map (HostDistance/values)))
+(def compression (utils/enum-values->map (ProtocolOptions$Compression/values)))
 
 (defmulti set-cluster-option! (fn [k ^Cluster$Builder builder option] k))
 
