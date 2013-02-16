@@ -45,6 +45,22 @@
                   (when (thread-bound? #'*consistency*)
                     (set! *consistency* consistency))))
 
+(def ^:dynamic *session*)
+
+(defmacro with-session
+  "Binds qbits.alia/*session*"
+  [session & body]
+  `(binding [qbits.alia/*session* ~session]
+     ~@body))
+
+(defn set-session!
+  "Sets the session globally"
+  [session]
+  (alter-var-root #'*session*
+                  (constantly session)
+                  (when (thread-bound? #'*session*)
+                    (set! *session* session))))
+
 (defn cluster
   "Returns a new com.datastax.driver.core/Cluster instance"
   [hosts & {:as options
@@ -63,22 +79,6 @@ keyspaces from a single cluster instance"
      (.connect cluster keyspace))
   ([^Cluster cluster]
      (.connect cluster)))
-
-(def ^:dynamic *session*)
-
-(defmacro with-session
-  "Binds qbits.alia/*session*"
-  [session & body]
-  `(binding [qbits.alia/*session* ~session]
-     ~@body))
-
-(defn set-session!
-  "Sets the session globally"
-  [session]
-  (alter-var-root #'*session*
-                  (constantly session)
-                  (when (thread-bound? #'*session*)
-                    (set! *session* session))))
 
 (defn shutdown
   "Shutdowns Session or Cluster instance, clearing the underlying
@@ -136,6 +136,22 @@ pools/connections"
   "Executes querys against a session. Returns a collection of rows.
 The first argument can be either a Session instance or the query
 directly.
+
+So 2 signatures:
+
+ [session query & {:keys [async? success error executor
+                         consistency routing-key retry-policy
+                         tracing?]
+                  :or {executor default-async-executor
+                       consistency *consistency*}}]
+
+or
+
+ [query & {:keys [async? success error executor
+                         consistency routing-key retry-policy
+                         tracing?]
+                  :or {executor default-async-executor
+                       consistency *consistency*}}]
 
 If you chose the latter the Session must be bound with
 `with-session`.
