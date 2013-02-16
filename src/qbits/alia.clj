@@ -6,23 +6,20 @@
    [qbits.alia.cluster-options :as copt])
   (:import
    [com.datastax.driver.core
+    BoundStatement
     Cluster
     Cluster$Builder
     ColumnDefinitions$Definition
     ConsistencyLevel
     DataType
     DataType$Name
-    HostDistance
-    PoolingOptions
     PreparedStatement
-    ProtocolOptions$Compression
     Query
     ResultSet
     ResultSetFuture
     Row
     Session
-    SimpleStatement
-    SocketOptions]
+    SimpleStatement]
    [com.google.common.util.concurrent
     Futures
     FutureCallback]
@@ -83,7 +80,7 @@ keyspaces from a single cluster instance"
 (defn shutdown
   "Shutdowns Session or Cluster instance, clearing the underlying
 pools/connections"
-  ([^Session cluster-or-session]
+  ([cluster-or-session]
      (.shutdown cluster-or-session))
   ([]
      (shutdown *session*)))
@@ -111,7 +108,7 @@ pools/connections"
 (defn execute-async
   [^Session session ^SimpleStatement statement executor success error]
   (let [rs-future
-        (.executeAsync session (SimpleStatement. statement))
+        (.executeAsync session statement)
         async-result (promise)]
     (Futures/addCallback
      rs-future
@@ -131,6 +128,16 @@ pools/connections"
 (defn execute-sync
   [^Session session ^SimpleStatement statement]
   (result-set->clojure (.execute session statement)))
+
+(defprotocol PStatement
+  (query->statement [x] "Encodes input into a Statement (Query) instance"))
+
+(extend-protocol PStatement
+  Query
+  (query->statement [x] x)
+
+  String
+  (query->statement [x] (SimpleStatement. x)))
 
 (defn execute
   "Executes querys against a session. Returns a collection of rows.
@@ -170,7 +177,7 @@ used for the asynchronous queries."
         (if (even? (count args))
           args
           (conj args *session*))
-        statement (SimpleStatement. query)]
+        statement (query->statement query)]
     (when retry-policy
       (.setRetryPolicy statement retry-policy))
     (when routing-key
@@ -181,8 +188,8 @@ used for the asynchronous queries."
     (.setConsistencyLevel statement (consistency-levels consistency))
 
     (if (or success async? error)
-      (execute-async session query executor success error)
-      (execute-sync session query))))
+      (execute-async session statement executor success error)
+      (execute-sync session statement))))
 
 (defn prepare
   "Returns a com.datastax.driver.core.PreparedStatement instance to be
