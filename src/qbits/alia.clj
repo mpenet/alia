@@ -140,16 +140,16 @@ directly.
 So 2 signatures:
 
  [session query & {:keys [async? success error executor
-                         consistency routing-key retry-policy
-                         tracing?]
+                          consistency routing-key retry-policy
+                          tracing?]
                   :or {executor default-async-executor
                        consistency *consistency*}}]
 
 or
 
  [query & {:keys [async? success error executor
-                         consistency routing-key retry-policy
-                         tracing?]
+                  consistency routing-key retry-policy
+                  tracing?]
                   :or {executor default-async-executor
                        consistency *consistency*}}]
 
