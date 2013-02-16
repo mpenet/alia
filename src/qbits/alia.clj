@@ -51,6 +51,14 @@ keyspaces from a single cluster instance"
   `(binding [qbits.alia/*session* ~session]
      ~@body))
 
+(defn set-session!
+  "Sets the session globally"
+  [session]
+  (alter-var-root #'*session*
+                  (constantly session)
+                  (when (thread-bound? #'*session*)
+                    (set! *session* session))))
+
 (defn shutdown
   "Shutdowns Session or Cluster instance, clearing the underlying
 pools/connections"
