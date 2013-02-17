@@ -177,9 +177,9 @@ Some examples:
      (group-by [:bar :asc])
      (using :ttl 10000))
 
-;; To compile the queries just use ->cql or ->prepared
+;; To compile the queries just use ->raw or ->prepared
 
-(->cql (select :foo))
+(->raw (select :foo))
 > "SELECT * FROM foo;"
 
 (->prepared (select :foo (where {:bar 1})))
