@@ -36,6 +36,8 @@ It's relatively low level for now.
   on the mode you choose), with transparent handling of clojure
   datatypes (all cassandra data types are supported).
 
+* Query generation from a cute korma'ish dsl (in developement here: [hayt](https://github.com/mpenet/hayt))
+
 * The exposed parts of the public api all allow full access to
   java-driver API if you need to leverage some of the advanced
   functionalities it provides (that is until I provide some wrappers
@@ -43,7 +45,7 @@ It's relatively low level for now.
 
 ### Will do soon
 
-* Query generation from a cute korma'ish dsl (in developement here: [hayt](https://github.com/mpenet/hayt))
+
 * Support for more external lib data types (joda time and
   com.eaio.uuid's are already supported)
 * More sugar around retry/pooling/balancing options
@@ -142,6 +144,55 @@ First some [API docs](http://mpenet.github.com/alia).
 
 ```
 
+## Hayt (Query DSL)
+
+There is a nicer way to write your queries using
+[Hayt](https://github.com/mpenet/hayt), this should be familiar if you
+know Korma or ClojureQL.
+One of the major difference is that Hayt doesn't use macros.
+
+Some examples:
+
+```clojure
+
+(use 'qbits.hayt)
+
+(select :foo (where {:bar 2}))
+
+(update :foo
+         (set-columns {:bar 1
+                       :baz [+ 2]})
+         (where {:foo :bar
+                 :moo [> 3]
+                 :meh [:> 4]
+                 :baz [:in [5 6 7]]}))
+
+
+;; They are composable using q->
+(def base (select :foo (where {:foo 1})))
+
+(q-> base
+     (columns :bar :baz)
+     (where {:bar 2})
+     (group-by [:bar :asc])
+     (using :ttl 10000))
+
+;; To compile the queries just use ->cql or ->prepared
+
+(->cql (select :foo))
+> "SELECT * FROM foo;"
+
+(->prepared (select :foo (where {:bar 1})))
+> ["SELECT * FROM foo WHERE bar=?;" [1]]
+
+
+```
+
+It is still in developement but it covers everything that is possible
+with CQL3 (functions, handling of collection types and their
+operations, ddl, prepared statements, etc).
+Proper documentation will come soon, if you want to know more about it head to
+[Hayt's tests](https://github.com/mpenet/hayt/blob/master/test/qbits/hayt/core_test.clj).
 
 ## Installation
 
