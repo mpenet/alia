@@ -2,6 +2,8 @@
   (:use clojure.test
         clojure.data
         qbits.alia
+        qbits.alia.codec.eaio-uuid
+        qbits.alia.codec.joda-time
         qbits.tardis))
 
 (def ^:dynamic *cluster*)

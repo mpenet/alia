@@ -60,14 +60,6 @@
   clojure.lang.Keyword
   (encode [x] (name x))
 
-  org.joda.time.DateTime
-  (encode [x]
-    (.toDate x))
-
-  com.eaio.uuid.UUID
-  (encode [x]
-    (java.util.UUID/fromString (str x)))
-
   Object
   (encode [x] x)
 
