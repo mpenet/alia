@@ -92,7 +92,7 @@ pools/connections"
   ([query]
      (prepare *session* query)))
 
-(defn result-set->clojure
+(defn ^:private result-set->clojure
   [result-set]
   (map (fn [^Row row]
          (let [cdef (.getColumnDefinitions row)]
@@ -106,7 +106,7 @@ pools/connections"
 
 (defonce default-async-executor (knit/executor :cached))
 
-(defn execute-async
+(defn ^:private execute-async
   [^Session session ^SimpleStatement statement executor success error]
   (let [rs-future
         (.executeAsync session statement)
@@ -126,7 +126,7 @@ pools/connections"
      executor)
     async-result))
 
-(defn execute-sync
+(defn ^:private execute-sync
   [^Session session ^SimpleStatement statement]
   (result-set->clojure (.execute session statement)))
 
