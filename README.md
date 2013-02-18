@@ -174,7 +174,7 @@ Some examples:
 (q-> base
      (columns :bar :baz)
      (where {:bar 2})
-     (group-by [:bar :asc])
+     (order-by [:bar :asc])
      (using :ttl 10000))
 
 ;; To compile the queries just use ->raw or ->prepared
