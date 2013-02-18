@@ -178,7 +178,7 @@ used for the asynchronous queries."
         (if (even? (count args))
           args
           (conj args *session*))
-        statement (query->statement query)]
+        ^SimpleStatement statement (query->statement query)]
     (when retry-policy
       (.setRetryPolicy statement retry-policy))
     (when routing-key
