@@ -59,6 +59,22 @@
                   (when (thread-bound? #'*session*)
                     (set! *session* session))))
 
+(def ^:dynamic *executor* (knit/executor :cached))
+
+(defmacro with-executor
+  "Binds qbits.alia/*executor*"
+  [executor & body]
+  `(binding [qbits.alia/*executor* ~executor]
+     ~@body))
+
+(defn set-executor!
+  "Sets the executor globally"
+  [executor]
+  (alter-var-root #'*executor*
+                  (constantly executor)
+                  (when (thread-bound? #'*executor*)
+                    (set! *executor* executor))))
+
 (defn cluster
   "Returns a new com.datastax.driver.core/Cluster instance"
   [hosts & {:as options
@@ -103,8 +119,6 @@ pools/connections"
                  :value (codec/decode row idx (.getType cdef idx))}))
             cdef)))
        result-set))
-
-(defonce default-async-executor (knit/executor :cached))
 
 (defn ^:private execute-async
   [^Session session ^SimpleStatement statement executor success error]
@@ -173,7 +187,7 @@ used for the asynchronous queries."
   (let [[^Session session query & {:keys [async? success error executor
                                           consistency routing-key retry-policy
                                           tracing?]
-                                   :or {executor default-async-executor
+                                   :or {executor *executor*
                                         consistency *consistency*}}]
         (if (even? (count args))
           args
