@@ -5,7 +5,7 @@ performance or features, compared to the java library it wraps.
 
 This is outlined by the very low number of functions it exposes (a
 dozen more or less) and the lack of very high level abstraction.
-However alia comes with [Hayt](#hayt) a CQL
+However alia comes with [Hayt](#hayt-query-dsl) a CQL
 query DSL for clojure.
 
 ## Cluster initialisation
