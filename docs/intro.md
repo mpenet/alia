@@ -199,10 +199,10 @@ In order to prepare a statement you need to use `alia/prepare`
 (def statement (alia/prepare "SELECT * FROM foo WHERE foo=? AND bar=?;"))
 ```
 
-Again prepare expects a session as first parameter if you havent set
+`prepare` expects a session as first parameter if you havent set
 it globally or wrapped the call with `with-session`.
 
-To bind values prior  to execution:
+To bind values prior to execution:
 
 ```clojure
 (def bst (alia/bind statement ["value-of-foo" "value-of-bar"]))
@@ -219,9 +219,8 @@ specific to execution for prepared statements.
 (alia/execute bst)
 ```
 
-And this is pretty much it for the core of the function you need to know.
-There are a few other that can be usefull though:
-
+And this is it for the core of the function you need to know.
+There are a few other that can be usefull though.
 
 ### `alia/execute` advanced options
 
@@ -333,8 +332,7 @@ If you want alia to be able to encode custom datatypes without having
 to do it yourself for every query you can extend the following
 protocol `qbits.alia.codec/PCodec`'s `encode` function.
 
-Here is an example that is provided for supporting joda-time, storing
-them as longs:
+Here is an example that is provided for supporting joda-time.
 
 ```clojure
 (ns qbits.alia.codec.joda-time
@@ -349,8 +347,8 @@ them as longs:
 ## Hayt: Query DSL
 
 Alia comes with the latest version of [Hayt](https://github.com/mpenet/hayt).
-This is clojure a DSL, that is composable, very easy to use, performant
-and provideds complete support for CQL3 features.
+This is a query DSL, that is composable, very easy to use, performant
+and provides complete support for CQL3 features.
 
 Some examples:
 
