@@ -5,7 +5,7 @@ performance or features, compared to the java library it wraps.
 
 This is outlined by the very low number of functions it exposes (a
 dozen more or less) and the lack of very high level abstraction.
-However alia comes with [Hayt](https://github.com/alia/#hayt) a CQL
+However alia comes with [Hayt](https://github.com/mpenet/alia/#hayt) a CQL
 query DSL for clojure.
 
 ## Cluster initialisation
@@ -93,7 +93,7 @@ You can interact with C* using either raw queries or prepared statements.
 There is a single function that allows you to do that: `alia/execute`.
 
 This function supports a number of options, but the simplest example
-of its use wuold look like this:
+of its use would look like this:
 
 ```clojure
 (alia/execute session "SELECT * FROM foo;")
@@ -120,7 +120,7 @@ using `alia/rows->maps` on the result.
 
 As you can see C* datatypes are translated to clojure friendly types
 when it's possible: in this example `:emails` is a C* native Set,
-`tags` is a native list and `:amap` is a native map.
+`:tags` is a native list and `:amap` is a native map.
 
 `alia/execute` has 2 distinct arity, you can skip the session parameter if
 you have set it using `with-session` or `set-session!`:
@@ -199,7 +199,8 @@ In order to prepare a statement you need to use `alia/prepare`
 (def statement (alia/prepare "SELECT * FROM foo WHERE foo=? AND bar=?;"))
 ```
 
-Again prepare exects a session as first parameter if you havent set it globally or wrapped the call with `with-session`.
+Again prepare expects a session as first parameter if you havent set
+it globally or wrapped the call with `with-session`.
 
 To bind values prior  to execution:
 
@@ -207,11 +208,11 @@ To bind values prior  to execution:
 (def bst (alia/bind statement ["value-of-foo" "value-of-bar"]))
 ```
 
-Again you don't have to deal with translations of datatypes, this is
+You don't have to deal with translations of datatypes, this is
 done under the hood.
 
 Ok so now we are ready to execute the query with `alia/execute`, which
-is used exactly the same as explained earlier, there is nothing
+is used exactly the same way as explained earlier, there is nothing
 specific to execution for prepared statements.
 
 ```clojure
@@ -235,17 +236,15 @@ The complete signature of execute looks like this
 ```
 
 `execute` supports a number of options I didn't mention earlier. you
-can specify Consistency level, a custom
-ExecutorService, retry policy, and trigger
-tracing when calling it.
+can specify Consistency level, a custom ExecutorService, a retry
+policy, a routing key and trigger tracing when calling it.
 
 #### Consistency level
 
 Here are the supported consistency levels:
 
-```clojure
-:all :any :each_quorum :local_quorum :one :quorum :three :two
-```
+`:all` `:any` `:each-quorum` `:local-quorum` `:one` `:quorum` `:three` `:two`
+
 
 ```clojure
 (alia/execute bst :consistency :all)
@@ -272,7 +271,7 @@ or
 #### Executors
 
 The executor used to deal with resultset futures (in asynchronous
-mode) can be passed as a named argument to alia/execute, or like
+mode) can be passed as a named argument to `alia/execute`, or like
 sessions, and consistency be set with a function globally or with a
 binding:
 
@@ -283,7 +282,7 @@ binding:
 
 
 ```clojure
-(set-executor!! executor-instance)
+(set-executor! executor-instance)
 ```
 
 or
@@ -302,7 +301,7 @@ You can manually provide a routing key for this query. It is thus
 optional since the routing key is only an hint for token aware load
 balancing policy but is never mandatory.
 
-see: [RoutingKey on datastax doc](http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/SimpleStatement.html#setRoutingKey(java.nio.ByteBuffer...))
+RoutingKey on datastax doc : http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/SimpleStatement.html#setRoutingKey(java.nio.ByteBuffer...)
 
 #### Retry Policy
 
@@ -312,7 +311,7 @@ returned by Policies.getRetryPolicy() in the cluster
 configuration. This method is thus only useful in case you want to
 punctually override the default policy for this request.
 
-see: [RetryPolicy on datastax doc](http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/Query.html#setRetryPolicy(com.datastax.driver.core.policies.RetryPolicy))
+RetryPolicy on datastax doc: (http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/Query.html#setRetryPolicy(com.datastax.driver.core.policies.RetryPolicy)
 
 ## Shuting down
 
