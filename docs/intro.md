@@ -53,11 +53,37 @@ The following options are supported:
   protocol. Can be `:none` or `:snappy`.
 
 * `:pooling-options`: The pooling options used by this builder.
-   Supports the following
-   ** :core-connections-per-host
-   ** :max-connections-per-host
-   ** :max-simultaneous-requests-per-connection
-   ** :min-simultaneous-requests-per-connection
+  Options related to connection pooling.
+
+  The driver uses connections in an asynchronous way. Meaning that
+  multiple requests can be submitted on the same connection at the
+  same time. This means that the driver only needs to maintain a
+  relatively small number of connections to each Cassandra host. These
+  options allow to control how many connections are kept exactly.
+
+  For each host, the driver keeps a core amount of connections open at
+  all time. If the utilisation of those connections reaches a
+  configurable threshold ,more connections are created up to a
+  configurable maximum number of connections.
+
+  Once more than core connections have been created, connections in
+  excess are reclaimed if the utilisation of opened connections drops
+  below the configured threshold.
+
+  Each of these parameters can be separately set for `:local` and `:remote`
+  hosts (HostDistance). For `:ignored` hosts, the default for all those
+  settings is 0 and cannot be changed.
+
+  Each of the following configuration keys, take a vector of [distance, int-value]:
+  ex:
+  ```clojure
+  :core-connections-per-host [:remote 10]
+  ```
+
+** `:core-connections-per-host`
+** `:max-connections-per-host`
+** `:max-simultaneous-requests-per-connection`
+** `:min-simultaneous-requests-per-connection`
 
 * `:pre-build-fn`: a function that will receive the cluster builder
   instance as only parameter when you want full control over
