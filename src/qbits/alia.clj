@@ -103,8 +103,8 @@ pools/connections"
      (shutdown *session*)))
 
 (defn prepare
-  ([session query]
-     (.prepare ^Session session query))
+  ([^Session session query]
+     (.prepare session query))
   ([query]
      (prepare *session* query)))
 
@@ -122,14 +122,13 @@ pools/connections"
 
 (defn ^:private execute-async
   [^Session session ^SimpleStatement statement executor success error]
-  (let [rs-future
-        (.executeAsync session statement)
+  (let [^ResultSetFuture rs-future (.executeAsync session statement)
         async-result (promise)]
     (Futures/addCallback
      rs-future
      (reify FutureCallback
        (onSuccess [_ result]
-         (let [result (result-set->clojure (.get ^ResultSetFuture rs-future))]
+         (let [result (result-set->clojure (.get rs-future))]
            (deliver async-result result)
            (when (fn? success)
              (success result))))
@@ -211,7 +210,7 @@ used for the asynchronous queries."
 used in `execute` after it's been bound with `bind`"
   ([^Session session ^String query]
      (.prepare session query))
-  ([^String query]
+  ([query]
      (prepare *session* query)))
 
 (defn bind
