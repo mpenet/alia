@@ -7,29 +7,17 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 
 !! Early release, [datastax/java-driver](https://github.com/datastax/java-driver) is still not published on maven and in active developpement.
 
-## But why yet another one?
-
-You would think I'd get bored of cassandra clients, but
-[datastax/java-driver](https://github.com/datastax/java-driver) looks
-very promising.
-
-It's built on top of the new binary protocol, can handle all the
-pooling/balancing/failover for you, is very active, has synchronous and
+It's built on top of the new binary protocol, can handle
+pooling/balancing/failover, is very active, has synchronous and
 asynchronous APIs, is likely to become the standard client for java
-(it's the only one I know that uses the new protocol) and you can trust
-[datastax](http://datastax.com/) people to improve and maintain it.
+(it's the only one I know that uses the new protocol) and you can
+trust [datastax](http://datastax.com/) people to improve and maintain
+it.
 
-Thrift clients are still very relevant though, CQL3 brings a lot of
-high level features, but for now it still feels incomplete on some
-aspects.
+If you want a Thrift based client for Clojure you could give a try to
+[casyn](https://github.com/mpenet/casyn)
 
-If you want a Thrift based client for Clojure you could give a try to [casyn](https://github.com/mpenet/casyn)
-
-## What Alia can do and will do soon.
-
-It's relatively low level for now.
-
-### Can do
+## What Alia can do
 
 * Nice simple api to work with string queries or prepared statements,
   sync/async (using regular functions, promises or callbacks depending
@@ -43,17 +31,11 @@ It's relatively low level for now.
   functionalities it provides (that is until I provide some wrappers
   around that).
 
-### Will do soon
+## Documentation
 
-
-* Support for more external lib data types (joda time and
-  com.eaio.uuid's are already supported)
-* More sugar around retry/pooling/balancing options
-* Proper documentation
+[A first draft can be found here](https://github.com/mpenet/alia/blob/master/docs/intro.md) and you can also consult the [codox generated documentation](http://mpenet.github.com/alia/#docs).
 
 ## Show me some code!
-
-First some [API docs](http://mpenet.github.com/alia).
 
 ```clojure
 
