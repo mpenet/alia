@@ -129,7 +129,7 @@
 (deftest test-prepared
   (let [s-simple (prepare "select * from users;")
         s-parameterized-simple (prepare "select * from users where user_name=?;")
-        s-prepare-types (prepare "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid) VALUES(?, ?, ?, ?, ?, ?);")
+        s-prepare-types (prepare "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);")
         ;; s-parameterized-set (prepare  "select * from users where emails=?;")
         ;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
         ]
@@ -144,7 +144,10 @@
                                        #uuid "b474e171-7757-449a-87be-d2797d1336e3"
                                        (qbits.tardis/to-uuid "e34288d0-7617-11e2-9243-0024d70cf6c4")
                                        (java.util.Date.)
-                                       false))))
+                                       false
+                                       [1 2 3 4]
+                                       #{"foo" "bar"}
+                                       {"foo" 123}))))
     (execute  "delete from users where user_name = 'foobar';") ;; cleanup
 
     ;; ;; index on collections not supp  orted yet
