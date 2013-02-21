@@ -80,10 +80,10 @@ The following options are supported:
   :core-connections-per-host [:remote 10]
   ```
 
-** `:core-connections-per-host`
-** `:max-connections-per-host`
-** `:max-simultaneous-requests-per-connection`
-** `:min-simultaneous-requests-per-connection`
+  + `:core-connections-per-host`
+  + `:max-connections-per-host`
+  + `:max-simultaneous-requests-per-connection`
+  + `:min-simultaneous-requests-per-connection`
 
 * `:pre-build-fn`: a function that will receive the cluster builder
   instance as only parameter when you want full control over
