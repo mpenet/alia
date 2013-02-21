@@ -205,7 +205,7 @@ it globally or wrapped the call with `with-session`.
 To bind values prior to execution:
 
 ```clojure
-(def bst (alia/bind statement ["value-of-foo" "value-of-bar"]))
+(def bst (alia/bind statement "value-of-foo" "value-of-bar"))
 ```
 
 You don't have to deal with translations of datatypes, this is
