@@ -99,10 +99,19 @@ pools/connections"
      (shutdown *session*)))
 
 (defn prepare
-  ([^Session session query]
+  "Returns a com.datastax.driver.core.PreparedStatement instance to be
+used in `execute` after it's been bound with `bind`"
+  ([^Session session ^String query]
      (.prepare session query))
   ([query]
      (prepare *session* query)))
+
+(defn bind
+  "Returns a com.datastax.driver.core.BoundStatement instance to be
+  used with `execute`"
+  [^PreparedStatement prepared-statement & values]
+  (.bind prepared-statement (to-array (map codec/encode values))))
+
 
 (defn ^:private execute-async
   [^Session session ^SimpleStatement statement executor success error]
@@ -133,6 +142,12 @@ pools/connections"
 (extend-protocol PStatement
   Query
   (query->statement [x] x)
+
+  PreparedStatement
+  (query->statement [x]
+    ;; this covers the case when a prepared statement with no arg is
+    ;; sent to execute
+    (bind x))
 
   String
   (query->statement [x] (SimpleStatement. x)))
@@ -188,17 +203,3 @@ used for the asynchronous queries."
     (if (or success async? error)
       (execute-async session statement executor success error)
       (execute-sync session statement))))
-
-(defn prepare
-  "Returns a com.datastax.driver.core.PreparedStatement instance to be
-used in `execute` after it's been bound with `bind`"
-  ([^Session session ^String query]
-     (.prepare session query))
-  ([query]
-     (prepare *session* query)))
-
-(defn bind
-  "Returns a com.datastax.driver.core.BoundStatement instance to be
-  used with `execute`"
-  [^PreparedStatement prepared-statement & values]
-  (.bind prepared-statement (to-array (map codec/encode values))))

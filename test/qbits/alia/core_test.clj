@@ -95,7 +95,7 @@
         ;; s-parameterized-set (prepare  "select * from users where emails=?;")
         ;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
         ]
-    (is (= user-data-set (execute (bind s-simple))))
+    (is (= user-data-set (execute s-simple)))
     (is (= [(first user-data-set)]
            (execute (bind s-parameterized-simple "mpenet"))))
     (is (= [(first user-data-set)]
