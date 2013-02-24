@@ -175,7 +175,7 @@ mvn install -DskipTests
 Then add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia "0.1.0-SNAPSHOT"]
+[cc.qbits/alia "0.2.0-SNAPSHOT"]
 ```
 
 ## License
