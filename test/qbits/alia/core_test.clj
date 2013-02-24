@@ -7,69 +7,31 @@
 
 (def ^:dynamic *cluster*)
 
-;; <native-type> ::= ascii
-;;                 | bigint
-;;                 | blob
-;;                 | boolean
-;;                 | counter
-;;                 | decimal
-;;                 | double
-;;                 | float
-;;                 | inet
-;;                 | int
-;;                 | text
-;;                 | timestamp
-;;                 | timeuuid
-;;                 | uuid
-;;                 | varchar
-;;                 | varint
-
-
-;; ascii	ASCII character string
-;; bigint	64-bit signed long
-;; blob	Arbitrary bytes (no validation)
-;; boolean	true or false
-;; counter	Counter column (64-bit signed value). See Counters for details
-;; decimal	Variable-precision decimal
-;; double	64-bit IEEE-754 floating point
-;; float	32-bit IEEE-754 floating point
-;; inet	An IP address. It can be either 4 bytes long (IPv4) or 16 bytes long (IPv6)
-;; int	32-bit signed int
-;; text	UTF8 encoded string
-;; timestamp	A timestamp. See Working with dates below for more information.
-;; timeuuid	Type 1 UUID. This is generally used as a “conflict-free” timestamp. See Working with timeuuid below.
-;; uuid	Type 1 or type 4 UUID
-;; varchar	UTF8 encoded string
-;; varint	Arbitrary-precision integer
-
-
 ;; some test data
-(def user-data-set [[{:name "user_name", :value "mpenet"}
-                     {:name "first_name", :value "Max"}
-                     {:name "last_name", :value "Penet"}
-                     {:name "emails", :value #{"m@p.com" "ma@pe.com"}}
-                     {:name "birth_year", :value 0}
-                     {:name "created" :value nil}
-                     {:name "valid" :value true}
-                     {:name "amap", :value {"foo" 1 "bar" 2}}
-                     {:name "tags" :value [1 2 3]}
-                     {:name "auuid" :value #uuid "42048d2d-c135-4c18-aa3a-e38a6d3be7f1"}
-                     {:name "tuuid" :value #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"}]
-                    [{:name "user_name", :value "frodo"}
-                     {:name "first_name", :value "Frodo"}
-                     {:name "last_name", :value "Baggins"}
-                     {:name "birth_year", :value 1}
-                     {:name "created" :value nil}
-                     {:name "valid" :value true}
-                     {:name "emails", :value #{"baggins@gmail.com" "f@baggins.com"}}
-                     {:name "amap", :value {"foo" 1 "bar" 2}}
-                     {:name "tags" :value [4 5 6]}
-                     {:name "auuid" :value #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892"}
-                     {:name "tuuid" :value #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"}]])
+(def user-data-set [{"created" nil,
+                     "tuuid" #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
+                     "last_name" "Penet",
+                     "emails" #{"m@p.com" "ma@pe.com"},
+                     "tags" [1 2 3],
+                     "first_name" "Max",
+                     "amap" {"foo" 1, "bar" 2},
+                     "auuid" #uuid "42048d2d-c135-4c18-aa3a-e38a6d3be7f1",
+                     "valid" true,
+                     "birth_year" 0,
+                     "user_name" "mpenet"}
+                    {"created" nil,
+                     "tuuid" #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
+                     "last_name" "Baggins",
+                     "emails" #{"baggins@gmail.com" "f@baggins.com"},
+                     "tags" [4 5 6],
+                     "first_name" "Frodo",
+                     "amap" {"foo" 1, "bar" 2},
+                     "auuid" #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892",
+                     "valid" true,
+                     "birth_year" 1,
+                     "user_name" "frodo"}])
 
 ;; helpers
-(def execute->map (comp rows->maps execute))
-(def user-data-set-as-map (rows->maps user-data-set))
 
 (use-fixtures
   :once
@@ -112,18 +74,18 @@
         (shutdown *cluster*)))))
 
 (deftest test-sync-execute
-  (is (= user-data-set-as-map
-         (execute->map "select * from users;"))))
+  (is (= user-data-set
+         (execute "select * from users;"))))
 
 (deftest test-async-execute
   ;; promise
-  (is (= user-data-set-as-map
-         (rows->maps @(execute "select * from users;" :async? true))))
+  (is (= user-data-set
+         @(execute "select * from users;" :async? true)))
   ;; callback
   (let [p (promise)]
     (execute  "select * from users;"
-             :success (fn [r] (deliver p (rows->maps r))))
-    (is (= user-data-set-as-map @p))))
+              :success (fn [r] (deliver p r)))
+    (is (= user-data-set @p))))
 
 
 (deftest test-prepared
@@ -133,11 +95,11 @@
         ;; s-parameterized-set (prepare  "select * from users where emails=?;")
         ;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
         ]
-    (is (= user-data-set-as-map (execute->map (bind s-simple))))
-    (is (= [(first user-data-set-as-map)]
-           (execute->map (bind s-parameterized-simple "mpenet"))))
-    (is (= [(first user-data-set-as-map)]
-           (execute->map (bind s-parameterized-simple :mpenet))))
+    (is (= user-data-set (execute (bind s-simple))))
+    (is (= [(first user-data-set)]
+           (execute (bind s-parameterized-simple "mpenet"))))
+    (is (= [(first user-data-set)]
+           (execute (bind s-parameterized-simple :mpenet))))
     (is (= [] (execute (bind s-prepare-types
                                        "foobar"
                                        0
@@ -157,7 +119,3 @@
     ;; (is (= user-data-set (execute (bind s-parameterized-nil nil))))
     ;; 'null' parameters are not allowed since CQL3 does not (yet) supports them (see https://issues.apache.org/jira/browse/CASSANDRA-3783)
 ))
-
-(deftest test-rows-to-map
-  (is (= [{1 2, 2 3}]
-         (rows->maps [[{:name 1 :value 2} {:name 2 :value 3}]]))))

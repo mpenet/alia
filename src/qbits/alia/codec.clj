@@ -3,6 +3,7 @@
    [com.datastax.driver.core
     DataType
     DataType$Name
+    ResultSet
     Row]))
 
 (defmacro make-decoders [row idx col-type & specs]
@@ -69,3 +70,18 @@
             "'null' parameters are not allowed since CQL3 does
 not (yet) supports them. See
 https://issues.apache.org/jira/browse/CASSANDRA-3783"))))
+
+(defn result-set->maps
+  [^ResultSet result-set]
+  (-> (map (fn [^Row row]
+             (let [cdef (.getColumnDefinitions row)
+                   len (.size cdef)]
+               (loop [idx (int 0)
+                      row-map (transient {})]
+                 (if (< idx len)
+                   (recur (int (inc idx))
+                          (assoc! row-map
+                            (.getName cdef idx)
+                            (decode row idx (.getType cdef idx))))
+                   (persistent! row-map)))))
+            result-set)))

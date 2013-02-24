@@ -108,18 +108,6 @@ pools/connections"
   ([query]
      (prepare *session* query)))
 
-(defn ^:private result-set->clojure
-  [result-set]
-  (map (fn [^Row row]
-         (let [cdef (.getColumnDefinitions row)]
-           (map-indexed
-            (fn [idx col]
-              (let [idx (int idx)]
-                {:name (.getName cdef idx)
-                 :value (codec/decode row idx (.getType cdef idx))}))
-            cdef)))
-       result-set))
-
 (defn ^:private execute-async
   [^Session session ^SimpleStatement statement executor success error]
   (let [^ResultSetFuture rs-future (.executeAsync session statement)
@@ -128,7 +116,7 @@ pools/connections"
      rs-future
      (reify FutureCallback
        (onSuccess [_ result]
-         (let [result (result-set->clojure (.get rs-future))]
+         (let [result (codec/result-set->maps (.get rs-future))]
            (deliver async-result result)
            (when (fn? success)
              (success result))))
@@ -141,7 +129,7 @@ pools/connections"
 
 (defn ^:private execute-sync
   [^Session session ^SimpleStatement statement]
-  (result-set->clojure (.execute session statement)))
+  (codec/result-set->maps (.execute session statement)))
 
 (defprotocol PStatement
   (query->statement [x] "Encodes input into a Statement (Query) instance"))
@@ -218,9 +206,3 @@ used in `execute` after it's been bound with `bind`"
   used with `execute`"
   [^PreparedStatement prepared-statement & values]
   (.bind prepared-statement (to-array (map codec/encode values))))
-
-(defn rows->maps
-  "Converts rows returned from execute into a collection of maps,
-  instead of 2d collection with maps per entry"
-  [rows]
-  (map #(into (array-map) (map (juxt :name :value) %)) rows))
