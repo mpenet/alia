@@ -52,7 +52,7 @@ If you want a Thrift based client for Clojure you could give a try to
 
 ;; Every function that requires session as first argument can be also
 ;; used without this argument if you provide a binding (valid for
-;; alia/execute, alia/prepare, alia/bind):
+;; alia/execute and alia/prepare):
 (alia/with-session session
    (alia/execute "USE alia;")
    (alia/execute "CREATE TABLE users (user_name varchar,
