@@ -263,7 +263,7 @@ The complete signature of execute looks like this
 ```clojure
 [session query & {:keys [async? success error executor
                           consistency routing-key retry-policy
-                          tracing?]
+                          tracing? values]
                   :or {executor *executor*
                        consistency *consistency*}}]
 ```
