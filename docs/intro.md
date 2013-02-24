@@ -213,7 +213,6 @@ Prepared statements still use `alia/execute`, but require 1 (optionally 2) more
 steps.
 
 In order to prepare a statement you need to use `alia/prepare`
-```
 
 ```clojure
 (def statement (alia/prepare "SELECT * FROM foo WHERE foo=? AND bar=?;"))
@@ -237,17 +236,8 @@ query time for every call to execute).
 (alia/execute bst)
 ```
 
-
 You don't have to deal with translations of datatypes, this is
 done under the hood.
-
-Ok so now we are ready to execute the query with `alia/execute`, which
-is used exactly the same way as explained earlier, there is nothing
-specific to execution for prepared statements.
-
-```clojure
-(alia/execute bst)
-```
 
 And this is it for the core of the function you need to know.
 There are a few other that can be usefull though.
