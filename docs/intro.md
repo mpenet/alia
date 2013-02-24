@@ -85,11 +85,10 @@ The following options are supported:
   + `:max-simultaneous-requests-per-connection`
   + `:min-simultaneous-requests-per-connection`
 
-* `:pre-build-fn`: a function that will receive the cluster builder
-  instance as only parameter when you want full control over
-  initialisation. After its execution .build will be run, and the
-  cluster will be initialised.
-
+The handling of these options is achieved with a multimethod that you
+could extend if you need to handle some special case or want to create
+your own options templates.
+See `qbits.alia.cluster-options/set-cluster-options!` [[source]](../src/qbits/alia/cluster_options.clj)
 
 ## Creating Sessions from a cluster instance
 

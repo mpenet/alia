@@ -73,12 +73,9 @@
 
 (defn cluster
   "Returns a new com.datastax.driver.core/Cluster instance"
-  [hosts & {:as options
-            :keys [pre-build-fn]
-            :or {pre-build-fn identity}}]
+  [hosts & {:as options}]
   (-> (Cluster/builder)
       (copt/set-cluster-options! (assoc options :contact-points hosts))
-      ^Cluster$Builder (pre-build-fn)
       .build))
 
 (defn ^Session connect
