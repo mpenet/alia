@@ -78,11 +78,11 @@ https://issues.apache.org/jira/browse/CASSANDRA-3783"))))
                    len (.size cdef)]
                (loop [idx (int 0)
                       row-map (transient {})]
-                 (if (< idx len)
+                 (if (= idx len)
+                   (persistent! row-map)
                    (recur (int (inc idx))
                           (assoc! row-map
                             (.getName cdef idx)
-                            (decode row idx (.getType cdef idx))))
-                   (persistent! row-map)))))
+                            (decode row idx (.getType cdef idx))))))))
             result-set)
       (vary-meta assoc :query-trace (.getQueryTrace result-set))))
