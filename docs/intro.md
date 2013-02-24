@@ -88,7 +88,7 @@ The following options are supported:
 The handling of these options is achieved with a multimethod that you
 could extend if you need to handle some special case or want to create
 your own options templates.
-See `qbits.alia.cluster-options/set-cluster-options!` [[source]](../src/qbits/alia/cluster_options.clj)
+See `qbits.alia.cluster-options/set-cluster-option!` [[source]](../src/qbits/alia/cluster_options.clj#L19)
 
 ## Creating Sessions from a cluster instance
 
