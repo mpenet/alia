@@ -213,10 +213,8 @@ available. You can also provide an `:error` callback.
 
 ### Prepared statements
 
-Prepared statements still use `alia/execute`, but require 2 more
-steps: one to prepare the query, and one to bind values to a prepared
-statement.
-
+Prepared statements still use `alia/execute`, but require 1 (optionally 2) more
+steps.
 
 In order to prepare a statement you need to use `alia/prepare`
 ```
@@ -228,11 +226,21 @@ In order to prepare a statement you need to use `alia/prepare`
 `prepare` expects a session as first parameter if you havent set
 it globally or wrapped the call with `with-session`.
 
-To bind values prior to execution:
+Then execute the query
 
 ```clojure
-(def bst (alia/bind statement "value-of-foo" "value-of-bar"))
+(alia/execute statement :values ["value-of-foo" "value-of-bar"])
 ```
+
+Alternatively you can bind values prior to execution (in case the
+value don't change and you don't want this step to be repeated each at
+query time for every call to execute).
+
+```clojure
+(def bst (alia/bind statement ["value-of-foo" "value-of-bar"]))
+(alia/execute bst)
+```
+
 
 You don't have to deal with translations of datatypes, this is
 done under the hood.
