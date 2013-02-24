@@ -114,7 +114,7 @@ used in `execute` after it's been bound with `bind`"
 
 
 (defn ^:private execute-async
-  [^Session session ^SimpleStatement statement executor success error]
+  [^Session session ^Query statement executor success error]
   (let [^ResultSetFuture rs-future (.executeAsync session statement)
         async-result (promise)]
     (Futures/addCallback
@@ -133,7 +133,7 @@ used in `execute` after it's been bound with `bind`"
     async-result))
 
 (defn ^:private execute-sync
-  [^Session session ^SimpleStatement statement]
+  [^Session session ^Query statement]
   (codec/result-set->maps (.execute session statement)))
 
 (defprotocol PStatement
