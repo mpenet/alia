@@ -109,7 +109,7 @@ used in `execute` after it's been bound with `bind`"
 (defn bind
   "Returns a com.datastax.driver.core.BoundStatement instance to be
   used with `execute`"
-  [^PreparedStatement prepared-statement & values]
+  [^PreparedStatement prepared-statement values]
   (.bind prepared-statement (to-array (map codec/encode values))))
 
 
@@ -137,17 +137,11 @@ used in `execute` after it's been bound with `bind`"
   (codec/result-set->maps (.execute session statement)))
 
 (defprotocol PStatement
-  (query->statement [x] "Encodes input into a Statement (Query) instance"))
+  (query->statement [x] [x values] "Encodes input into a Statement (Query) instance"))
 
 (extend-protocol PStatement
   Query
   (query->statement [x] x)
-
-  PreparedStatement
-  (query->statement [x]
-    ;; this covers the case when a prepared statement with no arg is
-    ;; sent to execute
-    (bind x))
 
   String
   (query->statement [x] (SimpleStatement. x)))
@@ -184,17 +178,21 @@ used for the asynchronous queries."
   [& args]
   (let [[^Session session query & {:keys [async? success error executor
                                           consistency routing-key retry-policy
-                                          tracing?]
+                                          tracing? values]
                                    :or {executor *executor*
                                         consistency *consistency*}}]
         (if (even? (count args))
           args
           (conj args *session*))
-        ^SimpleStatement statement (query->statement query)]
+        ^Query statement (if (= PreparedStatement (type query))
+                           (bind query values)
+                           (query->statement query))]
+
+    (when routing-key
+      (.setRoutingKey ^SimpleStatement statement
+                      ^ByteBuffer routing-key))
     (when retry-policy
       (.setRetryPolicy statement retry-policy))
-    (when routing-key
-      (.setRoutingKey statement ^ByteBuffer routing-key))
     (when tracing?
       (.enableTracing statement))
 

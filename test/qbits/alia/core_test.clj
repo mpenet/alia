@@ -97,19 +97,21 @@
         ]
     (is (= user-data-set (execute s-simple)))
     (is (= [(first user-data-set)]
-           (execute (bind s-parameterized-simple "mpenet"))))
+           (execute s-parameterized-simple :values ["mpenet"])))
+    ;; manually  bound
     (is (= [(first user-data-set)]
-           (execute (bind s-parameterized-simple :mpenet))))
-    (is (= [] (execute (bind s-prepare-types
-                                       "foobar"
-                                       0
-                                       #uuid "b474e171-7757-449a-87be-d2797d1336e3"
-                                       (qbits.tardis/to-uuid "e34288d0-7617-11e2-9243-0024d70cf6c4")
-                                       (java.util.Date.)
-                                       false
-                                       [1 2 3 4]
-                                       #{"foo" "bar"}
-                                       {"foo" 123}))))
+           (execute (bind s-parameterized-simple ["mpenet"]))))
+    (is (= [(first user-data-set)]
+           (execute s-parameterized-simple :values [:mpenet])))
+    (is (= [] (execute s-prepare-types :values ["foobar"
+                                                0
+                                                #uuid "b474e171-7757-449a-87be-d2797d1336e3"
+                                                (qbits.tardis/to-uuid "e34288d0-7617-11e2-9243-0024d70cf6c4")
+                                                (java.util.Date.)
+                                                false
+                                                [1 2 3 4]
+                                                #{"foo" "bar"}
+                                                {"foo" 123}])))
     (execute  "delete from users where user_name = 'foobar';") ;; cleanup
 
     ;; ;; index on collections not supp  orted yet
