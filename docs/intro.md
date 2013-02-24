@@ -233,7 +233,7 @@ Then execute the query
 ```
 
 Alternatively you can bind values prior to execution (in case the
-value don't change and you don't want this step to be repeated each at
+value don't change often and you don't want this step to be repeated at
 query time for every call to execute).
 
 ```clojure

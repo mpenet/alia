@@ -74,9 +74,8 @@ If you want a Thrift based client for Clojure you could give a try to
                  '1f84b56b-5481-4ee4-8236-8a3831ee5892', true);")
 
   (def prepared-statement (alia/prepare "select * from users where user_name=?;"))
-  (-> prepared-statement
-      (alia/bind "frodo") ;; If you have more args: (alia/bind "foo" "bar" 1 (java.util.Date.)) etc...
-      alia/execute)
+
+  (alia/execute prepared-statement :values ["frodo"])
 
   >> ({"created" nil,
        "last_name" "Baggins",
