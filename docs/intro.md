@@ -129,20 +129,17 @@ And it would return:
 
 ```clojure
 
- >> [[{:name "user_name", :value "frodo"}
-       {:name "first_name", :value "Frodo"}
-       {:name "last_name", :value "Baggins"}
-       {:name "birth_year", :value 1}
-       {:name "created" :value nil}
-       {:name "valid" :value true}
-       {:name "emails", :value #{"baggins@gmail.com" "f@baggins.com"}}
-       {:name "amap", :value {"foo" 1 "bar" 2}}
-       {:name "tags" :value [4 5 6]}
-       {:name "auuid" :value #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892"}]]
+ >> ({"created" nil,
+       "last_name" "Baggins",
+       "emails" #{"baggins@gmail.com" "f@baggins.com"},
+       "tags" [4 5 6],
+       "first_name" "Frodo",
+       "amap" {"foo" 1, "bar" 2},
+       "auuid" #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892",
+       "valid" true,
+       "birth_year" 1,
+       "user_name" "frodo"})
 ```
-
-Note: you can have the result transformed into a collection of maps
-using `alia/rows->maps` on the result.
 
 As you can see C* datatypes are translated to clojure friendly types
 when it's possible: in this example `:emails` is a C* native Set,
