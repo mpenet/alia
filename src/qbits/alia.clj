@@ -10,15 +10,11 @@
     BoundStatement
     Cluster
     Cluster$Builder
-    ColumnDefinitions$Definition
     ConsistencyLevel
-    DataType
-    DataType$Name
     PreparedStatement
     Query
     ResultSet
     ResultSetFuture
-    Row
     Session
     SimpleStatement]
    [com.google.common.util.concurrent
