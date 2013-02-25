@@ -23,16 +23,25 @@ you can create sessions from it and interact with multiple keyspaces.
 
 ex:
 ```clojure
-(def cluster (alia/cluster "localhost" :port 9999))
+(def cluster (alia/cluster "localhost" :port 9042))
 
 ```
+
+It can also take a sequence of nodes to connect to.
+ex:
+```clojure
+(def cluster (alia/cluster ["192.168.1.30" "192.168.1.31" "192.168.1.32"]
+                           :port 9042))
+
+```
+
 The following options are supported:
 
 * `:contact-points`: a list of nodes ip addresses to connect to.
 
 * `:port`: port to connect to on the nodes (native transport must be
   active on the nodes: `start_native_transport: true` in
-  cassandra.yaml).
+  cassandra.yaml). Defaults to 9042 if not supplied.
 
 * `:load-balancing-policy`: Configure the [LoadBalancingPolicy](http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/LoadBalancingPolicy.html) to use for the new cluster.
 

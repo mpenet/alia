@@ -109,7 +109,6 @@ used in `execute` after it's been bound with `bind`"
   [^PreparedStatement prepared-statement values]
   (.bind prepared-statement (to-array (map codec/encode values))))
 
-
 (defn ^:private execute-async
   [^Session session ^Query statement executor success error]
   (let [^ResultSetFuture rs-future (.executeAsync session statement)
