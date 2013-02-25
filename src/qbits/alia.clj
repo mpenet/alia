@@ -134,14 +134,19 @@ used in `execute` after it's been bound with `bind`"
   (codec/result-set->maps (.execute session statement)))
 
 (defprotocol PStatement
-  (query->statement [x] [x values] "Encodes input into a Statement (Query) instance"))
+  (query->statement [x values] "Encodes input into a Statement (Query) instance"))
 
 (extend-protocol PStatement
   Query
-  (query->statement [x] x)
+  (query->statement [q _] q)
+
+  PreparedStatement
+  (query->statement [q values]
+    (bind q values))
 
   String
-  (query->statement [x] (SimpleStatement. x)))
+  (query->statement [q _]
+    (SimpleStatement. q)))
 
 (defn execute
   "Executes querys against a session. Returns a collection of rows.
@@ -181,9 +186,7 @@ used for the asynchronous queries."
         (if (even? (count args))
           args
           (conj args *session*))
-        ^Query statement (if (= PreparedStatement (type query))
-                           (bind query values)
-                           (query->statement query))]
+        ^Query statement (query->statement query values)]
 
     (when routing-key
       (.setRoutingKey ^SimpleStatement statement
