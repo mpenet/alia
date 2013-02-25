@@ -134,7 +134,7 @@ used in `execute` after it's been bound with `bind`"
   (codec/result-set->maps (.execute session statement)))
 
 (defprotocol PStatement
-  (query->statement [x values] "Encodes input into a Statement (Query) instance"))
+  (query->statement [q values] "Encodes input into a Statement (Query) instance"))
 
 (extend-protocol PStatement
   Query
