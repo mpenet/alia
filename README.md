@@ -60,7 +60,7 @@ keyspaces from the same cluster definition(
 
 (alia/execute session "CREATE KEYSPACE alia
                        WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};")
-``
+```
 
 Every function that requires session as first argument can be also
 used without this argument if you provide a binding or set it globally (valid for
