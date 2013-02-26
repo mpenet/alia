@@ -130,6 +130,8 @@ just like before)
 
 ```
 
+And it can do a tons more! Head to the [docs](https://github.com/mpenet/alia/blob/master/docs/intro.md) or the [codox generated documentation](http://mpenet.github.com/alia/#docs).
+
 ## Hayt (Query DSL)
 
 There is a nicer way to write your queries using
