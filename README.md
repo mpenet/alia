@@ -7,17 +7,14 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 
 Alia's goal is to be a very simple to use library without trading
 performance, features or exensibility.
-
 It allows do to everything
 [datastax/java-driver](https://github.com/datastax/java-driver) has to offer
 with an idiomatic API, from a handfull of functions. The learning
 curve or need to reach for the docs should be minimal.
-
 Alia also comes with [Hayt](#hayt-query-dsl) a CQL query DSL inspired
 by korma/ClojureQL.
 
 About datastax/java-driver:
-
 It's built on top of the new binary protocol, can handle
 pooling/balancing/failover/metrics, is very active, has synchronous and
 asynchronous APIs, is likely to become the standard client for java
