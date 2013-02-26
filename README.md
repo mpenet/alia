@@ -5,10 +5,21 @@
 
 Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github.com/datastax/java-driver).
 
-!! Early release, [datastax/java-driver](https://github.com/datastax/java-driver) is still not published on maven and in active developpement.
+Alia's goal is to be a very simple to use library without trading
+performance, features or exensibility.
+
+It allows do to everything
+[datastax/java-driver](https://github.com/datastax/java-driver) has to offer
+with an idiomatic API, from a handfull of functions. The learning
+curve or need to reach for the docs should be minimal.
+
+Alia also comes with [Hayt](#hayt-query-dsl) a CQL query DSL inspired
+by korma/ClojureQL.
+
+About datastax/java-driver:
 
 It's built on top of the new binary protocol, can handle
-pooling/balancing/failover, is very active, has synchronous and
+pooling/balancing/failover/metrics, is very active, has synchronous and
 asynchronous APIs, is likely to become the standard client for java
 (it's the only one I know that uses the new protocol) and you can
 trust [datastax](http://datastax.com/) people to improve and maintain
@@ -19,17 +30,16 @@ If you want a Thrift based client for Clojure you could give a try to
 
 ## What Alia can do
 
-* Nice simple api to work with string queries or prepared statements,
-  sync/async (using regular functions, promises or callbacks depending
-  on the mode you choose), with transparent handling of clojure
-  datatypes (all cassandra data types are supported).
+* Nice simple and extensible api to work with string queries or
+  prepared statements, synchronous/asynchronous execution, using
+  promises or success/error callbacks depending on the mode you
+  choose,, with transparent handling of clojure datatypes, all
+  cassandra data types are supported.
 
-* Query generation from a cute korma'ish dsl (in developement here: [hayt](https://github.com/mpenet/hayt))
 
-* The exposed parts of the public api all allow full access to
-  java-driver API if you need to leverage some of the advanced
-  functionalities it provides (that is until I provide some wrappers
-  around that).
+* The exposed parts of the public api all allow to extend it to fit
+  your needs and leverage all the good stuff available from
+  [datastax/java-driver](https://github.com/datastax/java-driver).
 
 ## Documentation
 
@@ -37,22 +47,29 @@ If you want a Thrift based client for Clojure you could give a try to
 
 ## Show me some code!
 
-```clojure
+This is an example of a complete session.
 
+```clojure
 (require '[qbits.alia :as alia] )
 
 (def cluster (alia/cluster "localhost"))
+```
 
-;; Sessions are separate so that you can interact with multiple
-;; keyspaces from the same cluster definition
+Sessions are separate so that you can interact with multiple
+keyspaces from the same cluster definition(
+
+```clojure
 (def session (alia/connect cluster))
 
 (alia/execute session "CREATE KEYSPACE alia
                        WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};")
+``
 
-;; Every function that requires session as first argument can be also
-;; used without this argument if you provide a binding (valid for
-;; alia/execute and alia/prepare):
+Every function that requires session as first argument can be also
+used without this argument if you provide a binding or set it globally (valid for
+alia/execute and alia/prepare) using `with-session` or `set-session!`:
+
+```clojure
 (alia/with-session session
    (alia/execute "USE alia;")
    (alia/execute "CREATE TABLE users (user_name varchar,
@@ -87,25 +104,32 @@ If you want a Thrift based client for Clojure you could give a try to
        "valid" true,
        "birth_year" 1,
        "user_name" "frodo"})
+```
 
-  ;; Asynchronous interface:
+Asynchronous interface:
 
-  ;; If you pass async? true then execute returns
-  ;; a [promise](http://clojuredocs.org/clojure_core/clojure.core/promise) (non blocking)
-  (def result (alia/execute "select * from users;" :async? true))
+The simplest mode is triggered if you pass async? true then execute returns a
+[promise](http://clojuredocs.org/clojure_core/clojure.core/promise) (non blocking).
 
-  ;; To get the result once it's realized we can dereference it, which
-  ;; is a blocking operation
-  @result
+```clojure
+(def result (alia/execute "select * from users;" :async? true))
 
-  ;; or using success/error handlers (it still returns a promise just like before)
-  (alia/execute "select * from users;"
-                :success (fn [r] (do-something-with-result r)
-                :error (fn [e] (print "fail!")))))
+```
 
-;; cleanup
-(shutdown session)
-(shutdown cluster)
+To get the result once and wait for its realization we can dereference
+it, a blocking operation.
+
+```clojure
+@result
+```
+
+Or we can use `success`/`error` handlers (it still returns a promise
+just like before)
+
+```clojure
+(alia/execute "select * from users;"
+              :success (fn [r] (do-something-with-result r)
+              :error (fn [e] (print "fail!"))))
 
 ```
 

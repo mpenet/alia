@@ -1,12 +1,15 @@
 # Alia
 
 Alia's goal is to be a very simple to use library without trading
-performance or features, compared to the java library it wraps.
+performance, features or exensibility.
 
-This is outlined by the very low number of functions it exposes (a
-dozen more or less) and the lack of very high level abstraction.
-However alia comes with [Hayt](#hayt-query-dsl) a CQL
-query DSL for clojure.
+It allows do to everything
+[datastax/java-driver](https://github.com/datastax/java-driver) has to offer
+with an idiomatic API, from a handfull of functions. The learning
+curve or need to reach for the docs should be minimal.
+
+Alia also comes with [Hayt](#hayt-query-dsl) a CQL query DSL inspired
+by korma/ClojureQL.
 
 ## Cluster initialisation
 
