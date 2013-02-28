@@ -432,6 +432,6 @@ To compile the queries just use `->raw` or `->prepared`
 ```
 
 If you are curious about what else it can do head to the [very
-incomplete documentation](http://mpenet.github.com/hayt/qbits.hayt.html) or the [tests](https://github.com/mpenet/hayt/blob/master/test/qbits/hayt/core_test.clj).
+incomplete documentation](https://github.com/mpenet/hayt/blob/gh-pages/markdown/intro.md) or the [tests](https://github.com/mpenet/hayt/blob/master/test/qbits/hayt/core_test.clj).
 
 I will provide a complete documentation for it in the following days.
