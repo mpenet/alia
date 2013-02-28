@@ -130,7 +130,10 @@ just like before)
 
 ```
 
-And it can do a tons more! Head to the [docs](https://github.com/mpenet/alia/blob/master/docs/intro.md) or the [codox generated documentation](http://mpenet.github.com/alia/#docs).
+And it can do a tons more! Head to the
+[docs](https://github.com/mpenet/alia/blob/master/docs/intro.md) or
+the
+[codox generated documentation](http://mpenet.github.com/alia/#docs).
 
 ## Hayt (Query DSL)
 
@@ -193,6 +196,10 @@ git clone git@github.com:datastax/java-driver.git
 cd java-driver/driver-core
 mvn install -DskipTests
 ```
+
+The binary protocol server is not started with the default configuration file coming with Cassandra 1.2. In the cassandra.yaml file, you need to set:
+
+`start_native_transport: true`
 
 Then add this to your dependencies:
 

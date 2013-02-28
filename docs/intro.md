@@ -13,6 +13,12 @@ by korma/ClojureQL.
 
 ## Cluster initialisation
 
+The binary protocol server is not started with the default
+configuration file coming with Cassandra 1.2. In the cassandra.yaml
+file, you need to set:
+
+`start_native_transport: true`
+
 To get started you will need to prepare a cluster definition, so that
 you can create sessions from it and interact with multiple keyspaces.
 
