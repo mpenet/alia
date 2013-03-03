@@ -9,7 +9,8 @@
                  [cc.qbits/tardis "1.0.0"]
                  [com.datastax.cassandra/cassandra-driver-core "1.0.0-beta1"]]
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
-             :1.5  {:dependencies [[org.clojure/clojure "1.5.0-master-SNAPSHOT"]]}
+             :1.5  {:dependencies [[org.clojure/clojure "1.5.0"]]}
+             :1.6  {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
              :dev  {:dependencies [[clj-time "0.4.4"]]}
              :test  {:dependencies [[clj-time "0.4.4"]]}}
   :codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master"
