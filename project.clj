@@ -5,7 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.4.0"]
                  [cc.qbits/knit "0.2.1"]
-                 [cc.qbits/hayt "0.2.1"]
+                 [cc.qbits/hayt "0.3.0-RC1"]
                  [cc.qbits/tardis "1.0.0"]
                  [com.datastax.cassandra/cassandra-driver-core "1.0.0-beta1"]]
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
