@@ -2,8 +2,11 @@
 
 ## 0.3.0
 
-* Add `execute-async`: use distinct functions for sync/async mode
-  since they don't share return types and some optional parameters.
+* Breaking change!
+  Add `execute-async`: use distinct functions for sync/async mode
+  since they don't share return types and some optional
+  parameters. This means `execute` no longer accepts the `:sync?`
+  option, use `execute-async` instead.
 
 ## 0.2.0
 
