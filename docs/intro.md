@@ -92,10 +92,10 @@ The following options are supported:
   hosts (HostDistance). For `:ignored` hosts, the default for all those
   settings is 0 and cannot be changed.
 
-  Each of the following configuration keys, take a vector of [distance, int-value]:
+  Each of the following configuration keys, take a map of {distance value}  :
   ex:
   ```clojure
-  :core-connections-per-host [:remote 10]
+  :core-connections-per-host {:remote 10 :local 100}
   ```
 
   + `:core-connections-per-host`

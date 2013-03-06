@@ -43,15 +43,15 @@
 (defmethod set-cluster-option! :pooling-options
   [_ ^Cluster$Builder builder options]
   (let [^PoolingOptions po (.poolingOptions builder)]
-    (when-let [[dist value] (:core-connections-per-host options)]
+    (doseq [[dist value] (:core-connections-per-host options)]
       (.setCoreConnectionsPerHost po (host-distance dist) (int value)))
-    (when-let [[dist value] (:max-connections-per-host options)]
+    (doseq [[dist value] (:max-connections-per-host options)]
       (.setMaxConnectionsPerHost po (host-distance dist) (int value)))
-    (when-let [[dist value] (:max-simultaneous-requests-per-connection options)]
+    (doseq [[dist value] (:max-simultaneous-requests-per-connection options)]
       (.setMaxSimultaneousRequestsPerConnectionTreshold po
                                                         (host-distance dist)
                                                         (int value)))
-    (when-let [[dist value] (:min-simultaneous-requests-per-connection options)]
+    (doseq [[dist value] (:min-simultaneous-requests-per-connection options)]
       (.setMinSimultaneousRequestsPerConnectionTreshold po
                                                         (host-distance dist)
                                                         (int value))))
