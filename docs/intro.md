@@ -133,9 +133,10 @@ or if you want to use a particular keyspace from the start:
 ## Executing queries
 
 You can interact with C* using either raw queries or prepared statements.
-There is a single function that allows you to do that: `alia/execute`.
+There is are two function that allow you to do that: `alia/execute`
+and `alia/execute-async`.
 
-This function supports a number of options, but the simplest example
+These functions support a number of options, but the simplest example
 of its use would look like this:
 
 ```clojure
@@ -162,8 +163,9 @@ As you can see C* datatypes are translated to clojure friendly types
 when it's possible: in this example `:emails` is a C* native Set,
 `:tags` is a native list and `:amap` is a native map.
 
-`alia/execute` has 2 distinct arity, you can skip the session parameter if
-you have set it using `with-session` or `set-session!`:
+`alia/execute` and `alia/execute-async` have 2 distinct arity, you can
+skip the session parameter if you have set it using `with-session` or
+`set-session!`:
 
 ex:
 
@@ -190,7 +192,7 @@ using `set-session!` to be more succint.
 The previous examples will block until a response is received from
 cassandra. But it is possible to avoid that and perform them asynchronously.
 
-You will need to use `execute-async` which return a clojure promise
+You will need to use `execute-async` which return a clojure [promise](http://clojuredocs.org/clojure_core/clojure.core/promise)
 (it will return immediately), meaning you need to use
 `clojure.core/deref` or `@` to get its value once it is realized.
 
@@ -244,7 +246,7 @@ Then execute the query
 
 Alternatively you can bind values prior to execution (in case the
 value don't change often and you don't want this step to be repeated at
-query time for every call to execute).
+query time for every call to `execute` or `execute-async`).
 
 ```clojure
 (def bst (alia/bind statement ["value-of-foo" "value-of-bar"]))
@@ -257,16 +259,16 @@ done under the hood.
 And this is it for the core of the function you need to know.
 There are a few other that can be usefull though.
 
-### `alia/execute` advanced options
+### `alia/execute` & `alia/execute-async` advanced options
 
 The complete signature of execute looks like this
 
 
-`execute` and `execute-async`supports a number of options I didn't
+`execute` and `execute-async` support a number of options I didn't
 mention earlier. you can specify `:consistency`, a custom
 ExecutorService as `:executor`, a `:retry-policy`, a `:routing-key`
 and trigger tracing with `:tracing?`. Additionaly `execute-async`
-accepts an `:executor` option that will supply the
+accepts an `:executor` option that will set the
 java.util.concurrent `ExecutorService` instance to be used for the
 ResultFuture.
 
@@ -302,13 +304,13 @@ or
 #### Executors
 
 The executor used to deal with resultset futures (in asynchronous
-mode) can be passed as a named argument to `alia/execute`, or like
+mode) can be passed as a named argument to `alia/execute-async`, or like
 sessions, and consistency be set with a function globally or with a
 binding:
 
 
 ```clojure
-(alia/execute bst :executor executor-instance)
+(alia/execute-async bst :executor executor-instance)
 ```
 
 
