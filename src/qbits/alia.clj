@@ -109,29 +109,6 @@ used in `execute` after it's been bound with `bind`"
   [^PreparedStatement prepared-statement values]
   (.bind prepared-statement (to-array (map codec/encode values))))
 
-(defn ^:private execute-async-
-  [^Session session ^Query statement executor success error]
-  (let [^ResultSetFuture rs-future (.executeAsync session statement)
-        async-result (promise)]
-    (Futures/addCallback
-     rs-future
-     (reify FutureCallback
-       (onSuccess [_ result]
-         (let [result (codec/result-set->maps (.get rs-future))]
-           (deliver async-result result)
-           (when (fn? success)
-             (success result))))
-       (onFailure [_ err]
-         (deliver async-result err)
-         (when (fn? error)
-           (error err))))
-     executor)
-    async-result))
-
-(defn ^:private execute-sync-
-  [^Session session ^Query statement]
-  )
-
 (defprotocol PStatement
   (query->statement [q values] "Encodes input into a Statement (Query) instance"))
 
@@ -174,8 +151,7 @@ So 2 signatures:
 
 or
 
- [query & {:keys [async? success error executor
-                  consistency routing-key retry-policy
+ [query & {:keys [consistency routing-key retry-policy
                   tracing? values]
                   :or {executor default-async-executor
                        consistency *consistency*}}]
