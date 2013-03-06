@@ -105,11 +105,13 @@ alia/execute and alia/prepare) using `with-session` or `set-session!`:
 
 Asynchronous interface:
 
-The simplest mode is triggered if you pass async? true then execute returns a
-[promise](http://clojuredocs.org/clojure_core/clojure.core/promise) (non blocking).
+You need to use execute-async, which is used the same way as execute,
+the return value is a
+[promise](http://clojuredocs.org/clojure_core/clojure.core/promise)
+(non blocking).
 
 ```clojure
-(def result (alia/execute "select * from users;" :async? true))
+(def result (alia/execute-async "select * from users;"))
 
 ```
 
@@ -124,9 +126,9 @@ Or we can use `success`/`error` handlers (it still returns a promise
 just like before)
 
 ```clojure
-(alia/execute "select * from users;"
-              :success (fn [r] (do-something-with-result r)
-              :error (fn [e] (print "fail!"))))
+(alia/execute-async "select * from users;"
+                    :success (fn [r] (do-something-with-result r)
+                    :error (fn [e] (print "fail!"))))
 
 ```
 
@@ -204,7 +206,7 @@ The binary protocol server is not started with the default configuration file co
 Then add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia "0.2.0"]
+[cc.qbits/alia "0.3.0"]
 ```
 
 ## License

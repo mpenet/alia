@@ -109,7 +109,7 @@ used in `execute` after it's been bound with `bind`"
   [^PreparedStatement prepared-statement values]
   (.bind prepared-statement (to-array (map codec/encode values))))
 
-(defn ^:private execute-async
+(defn ^:private execute-async-
   [^Session session ^Query statement executor success error]
   (let [^ResultSetFuture rs-future (.executeAsync session statement)
         async-result (promise)]
@@ -128,9 +128,9 @@ used in `execute` after it's been bound with `bind`"
      executor)
     async-result))
 
-(defn ^:private execute-sync
+(defn ^:private execute-sync-
   [^Session session ^Query statement]
-  (codec/result-set->maps (.execute session statement)))
+  )
 
 (defprotocol PStatement
   (query->statement [q values] "Encodes input into a Statement (Query) instance"))
@@ -147,6 +147,19 @@ used in `execute` after it's been bound with `bind`"
   (query->statement [q _]
     (SimpleStatement. q)))
 
+(defn ^:private set-statement-options!
+  [^Query statement routing-key retry-policy tracing? consistency]
+  (when routing-key
+    (.setRoutingKey ^SimpleStatement statement
+                    ^ByteBuffer routing-key))
+  (when retry-policy
+    (.setRetryPolicy statement retry-policy))
+  (when tracing?
+    (.enableTracing statement))
+
+  (.setConsistencyLevel statement (consistency-levels consistency)))
+
+
 (defn execute
   "Executes querys against a session. Returns a collection of rows.
 The first argument can be either a Session instance or the query
@@ -154,8 +167,7 @@ directly.
 
 So 2 signatures:
 
- [session query & {:keys [async? success error executor
-                          consistency routing-key retry-policy
+ [session query & {:keys [consistency routing-key retry-policy
                           tracing? values]
                   :or {executor default-async-executor
                        consistency *consistency*}}]
@@ -169,34 +181,46 @@ or
                        consistency *consistency*}}]
 
 If you chose the latter the Session must be bound with
-`with-session`.
-
-If you pass :async? true, or if you provide a :success/:error callback
-this will be asynchronous, returning a promise and triggering the
-handler provided if any.  Also accepts a
-custom :executor (java.util.concurrent.ExecutorService instance) to be
-used for the asynchronous queries."
+`with-session`."
   [& args]
-  (let [[^Session session query & {:keys [async? success error executor
-                                          consistency routing-key retry-policy
+  (let [[^Session session query & {:keys [consistency routing-key retry-policy
                                           tracing? values]
+                                   :or {consistency *consistency*}}]
+        (if (even? (count args))
+          args
+          (conj args *session*))
+        ^Query statement (query->statement query values)]
+    (set-statement-options! statement routing-key retry-policy tracing? consistency)
+    (codec/result-set->maps (.execute session statement))))
+
+(defn execute-async
+  "Same as execute, but returns a promise and accepts :success and :error
+  handlers, you can also pass :executor for the ResultFuture, it
+  defaults to a cachedThreadPool if you don't"
+  [& args]
+  (let [[^Session session query & {:keys [success error executor consistency
+                                          routing-key retry-policy tracing?
+                                          values]
                                    :or {executor *executor*
                                         consistency *consistency*}}]
         (if (even? (count args))
           args
           (conj args *session*))
         ^Query statement (query->statement query values)]
-
-    (when routing-key
-      (.setRoutingKey ^SimpleStatement statement
-                      ^ByteBuffer routing-key))
-    (when retry-policy
-      (.setRetryPolicy statement retry-policy))
-    (when tracing?
-      (.enableTracing statement))
-
-    (.setConsistencyLevel statement (consistency-levels consistency))
-
-    (if (or success async? error)
-      (execute-async session statement executor success error)
-      (execute-sync session statement))))
+    (set-statement-options! statement routing-key retry-policy tracing? consistency)
+    (let [^ResultSetFuture rs-future (.executeAsync session statement)
+          async-result (promise)]
+      (Futures/addCallback
+       rs-future
+       (reify FutureCallback
+         (onSuccess [_ result]
+           (let [result (codec/result-set->maps (.get rs-future))]
+             (deliver async-result result)
+             (when (fn? success)
+               (success result))))
+         (onFailure [_ err]
+           (deliver async-result err)
+           (when (fn? error)
+             (error err))))
+       executor)
+      async-result)))

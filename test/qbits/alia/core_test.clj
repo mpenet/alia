@@ -80,11 +80,11 @@
 (deftest test-async-execute
   ;; promise
   (is (= user-data-set
-         @(execute "select * from users;" :async? true)))
+         @(execute-async "select * from users;")))
   ;; callback
   (let [p (promise)]
-    (execute  "select * from users;"
-              :success (fn [r] (deliver p r)))
+    (execute-async  "select * from users;"
+                    :success (fn [r] (deliver p r)))
     (is (= user-data-set @p))))
 
 

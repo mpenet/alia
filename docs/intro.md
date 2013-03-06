@@ -190,15 +190,12 @@ using `set-session!` to be more succint.
 The previous examples will block until a response is received from
 cassandra. But it is possible to avoid that and perform them asynchronously.
 
-There are a couple of ways to trigger this behavior.
-
-The first one will just return a clojure promise (it will return
-immediately) when you pass :async?  true, meaning you need
-to use `clojure.core/deref` or `@` to get its value once it is
-realized.
+You will need to use `execute-async` which return a clojure promise
+(it will return immediately), meaning you need to use
+`clojure.core/deref` or `@` to get its value once it is realized.
 
 ```clojure
-(def query (alia/execute "SELECT * FROM foo;" :async? true))
+(def query (alia/execute-async "SELECT * FROM foo;"))
 ;; ... more queries
 
 ;; and later to get its value
@@ -209,10 +206,10 @@ realized.
 But in this example the deref operation is blocking, so this might not
 be appropriate all the time.
 A better way to run queries asynchronously is to provide callbacks to
-the `execute` call:
+the `execute-async` call:
 
 ```clojure
-(alia/execute "SELECT * FROM foo;" :success (fn [rs] (do-something rs)))
+(alia/execute-async "SELECT * FROM foo;" :success (fn [rs] (do-something rs)))
 ```
 Again it will return immediately (as a promise) and will trigger the
 `:success` callback passing it the resultset once the result is
@@ -220,15 +217,15 @@ available. You can also provide an `:error` callback.
 
 
 ```clojure
-(alia/execute "SELECT * FROM foo;"
-              :success (fn [rs] (do-something rs))
-              :error (fn [ex] (deal-with-the-error ex)))
+(alia/execute-async "SELECT * FROM foo;"
+                    :success (fn [rs] (do-something rs))
+                    :error (fn [ex] (deal-with-the-error ex)))
 ```
 
 ### Prepared statements
 
-Prepared statements still use `alia/execute`, but require 1 (optionally 2) more
-steps.
+Prepared statements still use `alia/execute` or `alia/execute-async`,
+but require 1 (optionally 2) more steps.
 
 In order to prepare a statement you need to use `alia/prepare`
 
@@ -264,17 +261,14 @@ There are a few other that can be usefull though.
 
 The complete signature of execute looks like this
 
-```clojure
-[session query & {:keys [async? success error executor
-                          consistency routing-key retry-policy
-                          tracing? values]
-                  :or {executor *executor*
-                       consistency *consistency*}}]
-```
 
-`execute` supports a number of options I didn't mention earlier. you
-can specify Consistency level, a custom ExecutorService, a retry
-policy, a routing key and trigger tracing when calling it.
+`execute` and `execute-async`supports a number of options I didn't
+mention earlier. you can specify `:consistency`, a custom
+ExecutorService as `:executor`, a `:retry-policy`, a `:routing-key`
+and trigger tracing with `:tracing?`. Additionaly `execute-async`
+accepts an `:executor` option that will supply the
+java.util.concurrent `ExecutorService` instance to be used for the
+ResultFuture.
 
 #### Consistency level
 
