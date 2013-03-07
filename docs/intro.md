@@ -266,10 +266,10 @@ The complete signature of execute looks like this
 
 `execute` and `execute-async` support a number of options I didn't
 mention earlier, you can specify
-* `:consistency` see:[Consistency](#consistency)
-* `:retry-policy` see:[RetryPolicy](#retry-policy)
-* `:routing-key` see:[RoutingKey](#routing-key)
-* `:tracing?` A boolean that trigger tracing (defaults to false)
+* `:consistency` [Consistency](#consistency)
+* `:retry-policy` [RetryPolicy](#retry-policy)
+* `:routing-key` [RoutingKey](#routing-key)
+* `:tracing?` A boolean that triggers tracing (defaults to false)
 
 Additionaly `execute-async` accepts
 an `:executor` option that will set the java.util.concurrent
