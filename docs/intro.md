@@ -331,7 +331,7 @@ or
 )
 ```
 
-Alia uses mpeent/knit come with a thin wrapper for j.u.c Executors, [mpenet/knit](https://github.com/mpenet/knit).
+Alia comes with a thin wrapper for j.u.c Executors, [mpenet/knit](https://github.com/mpenet/knit).
 
 Ex:
 ```clojure
