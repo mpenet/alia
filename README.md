@@ -209,6 +209,11 @@ Then add this to your dependencies:
 [cc.qbits/alia "0.3.0"]
 ```
 
+Please check the
+[Changelog](https://github.com/mpenet/alia/blob/master/CHANGELOG.md)
+if you are upgrading, I might introduce breaking changes before it
+reaches 1.0 (until java-driver is published).
+
 ## License
 
 Copyright © 2013 Max Penet
