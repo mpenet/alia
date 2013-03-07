@@ -133,7 +133,7 @@ or if you want to use a particular keyspace from the start:
 ## Executing queries
 
 You can interact with C* using either raw queries or prepared statements.
-There is are two function that allow you to do that: `alia/execute`
+There are two function that allow you to do that: `alia/execute`
 and `alia/execute-async`.
 
 These functions support a number of options, but the simplest example
@@ -265,12 +265,16 @@ The complete signature of execute looks like this
 
 
 `execute` and `execute-async` support a number of options I didn't
-mention earlier. you can specify `:consistency`, a custom
-ExecutorService as `:executor`, a `:retry-policy`, a `:routing-key`
-and trigger tracing with `:tracing?`. Additionaly `execute-async`
-accepts an `:executor` option that will set the
-java.util.concurrent `ExecutorService` instance to be used for the
-ResultFuture.
+mention earlier, you can specify
+* `:consistency` (see:[Consistency](#consistency))
+* `:retry-policy` (see:[RetryPolicy](#retry-policy))
+* `:routing-key`(see:[RoutingKey](#routing-key))
+* `:tracing?` A boolean that trigger tracing (defaults to false)
+
+Additionaly `execute-async` accepts
+an `:executor` option that will set the java.util.concurrent
+`ExecutorService` instance to be used for the ResultFuture (see:
+[Executors](#executors)).
 
 #### Consistency level
 
@@ -328,7 +332,7 @@ or
 ```
 
 
-#### Setting the query routing key
+#### Routing key
 
 You can manually provide a routing key for this query. It is thus
 optional since the routing key is only an hint for token aware load
