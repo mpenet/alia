@@ -276,7 +276,7 @@ an `:executor` option that will set the java.util.concurrent
 `ExecutorService` instance to be used for the ResultFuture (see:
 [Executors](#executors)).
 
-#### Consistency level
+#### Consistency
 
 Here are the supported consistency levels:
 
