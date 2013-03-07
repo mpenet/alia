@@ -331,6 +331,13 @@ or
 )
 ```
 
+Alia uses mpeent/knit come with a thin wrapper for j.u.c Executors, [mpenet/knit](https://github.com/mpenet/knit).
+
+Ex:
+```clojure
+(require '[qbits.knit :as knit])
+(alia/set-executor! (knit/executor :fixed :num-threads 50))
+```
 
 #### Routing key
 
