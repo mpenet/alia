@@ -32,7 +32,7 @@
      ~@body))
 
 (utils/dyn-setter set-consistency!
-  "Sets roots value of *consistency*"
+  "Sets root value of *consistency*"
   *consistency*)
 
 (def ^:dynamic *session*)
@@ -44,13 +44,13 @@
      ~@body))
 
 (utils/dyn-setter set-session!
-  "Sets roots value of *session*"
+  "Sets root value of *session*"
   *session*)
 
 (def ^:dynamic *executor* (knit/executor :cached))
 
 (utils/dyn-setter set-executor!
-  "Sets roots value of *executor**"
+  "Sets root value of *executor*"
   *executor*)
 
 (defmacro with-executor
@@ -62,7 +62,7 @@
 (def ^:dynamic *keywordize* false)
 
 (utils/dyn-setter set-keywordize!
-  "Sets roots value of *kewordise*"
+  "Sets root value of *kewordize*"
   *keywordize*)
 
 (defn cluster
