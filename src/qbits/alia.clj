@@ -31,7 +31,7 @@
   `(binding [qbits.alia/*consistency* ~consistency]
      ~@body))
 
-(def ^{:doc "Sets root value of *consistency*x"}
+(def ^{:doc "Sets root value of *consistency*"}
   set-consistency!
   (utils/var-root-setter *consistency*))
 
