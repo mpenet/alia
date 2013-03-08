@@ -31,13 +31,9 @@
   `(binding [qbits.alia/*consistency* ~consistency]
      ~@body))
 
-(defn set-consistency!
-  "Sets the consistency globally"
-  [consistency]
-  (alter-var-root #'*consistency*
-                  (constantly consistency)
-                  (when (thread-bound? #'*consistency*)
-                    (set! *consistency* consistency))))
+(utils/dyn-setter set-consistency!
+  "Sets roots value of *consistency*"
+  *consistency*)
 
 (def ^:dynamic *session*)
 
@@ -47,15 +43,15 @@
   `(binding [qbits.alia/*session* ~session]
      ~@body))
 
-(defn set-session!
-  "Sets the session globally"
-  [session]
-  (alter-var-root #'*session*
-                  (constantly session)
-                  (when (thread-bound? #'*session*)
-                    (set! *session* session))))
+(utils/dyn-setter set-session!
+  "Sets roots value of *session*"
+  *session*)
 
 (def ^:dynamic *executor* (knit/executor :cached))
+
+(utils/dyn-setter set-executor!
+  "Sets roots values of *executor**"
+  *executor*)
 
 (defmacro with-executor
   "Binds qbits.alia/*executor*"
@@ -63,13 +59,11 @@
   `(binding [qbits.alia/*executor* ~executor]
      ~@body))
 
-(defn set-executor!
-  "Sets the executor globally"
-  [executor]
-  (alter-var-root #'*executor*
-                  (constantly executor)
-                  (when (thread-bound? #'*executor*)
-                    (set! *executor* executor))))
+(def ^:dynamic *keywordize* false)
+
+(utils/dyn-setter set-keywordize!
+  "Sets roots values of *kewordise*"
+  *keywordize*)
 
 (defn cluster
   "Returns a new com.datastax.driver.core/Cluster instance"
@@ -160,14 +154,15 @@ If you chose the latter the Session must be bound with
 `with-session`."
   [& args]
   (let [[^Session session query & {:keys [consistency routing-key retry-policy
-                                          tracing? values]
-                                   :or {consistency *consistency*}}]
+                                          tracing? values keywordize?]
+                                   :or {consistency *consistency*
+                                        keywordize? *keywordize*}}]
         (if (even? (count args))
           args
           (conj args *session*))
         ^Query statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
-    (codec/result-set->maps (.execute session statement))))
+    (codec/result-set->maps (.execute session statement) keywordize?)))
 
 (defn execute-async
   "Same as execute, but returns a promise and accepts :success and :error
@@ -176,9 +171,10 @@ If you chose the latter the Session must be bound with
   [& args]
   (let [[^Session session query & {:keys [success error executor consistency
                                           routing-key retry-policy tracing?
-                                          values]
+                                          values keywordize?]
                                    :or {executor *executor*
-                                        consistency *consistency*}}]
+                                        consistency *consistency*
+                                        keywordize? *keywordize*}}]
         (if (even? (count args))
           args
           (conj args *session*))
@@ -190,7 +186,7 @@ If you chose the latter the Session must be bound with
        rs-future
        (reify FutureCallback
          (onSuccess [_ result]
-           (let [result (codec/result-set->maps (.get rs-future))]
+           (let [result (codec/result-set->maps (.get rs-future) keywordize?)]
              (deliver async-result result)
              (when (fn? success)
                (success result))))

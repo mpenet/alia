@@ -269,7 +269,9 @@ mention earlier, you can specify
 * `:consistency` [Consistency](#consistency)
 * `:retry-policy` [RetryPolicy](#retry-policy)
 * `:routing-key` [RoutingKey](#routing-key)
-* `:tracing?` A boolean that triggers tracing (defaults to false)
+* `:tracing?` (boolean) triggers tracing (defaults to false)
+* `:keywordize?` (boolean) results use clojuse keywords as keys
+  instead of strings (the default), settable globally with `set-keywordize!`
 
 Additionaly `execute-async` accepts
 an `:executor` option that will set the java.util.concurrent

@@ -206,7 +206,7 @@ The binary protocol server is not started with the default configuration file co
 Then add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia "0.3.0"]
+[cc.qbits/alia "0.3.1"]
 ```
 
 Please check the

@@ -77,6 +77,13 @@
   (is (= user-data-set
          (execute "select * from users;"))))
 
+(deftest test-keywordize
+  (is (= (map (fn [user-map]
+                (into {} (map (juxt (comp keyword key) val)
+                              user-map)))
+              user-data-set)
+         (execute "select * from users;" :keywordize? true))))
+
 (deftest test-async-execute
   ;; promise
   (is (= user-data-set

@@ -12,3 +12,12 @@
             hd))
    {}
    enum-values))
+
+(defmacro dyn-setter [name doc-string x]
+  `(defn ~name
+    ~doc-string
+    [arg#]
+    (alter-var-root (var ~x)
+                    (constantly arg#)
+                    (when (thread-bound? (var ~x))
+                      (set! ~x arg#)))))

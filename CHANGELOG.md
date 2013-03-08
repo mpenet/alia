@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+* add `keywordize?` options to `execute` and `execute-async`, make it
+  settable globally with `set-keywordize!`.
+
 ## 0.3.0
 
 * Breaking change!
