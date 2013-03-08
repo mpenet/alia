@@ -31,9 +31,9 @@
   `(binding [qbits.alia/*consistency* ~consistency]
      ~@body))
 
-(utils/dyn-setter set-consistency!
-  "Sets root value of *consistency*"
-  *consistency*)
+(def ^{:doc "Sets root value of *consistency*x"}
+  set-consistency!
+  (utils/var-root-setter *consistency*))
 
 (def ^:dynamic *session*)
 
@@ -43,15 +43,15 @@
   `(binding [qbits.alia/*session* ~session]
      ~@body))
 
-(utils/dyn-setter set-session!
-  "Sets root value of *session*"
-  *session*)
+(def ^{:doc "Sets root value of *session*"}
+  set-session!
+  (utils/var-root-setter *session*))
 
 (def ^:dynamic *executor* (knit/executor :cached))
 
-(utils/dyn-setter set-executor!
-  "Sets root value of *executor*"
-  *executor*)
+(def ^{:doc "Sets root value of *executor*"}
+  set-executor!
+  (utils/var-root-setter *executor*))
 
 (defmacro with-executor
   "Binds qbits.alia/*executor*"
@@ -61,9 +61,9 @@
 
 (def ^:dynamic *keywordize* false)
 
-(utils/dyn-setter set-keywordize!
-  "Sets root value of *kewordize*"
-  *keywordize*)
+(def ^{:doc "Sets root value of *keywordize*"}
+  set-keywordize!
+  (utils/var-root-setter *keywordize*))
 
 (defn cluster
   "Returns a new com.datastax.driver.core/Cluster instance"
