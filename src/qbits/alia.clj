@@ -50,7 +50,7 @@
 (def ^:dynamic *executor* (knit/executor :cached))
 
 (utils/dyn-setter set-executor!
-  "Sets roots values of *executor**"
+  "Sets roots value of *executor**"
   *executor*)
 
 (defmacro with-executor
@@ -62,7 +62,7 @@
 (def ^:dynamic *keywordize* false)
 
 (utils/dyn-setter set-keywordize!
-  "Sets roots values of *kewordise*"
+  "Sets roots value of *kewordise*"
   *keywordize*)
 
 (defn cluster
@@ -139,16 +139,18 @@ directly.
 So 2 signatures:
 
  [session query & {:keys [consistency routing-key retry-policy
-                          tracing? values]
+                          tracing? keywordize? values]
                   :or {executor default-async-executor
-                       consistency *consistency*}}]
+                       consistency *consistency*
+                       keywordize? *keywordize*}}]
 
 or
 
  [query & {:keys [consistency routing-key retry-policy
-                  tracing? values]
+                  tracing? keywordize? values]
                   :or {executor default-async-executor
-                       consistency *consistency*}}]
+                       consistency *consistency*
+                       keywordize? *keywordize*}}]
 
 If you chose the latter the Session must be bound with
 `with-session`."
