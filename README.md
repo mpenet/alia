@@ -189,30 +189,21 @@ Proper documentation will come soon, if you want to know more about it head to
 
 ## Installation
 
-You need to install
-[datastax/java-driver](https://github.com/datastax/java-driver)
-manually until it gets publised (it is still in developpement).
-
-```bash
-git clone git@github.com:datastax/java-driver.git
-cd java-driver/driver-core
-mvn install -DskipTests
-```
-
-The binary protocol server is not started with the default configuration file coming with Cassandra 1.2. In the cassandra.yaml file, you need to set:
+The binary protocol server is not started with the default
+configuration file coming with Cassandra 1.2.
+In the cassandra.yaml file, you need to set:
 
 `start_native_transport: true`
 
 Then add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia "0.3.1"]
+[cc.qbits/alia "1.0.0-beta1"]
 ```
 
 Please check the
 [Changelog](https://github.com/mpenet/alia/blob/master/CHANGELOG.md)
-if you are upgrading, I might introduce breaking changes before it
-reaches 1.0 (until java-driver is published).
+if you are upgrading.
 
 ## License
 
