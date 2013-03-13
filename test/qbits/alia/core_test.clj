@@ -3,7 +3,8 @@
         clojure.data
         qbits.alia
         qbits.alia.codec.joda-time
-        qbits.tardis))
+        qbits.tardis
+        qbits.hayt))
 
 (def ^:dynamic *cluster*)
 
@@ -75,7 +76,10 @@
 
 (deftest test-sync-execute
   (is (= user-data-set
-         (execute "select * from users;"))))
+         (execute "select * from users;")))
+
+    (is (= user-data-set
+         (execute (select :users)))))
 
 (deftest test-keywordize
   (is (= (map (fn [user-map]
