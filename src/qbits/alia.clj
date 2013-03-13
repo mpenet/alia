@@ -68,7 +68,7 @@
   (utils/var-root-setter *keywordize*))
 
 (def ^:dynamic *hayt-raw-fn* (memo/memo-lu hayt/->raw 100))
-(def ^{:doc "Sets root value of *hayt-raw-memoize*, allowing to change
+(def ^{:doc "Sets root value of *hayt-raw-fn*, allowing to change
   the cache factory, defaults to LU with a threshold of 100"}
   set-hayt-raw-fn!
   (utils/var-root-setter *hayt-raw-fn*))
