@@ -181,7 +181,14 @@ Some examples:
 (->prepared (select :foo (where {:bar 1})))
 > ["SELECT * FROM foo WHERE bar=?;" [1]]
 
+```
 
+Alia supports hayt query direct execution, if you pass a non-compiled
+query, it will be compiled and cached (works for raw queries only atm).
+
+Ex:
+```clojure
+(execute (select :users (where {:name :foo})))
 ```
 
 It is still in developement but it covers everything that is possible

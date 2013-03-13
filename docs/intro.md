@@ -440,6 +440,14 @@ To compile the queries just use `->raw` or `->prepared`
 
 ```
 
+Alia supports hayt query direct execution, if you pass a non-compiled
+query, it will be compiled and cached (works for raw queries only atm).
+
+Ex:
+```clojure
+(execute (select :users (where {:name :foo})))
+```
+
 If you are curious about what else it can do head to the [very
 incomplete documentation](https://github.com/mpenet/hayt/blob/gh-pages/markdown/intro.md), the [codox API reference](http://mpenet.github.com/hayt/codox/qbits.hayt.html) or the [tests](https://github.com/mpenet/hayt/blob/master/test/qbits/hayt/core_test.clj).
 
