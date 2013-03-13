@@ -152,6 +152,9 @@ Some examples:
 
 (select :foo (where {:bar 2}))
 
+;; this generates a map
+>> {:select :foo :where {:bar 2}}
+
 (update :foo
          (set-columns {:bar 1
                        :baz [+ 2]})
