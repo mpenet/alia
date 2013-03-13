@@ -447,6 +447,11 @@ Ex:
 ```clojure
 (execute (select :users (where {:name :foo})))
 ```
+You can have control over the query caching using
+`set-hayt-raw-memoized-fn!` or via a binding on
+`*hayt-raw-memoized-fn*` and provide your own memoize implementation.
+The default uses `clojure.core.memoize` with a LU cache with a `:threshold`
+of 100.
 
 If you are curious about what else it can do head to the [very
 incomplete documentation](https://github.com/mpenet/hayt/blob/gh-pages/markdown/intro.md), the [codox API reference](http://mpenet.github.com/hayt/codox/qbits.hayt.html) or the [tests](https://github.com/mpenet/hayt/blob/master/test/qbits/hayt/core_test.clj).
