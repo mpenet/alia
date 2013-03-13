@@ -67,11 +67,11 @@
   set-keywordize!
   (utils/var-root-setter *keywordize*))
 
-(def ^:dynamic *hayt-raw-memoized-fn* (memo/memo-lu hayt/->raw 100))
+(def ^:dynamic *hayt-raw-fn* (memo/memo-lu hayt/->raw 100))
 (def ^{:doc "Sets root value of *hayt-raw-memoize*, allowing to change
   the cache factory, defaults to LU with a threshold of 100"}
-  set-hayt-raw-memoized-fn!
-  (utils/var-root-setter *hayt-raw-memoized-fn*))
+  set-hayt-raw-fn!
+  (utils/var-root-setter *hayt-raw-fn*))
 
 (defn cluster
   "Returns a new com.datastax.driver.core/Cluster instance"
@@ -126,11 +126,9 @@ used in `execute` after it's been bound with `bind`"
   (query->statement [q _]
     (SimpleStatement. q))
 
-  ;; Support for hayt maps, generated queries are cached, the cache
-  ;; eviction is managed by hayt-raw-query-cache-factory (a core.cache factory)
   clojure.lang.IPersistentMap
   (query->statement [q _]
-    (query->statement (*hayt-raw-memoized-fn* q) nil)))
+    (query->statement (*hayt-raw-fn* q) nil)))
 
 (defn ^:private set-statement-options!
   [^Query statement routing-key retry-policy tracing? consistency]
