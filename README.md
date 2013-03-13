@@ -184,7 +184,9 @@ Some examples:
 ```
 
 Alia supports hayt query direct execution, if you pass a non-compiled
-query, it will be compiled and cached (works for raw queries only atm).
+query, it will be compiled and cached, this works for raw queries only atm,
+on a LU cache with a threshold of 100 (the cache function is user
+settable), so to be used carefully.
 
 Ex:
 ```clojure
