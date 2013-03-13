@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.0.0-beta3
+
+* add hayt raw query execution support, with query caching.
+
 ### 1.0.0-beta2
 
 * update hayt to 0.4.0-beta1
