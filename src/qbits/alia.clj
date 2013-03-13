@@ -1,6 +1,8 @@
 (ns qbits.alia
   (:require
+   [clojure.core.memoize :as memo]
    [qbits.knit :as knit]
+   [qbits.hayt :as hayt]
    [qbits.alia.codec :as codec]
    [qbits.alia.codec.eaio-uuid]
    [qbits.alia.utils :as utils]
@@ -65,6 +67,11 @@
   set-keywordize!
   (utils/var-root-setter *keywordize*))
 
+(def ^:dynamic *hayt-raw-fn* (memo/memo-lu hayt/->raw 100))
+(def ^{:doc "Sets root value of *hayt-raw-fn*, allowing to change the cache factory, defaults to LU with a thres"}
+  set-hayt-raw-fn!
+  (utils/var-root-setter *keywordize*))
+
 (defn cluster
   "Returns a new com.datastax.driver.core/Cluster instance"
   [hosts & {:as options}]
@@ -116,7 +123,13 @@ used in `execute` after it's been bound with `bind`"
 
   String
   (query->statement [q _]
-    (SimpleStatement. q)))
+    (SimpleStatement. q))
+
+  ;; Support for hayt maps, generated queries are cached, the cache
+  ;; eviction is managed by hayt-raw-query-cache-factory (a core.cache factory)
+  clojure.lang.IPersistentMap
+  (query->statement [q _]
+    (query->statement (*hayt-raw-fn* q) nil)))
 
 (defn ^:private set-statement-options!
   [^Query statement routing-key retry-policy tracing? consistency]
@@ -129,7 +142,6 @@ used in `execute` after it's been bound with `bind`"
     (.enableTracing statement))
 
   (.setConsistencyLevel statement (consistency-levels consistency)))
-
 
 (defn execute
   "Executes querys against a session. Returns a collection of rows.
