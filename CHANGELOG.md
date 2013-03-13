@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.0.0-beta2
+
+* update hayt to 0.4.0-beta1
+
 ## 0.3.1
 
 * add `keywordize?` options to `execute` and `execute-async`, make it
