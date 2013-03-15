@@ -33,8 +33,8 @@
   `(binding [qbits.alia/*consistency* ~consistency]
      ~@body))
 
-(def ^{:doc "Sets root value of *consistency*"}
-  set-consistency!
+(def set-consistency!
+  "Sets root value of *consistency*"
   (utils/var-root-setter *consistency*))
 
 (def ^:dynamic *session*)
@@ -45,14 +45,14 @@
   `(binding [qbits.alia/*session* ~session]
      ~@body))
 
-(def ^{:doc "Sets root value of *session*"}
-  set-session!
+(def set-session!
+  "Sets root value of *session*"
   (utils/var-root-setter *session*))
 
 (def ^:dynamic *executor* (knit/executor :cached))
 
-(def ^{:doc "Sets root value of *executor*"}
-  set-executor!
+(def set-executor!
+  "Sets root value of *executor*"
   (utils/var-root-setter *executor*))
 
 (defmacro with-executor
@@ -63,14 +63,14 @@
 
 (def ^:dynamic *keywordize* false)
 
-(def ^{:doc "Sets root value of *keywordize*"}
-  set-keywordize!
+(def set-keywordize!
+  "Sets root value of *keywordize*"
   (utils/var-root-setter *keywordize*))
 
 (def ^:dynamic *hayt-raw-fn* (memo/memo-lu hayt/->raw 100))
-(def ^{:doc "Sets root value of *hayt-raw-fn*, allowing to change
-  the cache factory, defaults to LU with a threshold of 100"}
-  set-hayt-raw-fn!
+(def set-hayt-raw-fn!
+  "Sets root value of *hayt-raw-fn*, allowing to change
+   the cache factory, defaults to LU with a threshold of 100"
   (utils/var-root-setter *hayt-raw-fn*))
 
 (defn cluster
