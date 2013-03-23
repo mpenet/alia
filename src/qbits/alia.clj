@@ -142,6 +142,12 @@ used in `execute` after it's been bound with `bind`"
 
   (.setConsistencyLevel statement (consistency-levels consistency)))
 
+(defn ^:private execute-args
+  [args]
+  (if (instance? Session (first args))
+    args
+    (conj args *session*)))
+
 (defn execute
   "Executes querys against a session. Returns a collection of rows.
 The first argument can be either a Session instance or the query
@@ -170,9 +176,7 @@ If you chose the latter the Session must be bound with
                                           tracing? values keywordize?]
                                    :or {consistency *consistency*
                                         keywordize? *keywordize*}}]
-        (if (even? (count args))
-          args
-          (conj args *session*))
+        (execute-args args)
         ^Query statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
     (codec/result-set->maps (.execute session statement) keywordize?)))
@@ -188,9 +192,7 @@ If you chose the latter the Session must be bound with
                                    :or {executor *executor*
                                         consistency *consistency*
                                         keywordize? *keywordize*}}]
-        (if (even? (count args))
-          args
-          (conj args *session*))
+        (execute-args args)
         ^Query statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
     (let [^ResultSetFuture rs-future (.executeAsync session statement)

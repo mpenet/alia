@@ -76,7 +76,8 @@
 
 (deftest test-sync-execute
   (is (= user-data-set
-         (execute "select * from users;")))
+         (execute "select * from users;")
+         (execute (connect *cluster* "alia") "select * from users;")))
 
     (is (= user-data-set
          (execute (select :users)))))
