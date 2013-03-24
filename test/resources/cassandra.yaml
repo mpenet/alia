@@ -319,7 +319,7 @@ native_transport_port: 9042
 
 
 # Whether to start the thrift rpc server.
-start_rpc: true
+start_rpc: false
 # The address to bind the Thrift RPC service to -- clients connect
 # here. Unlike ListenAddress above, you *can* specify 0.0.0.0 here if
 # you want Thrift to listen on all interfaces.
