@@ -39,7 +39,7 @@
   :once
   (fn [test-runner]
     ;; prepare the thing
-    (binding [*cluster* (cluster "127.0.0.1" :port 9042)]
+    (binding [*cluster* (cluster "127.0.0.1" :port 19042)]
       (with-session (connect *cluster*)
         (try (execute "DROP KEYSPACE alia;")
              (catch Exception _ nil))

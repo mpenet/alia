@@ -13,5 +13,4 @@
   (doto (EmbeddedCassandraService.)
     (.start)))
 
-(when-not (Boolean/parseBoolean (System/getProperty "alia.server-running"))
-  (defonce service (start-service!)))
+(defonce service (start-service!))
