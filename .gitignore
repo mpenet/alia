@@ -1,4 +1,5 @@
 /target
+/tmp
 /lib
 /classes
 /checkouts
@@ -10,3 +11,4 @@ pom.xml
 .lein-plugins
 /doc
 /src/qbits/perf.clj
+/test/log4j.properties

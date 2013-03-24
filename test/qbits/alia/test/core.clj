@@ -1,10 +1,11 @@
-(ns qbits.alia.core-test
+(ns qbits.alia.test.core
   (:use clojure.test
         clojure.data
         qbits.alia
         qbits.alia.codec.joda-time
         qbits.tardis
-        qbits.hayt))
+        qbits.hayt
+        qbits.alia.test.embedded))
 
 (def ^:dynamic *cluster*)
 
