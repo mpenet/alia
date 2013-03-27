@@ -164,14 +164,15 @@ Some examples:
                  :baz [:in [5 6 7]]}))
 
 
-;; They are composable using q->
+;; Composability using normal map manipulation functions
+
 (def base (select :foo (where {:foo 1})))
 
-(q-> base
-     (columns :bar :baz)
-     (where {:bar 2})
-     (order-by [:bar :asc])
-     (using :ttl 10000))
+(merge base
+       (columns :bar :baz)
+       (where {:bar 2})
+       (order-by [:bar :asc])
+       (using :ttl 10000))
 
 ;; To compile the queries just use ->raw or ->prepared
 
