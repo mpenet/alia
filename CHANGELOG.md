@@ -1,5 +1,11 @@
 # Changelog
 
+### 1.0.0-beta4
+
+* update hayt to 0.4.0-beta3
+* update core.memoize to 0.5.3
+* minor code changes to avoid repetitions in alia.clj
+
 ### 1.0.0-beta3
 
 * add hayt raw query execution support, with query caching.
