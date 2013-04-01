@@ -61,7 +61,7 @@
   `(binding [qbits.alia/*executor* ~executor]
      ~@body))
 
-(def ^:dynamic *keywordize* false)
+(def ^:dynamic *keywordize* true)
 
 (def set-keywordize!
   "Sets root value of *keywordize*"

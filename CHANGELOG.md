@@ -1,5 +1,11 @@
 # Changelog
 
+### 1.0.0-beta5
+
+* Column names are now returned as kewords by default (you can change
+  that with `set-keywordize!` or per query using the :keywordize?
+  option)
+
 ### 1.0.0-beta4
 
 * update hayt to 0.4.0-beta3

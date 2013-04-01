@@ -91,16 +91,16 @@ alia/execute and alia/prepare) using `with-session` or `set-session!`:
 
   (alia/execute prepared-statement :values ["frodo"])
 
-  >> ({"created" nil,
-       "last_name" "Baggins",
-       "emails" #{"baggins@gmail.com" "f@baggins.com"},
-       "tags" [4 5 6],
-       "first_name" "Frodo",
-       "amap" {"foo" 1, "bar" 2},
-       "auuid" #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892",
-       "valid" true,
-       "birth_year" 1,
-       "user_name" "frodo"})
+  >> ({:created nil,
+       :last_name "Baggins",
+       :emails #{"baggins@gmail.com" "f@baggins.com"},
+       :tags [4 5 6],
+       :first_name "Frodo",
+       :amap {"foo" 1, "bar" 2},
+       :auuid #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892",
+       :valid true,
+       :birth_year 1,
+       :user_name "frodo"})
 ```
 
 Asynchronous interface:

@@ -10,28 +10,28 @@
 (def ^:dynamic *cluster*)
 
 ;; some test data
-(def user-data-set [{"created" nil,
-                     "tuuid" #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
-                     "last_name" "Penet",
-                     "emails" #{"m@p.com" "ma@pe.com"},
-                     "tags" [1 2 3],
-                     "first_name" "Max",
-                     "amap" {"foo" 1, "bar" 2},
-                     "auuid" #uuid "42048d2d-c135-4c18-aa3a-e38a6d3be7f1",
-                     "valid" true,
-                     "birth_year" 0,
-                     "user_name" "mpenet"}
-                    {"created" nil,
-                     "tuuid" #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
-                     "last_name" "Baggins",
-                     "emails" #{"baggins@gmail.com" "f@baggins.com"},
-                     "tags" [4 5 6],
-                     "first_name" "Frodo",
-                     "amap" {"foo" 1, "bar" 2},
-                     "auuid" #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892",
-                     "valid" true,
-                     "birth_year" 1,
-                     "user_name" "frodo"}])
+(def user-data-set [{:created nil,
+                     :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
+                     :last_name "Penet",
+                     :emails #{"m@p.com" "ma@pe.com"},
+                     :tags [1 2 3],
+                     :first_name "Max",
+                     :amap {"foo" 1, "bar" 2},
+                     :auuid #uuid "42048d2d-c135-4c18-aa3a-e38a6d3be7f1",
+                     :valid true,
+                     :birth_year 0,
+                     :user_name "mpenet"}
+                    {:created nil,
+                     :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
+                     :last_name "Baggins",
+                     :emails #{"baggins@gmail.com" "f@baggins.com"},
+                     :tags [4 5 6],
+                     :first_name "Frodo",
+                     :amap {"foo" 1, "bar" 2},
+                     :auuid #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892",
+                     :valid true,
+                     :birth_year 1,
+                     :user_name "frodo"}])
 
 ;; helpers
 
@@ -85,10 +85,10 @@
 
 (deftest test-keywordize
   (is (= (map (fn [user-map]
-                (into {} (map (juxt (comp keyword key) val)
+                (into {} (map (juxt (comp name key) val)
                               user-map)))
               user-data-set)
-         (execute "select * from users;" :keywordize? true))))
+         (execute "select * from users;" :keywordize? false))))
 
 (deftest test-async-execute
   ;; promise
