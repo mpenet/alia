@@ -73,7 +73,7 @@ https://issues.apache.org/jira/browse/CASSANDRA-3783"))))
 
 (defn result-set->maps
   [^ResultSet result-set keywordize?]
-  (let [key-mod  (if keywordize? keyword identity)]
+  (let [key-fn (if keywordize? keyword identity)]
     (-> (map (fn [^Row row]
                (let [cdef (.getColumnDefinitions row)
                      len (.size cdef)]
@@ -83,7 +83,7 @@ https://issues.apache.org/jira/browse/CASSANDRA-3783"))))
                      (persistent! row-map)
                      (recur (int (inc idx))
                             (assoc! row-map
-                                    (key-mod (.getName cdef idx))
+                                    (key-fn (.getName cdef idx))
                                     (decode row idx (.getType cdef idx))))))))
              result-set)
         (vary-meta assoc :query-trace (.getQueryTrace result-set)))))

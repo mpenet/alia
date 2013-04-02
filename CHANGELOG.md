@@ -2,9 +2,10 @@
 
 ### 1.0.0-beta5
 
-* Column names are now returned as kewords by default (you can change
-  that with `set-keywordize!` or per query using the :keywordize?
-  option)
+* BREAKING CHANGE: Column names are now returned as keywords by
+  default (way more convenient in real world use), you can change that
+  globally using `set-keywordize!`or per query using the
+  `:keywordize?` option on `execute`/`execute-async` calls.
 
 ### 1.0.0-beta4
 
