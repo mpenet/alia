@@ -270,8 +270,8 @@ mention earlier, you can specify
 * `:retry-policy` [RetryPolicy](#retry-policy)
 * `:routing-key` [RoutingKey](#routing-key)
 * `:tracing?` (boolean) triggers tracing (defaults to false)
-* `:keywordize?` (boolean) results use clojure keywords as keys
-  instead of strings (the default), settable globally with `set-keywordize!`
+* `:keywordize?` (boolean, defaults true) results use clojure keywords
+  as keys instead of strings, settable globally with `set-keywordize!`
 
 Additionaly `execute-async` accepts
 an `:executor` option that will set the java.util.concurrent
