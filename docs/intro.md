@@ -147,16 +147,16 @@ And it would return:
 
 ```clojure
 
- >> ({"created" nil,
-       "last_name" "Baggins",
-       "emails" #{"baggins@gmail.com" "f@baggins.com"},
-       "tags" [4 5 6],
-       "first_name" "Frodo",
-       "amap" {"foo" 1, "bar" 2},
-       "auuid" #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892",
-       "valid" true,
-       "birth_year" 1,
-       "user_name" "frodo"})
+ >> ({:created nil,
+      :last_name "Baggins",
+      :emails #{"baggins@gmail.com" "f@baggins.com"},
+      :tags [4 5 6],
+      :first_name "Frodo",
+      :amap {"foo" 1, "bar" 2},
+      :auuid #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892",
+      :valid true,
+      :birth_year 1,
+      :user_name "frodo"})
 ```
 
 As you can see C* datatypes are translated to clojure friendly types
@@ -406,6 +406,9 @@ Some examples:
 (select :foo
         (where {:bar 2}))
 
+;; this generates a map
+>> {:select :foo :where {:bar 2}}
+
 (update :some-table
          (set-columns {:bar 1
                        :baz [+ 2]})
@@ -416,16 +419,16 @@ Some examples:
          (order-by [:foo :asc]))
 ```
 
-Queries are composable using `q->`
+Queries are composable using any function that can operate on maps:
 
 ```clojure
 (def base (select :foo (where {:foo 1})))
 
-(q-> base
-     (columns :bar :baz)
-     (where {:bar 2})
-     (order-by [:bar :asc])
-     (using :ttl 10000))
+(merge base
+       (columns :bar :baz)
+       (where {:bar 2})
+       (order-by [:bar :asc])
+       (using :ttl 10000))
 
 ```
 
