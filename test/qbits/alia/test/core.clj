@@ -38,6 +38,7 @@
 (use-fixtures
   :once
   (fn [test-runner]
+    (flush)
     ;; prepare the thing
     (binding [*cluster* (cluster "127.0.0.1" :port 19042)]
       (with-session (connect *cluster*)

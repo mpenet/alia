@@ -1,5 +1,7 @@
 (ns qbits.alia.test.embedded
-  (:require [clojure.java.io :as io])
+  (:require
+   [clojure.java.io :as io]
+   [clojure.java.shell :as shell])
   (:use [clojure.test])
   (:import
    (org.apache.cassandra.service EmbeddedCassandraService)))
@@ -10,6 +12,8 @@
 
 (defn start-service!
   []
+  ;; cleanup previous runs data
+  (shell/sh "rm" "tmp -rf")
   (doto (EmbeddedCassandraService.)
     (.start)))
 
