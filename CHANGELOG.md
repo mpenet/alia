@@ -7,6 +7,8 @@
   globally using `set-keywordize!`or per query using the
   `:keywordize?` option on `execute`/`execute-async` calls.
 
+* Depend on clojure 1.5.1 by default.
+
 ### 1.0.0-beta4
 
 * update hayt to 0.4.0-beta3
