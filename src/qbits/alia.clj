@@ -6,6 +6,7 @@
    [qbits.alia.codec :as codec]
    [qbits.alia.codec.eaio-uuid]
    [qbits.alia.utils :as utils]
+   [lamina.core :as l]
    [qbits.alia.cluster-options :as copt])
   (:import
    [com.datastax.driver.core
@@ -196,18 +197,16 @@ If you chose the latter the Session must be bound with
         ^Query statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
     (let [^ResultSetFuture rs-future (.executeAsync session statement)
-          async-result (promise)]
+          async-result (l/result-channel)]
+      (l/on-realized async-result success error)
       (Futures/addCallback
        rs-future
        (reify FutureCallback
          (onSuccess [_ result]
-           (let [result (codec/result-set->maps (.get rs-future) keywordize?)]
-             (deliver async-result result)
-             (when (fn? success)
-               (success result))))
+           (l/success async-result
+                      (codec/result-set->maps (.get rs-future)
+                                              keywordize?)))
          (onFailure [_ err]
-           (deliver async-result err)
-           (when (fn? error)
-             (error err))))
+           (l/error async-result err)))
        executor)
       async-result)))

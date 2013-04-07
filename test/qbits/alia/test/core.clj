@@ -101,7 +101,6 @@
                     :success (fn [r] (deliver p r)))
     (is (= user-data-set @p))))
 
-
 (deftest test-prepared
   (let [s-simple (prepare "select * from users;")
         s-parameterized-simple (prepare "select * from users where user_name=?;")
