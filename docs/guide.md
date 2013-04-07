@@ -229,8 +229,10 @@ result is available. You can also provide an `:error` callback.
 ```
 
 [Lamina](https://github.com/ztellman/lamina) makes it easy to work in
-asynchronous situations, I encourage you to read about pipelines and
-channels in particular, its API is really rich.
+asynchronous situations, I encourage you to read about
+[pipelines](https://github.com/ztellman/lamina/wiki/Pipelines-new) and
+[channels](https://github.com/ztellman/lamina/wiki/Channels-new) in
+particular, its API is really rich.
 
 ### Prepared statements
 
