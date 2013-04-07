@@ -1,5 +1,14 @@
 # Changelog
 
+### 1.0.0-beta6
+
+* `async-execute` now returns a `lamina.core/result-channel`, the only
+  difference for end-users should be the behavior when an error occurs
+  and the query is dereferenced: it used to return the exception as a
+  value, now it throws it, callbacks are unchanged.
+
+* Added [Lamina](https://github.com/ztellman/lamina) as a dependency.
+
 ### 1.0.0-beta5
 
 * BREAKING CHANGE: Column names are now returned as keywords by
