@@ -28,6 +28,7 @@
    DataType$Name/BLOB      (.getBytes row idx)
    DataType$Name/BOOLEAN   (.getBool row idx)
    DataType$Name/COUNTER   (.getLong row idx)
+   DataType$Name/CUSTOM    (.getBytesUnsafe row idx)
    DataType$Name/DECIMAL   (.getDecimal row idx)
    DataType$Name/DOUBLE    (.getDouble row idx)
    DataType$Name/FLOAT     (.getFloat row idx)
