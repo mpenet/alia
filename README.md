@@ -29,9 +29,9 @@ If you want a Thrift based client for Clojure you could give a try to
 
 * Nice simple and extensible api to work with string queries or
   prepared statements, synchronous/asynchronous execution, using
-  promises or success/error callbacks depending on the mode you
-  choose,, with transparent handling of clojure datatypes, all
-  cassandra data types are supported.
+  `lamina/result-channels` (promises) or success/error callbacks
+  depending on the mode you choose,, with transparent handling of
+  clojure datatypes, all cassandra data types are supported.
 
 
 * The exposed parts of the public api all allow to extend it to fit
@@ -40,7 +40,7 @@ If you want a Thrift based client for Clojure you could give a try to
 
 ## Documentation
 
-[A first draft can be found here](https://github.com/mpenet/alia/blob/master/docs/intro.md) and you can also consult the [codox generated documentation](http://mpenet.github.com/alia/#docs).
+[A first draft can be found here](https://github.com/mpenet/alia/blob/master/docs/guide.md) and you can also consult the [codox generated documentation](http://mpenet.github.com/alia/#docs).
 
 ## Show me some code!
 
@@ -107,8 +107,8 @@ Asynchronous interface:
 
 You need to use execute-async, which is used the same way as execute,
 the return value is a
-[promise](http://clojuredocs.org/clojure_core/clojure.core/promise)
-(non blocking).
+[result-channel](https://github.com/ztellman/lamina/wiki/Result-Channels) from
+[Lamina](https://github.com/ztellman/lamina) (you can think of it as a promise).
 
 ```clojure
 (def result (alia/execute-async "select * from users;"))
@@ -122,8 +122,8 @@ it, a blocking operation.
 @result
 ```
 
-Or we can use `success`/`error` handlers (it still returns a promise
-just like before)
+Or we can use `success`/`error` handlers (it still returns a
+`result-channel` just like before).
 
 ```clojure
 (alia/execute-async "select * from users;"
@@ -133,7 +133,7 @@ just like before)
 ```
 
 And it can do a tons more! Head to the
-[docs](https://github.com/mpenet/alia/blob/master/docs/intro.md) or
+[docs](https://github.com/mpenet/alia/blob/master/docs/guide.md) or
 the
 [codox generated documentation](http://mpenet.github.com/alia/#docs).
 

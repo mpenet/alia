@@ -192,9 +192,13 @@ using `set-session!` to be more succint.
 The previous examples will block until a response is received from
 cassandra. But it is possible to avoid that and perform them asynchronously.
 
-You will need to use `execute-async` which return a clojure [promise](http://clojuredocs.org/clojure_core/clojure.core/promise)
-(it will return immediately), meaning you need to use
-`clojure.core/deref` or `@` to get its value once it is realized.
+You will need to use `execute-async` which returns
+[result-channel](https://github.com/ztellman/lamina/wiki/Result-Channels)
+from [Lamina](https://github.com/ztellman/lamina) (you can think of it
+as a promise, it will return immediately), meaning you need to use
+`clojure.core/deref` or `@` to get its value once it is realized (it's
+one way to do it, more about this later). If an error happened, when
+you deref the query it will throw the exception.
 
 ```clojure
 (def query (alia/execute-async "SELECT * FROM foo;"))
@@ -213,9 +217,9 @@ the `execute-async` call:
 ```clojure
 (alia/execute-async "SELECT * FROM foo;" :success (fn [rs] (do-something rs)))
 ```
-Again it will return immediately (as a promise) and will trigger the
-`:success` callback passing it the resultset once the result is
-available. You can also provide an `:error` callback.
+Again it will return immediately (as a `result-channel`) and will
+trigger the `:success` callback passing it the resultset once the
+result is available. You can also provide an `:error` callback.
 
 
 ```clojure
@@ -223,6 +227,10 @@ available. You can also provide an `:error` callback.
                     :success (fn [rs] (do-something rs))
                     :error (fn [ex] (deal-with-the-error ex)))
 ```
+
+[Lamina](https://github.com/ztellman/lamina) makes it easy to work in
+asynchronous situations, I encourage you to read about pipelines and
+channels in particular, its API is really rich.
 
 ### Prepared statements
 
