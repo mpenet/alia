@@ -8,7 +8,7 @@
   `:execution-info` key that contains basic info about the query
   (hosts queried etc) and allows to retrieve tracing info, in future
   versions paging metadata probably, see
-  [JAVA-65](https://datastax-oss.atlassian.net/browse/).
+  [JAVA-65](https://datastax-oss.atlassian.net/browse/JAVA-65).
 
 ### 1.0.0-beta6
 
