@@ -1,5 +1,5 @@
 # alia
-[![Build Status](https://secure.travis-ci.org/mpenet/alia.png?branch=master)](http://travis-ci.org/mpenet/alia)
+<!-- [![Build Status](https://secure.travis-ci.org/mpenet/alia.png?branch=master)](http://travis-ci.org/mpenet/alia) -->
 
 > Coan-Teen, the female death spirit who walks without feet.
 
@@ -211,7 +211,7 @@ In the cassandra.yaml file, you need to set:
 Then add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia "1.0.0-beta6"]
+[cc.qbits/alia "1.0.0-beta7"]
 ```
 
 Please check the

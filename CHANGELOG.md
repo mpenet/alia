@@ -1,5 +1,15 @@
 # Changelog
 
+### 1.0.0-beta7
+
+* Update java-driver to beta2
+
+* Metadata on results updated to follow java-driver's style, it now returns an
+  `:execution-info` key that contains basic info about the query
+  (hosts queried etc) and allows to retrieve tracing info, in future
+  versions paging metadata probably, see
+  [JAVA-65](https://datastax-oss.atlassian.net/browse/).
+
 ### 1.0.0-beta6
 
 * `async-execute` now returns a `lamina.core/result-channel`, the only

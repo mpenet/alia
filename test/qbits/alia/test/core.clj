@@ -5,7 +5,8 @@
         qbits.alia.codec.joda-time
         qbits.tardis
         qbits.hayt
-        qbits.alia.test.embedded))
+        ;; qbits.alia.test.embedded
+        ))
 
 (def ^:dynamic *cluster*)
 
@@ -40,12 +41,12 @@
   (fn [test-runner]
     (flush)
     ;; prepare the thing
-    (binding [*cluster* (cluster "127.0.0.1" :port 19042)]
+    (binding [*cluster* (cluster "127.0.0.1" ;; :port 19042
+                                 )]
       (with-session (connect *cluster*)
         (try (execute "DROP KEYSPACE alia;")
              (catch Exception _ nil))
-        (execute  "CREATE KEYSPACE alia
-         WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};")
+        (execute  "CREATE KEYSPACE alia WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};")
         (execute "USE alia;")
         (execute "CREATE TABLE users (
                 user_name varchar,

@@ -13,8 +13,12 @@
 (defn start-service!
   []
   ;; cleanup previous runs data
+  (println "Clear previous run data")
   (shell/sh "rm" "tmp -rf")
-  (doto (EmbeddedCassandraService.)
-    (.start)))
+  (println "Starting EmbeddedCassandraService")
+  (let [s (EmbeddedCassandraService.)]
+    (.start s)
+    (println "Service started")
+    s))
 
 (defonce service (start-service!))
