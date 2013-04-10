@@ -2,7 +2,8 @@
 
 ### 1.0.0-beta7
 
-* Update java-driver to beta2
+* Update java-driver to beta2, see
+  [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/master/driver-core/CHANGELOG.rst)
 
 * Metadata on results updated to follow java-driver's style, it now returns an
   `:execution-info` key that contains basic info about the query
