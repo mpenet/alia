@@ -10,6 +10,9 @@
   versions paging metadata probably, see
   [JAVA-65](https://datastax-oss.atlassian.net/browse/JAVA-65).
 
+* C* CUSTOM type support see
+  [JAVA-61](https://datastax-oss.atlassian.net/browse/JAVA-61)
+
 ### 1.0.0-beta6
 
 * `async-execute` now returns a `lamina.core/result-channel`, the only
