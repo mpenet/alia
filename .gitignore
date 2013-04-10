@@ -12,3 +12,4 @@ pom.xml
 /doc
 /src/qbits/perf.clj
 /test/log4j.properties
+/src/log4j.properties
