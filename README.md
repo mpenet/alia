@@ -85,7 +85,7 @@ alia/execute and alia/prepare) using `with-session` or `set-session!`:
                  VALUES('frodo', 'Frodo', 'Baggins',
                  {'f@baggins.com', 'baggins@gmail.com'}, 1,
                  {'foo': 1, 'bar': 2}, [4, 5, 6],
-                 '1f84b56b-5481-4ee4-8236-8a3831ee5892', true);")
+                 1f84b56b-5481-4ee4-8236-8a3831ee5892, true);")
 
   (def prepared-statement (alia/prepare "select * from users where user_name=?;"))
 
