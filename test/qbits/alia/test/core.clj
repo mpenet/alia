@@ -10,7 +10,7 @@
 (def ^:dynamic *cluster*)
 
 ;; some test data
-(def user-data-set [{:created nil,
+(def user-data-set [{:created #inst "7943-07-22T22:00:00.000-00:00" ,
                      :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
                      :last_name "Penet",
                      :emails #{"m@p.com" "ma@pe.com"},
@@ -21,7 +21,7 @@
                      :valid true,
                      :birth_year 0,
                      :user_name "mpenet"}
-                    {:created nil,
+                    {:created #inst "7943-07-24T22:00:00.000-00:00"
                      :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
                      :last_name "Baggins",
                      :emails #{"baggins@gmail.com" "f@baggins.com"},
@@ -62,10 +62,10 @@
               );")
         (execute "CREATE INDEX ON users (birth_year);")
 
-        (execute "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid)
-       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], 1f84b56b-5481-4ee4-8236-8a3831ee5892, e34288d0-7617-11e2-9243-0024d70cf6c4, true);")
-        (execute "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid)
-       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true);")
+        (execute "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, created)
+       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], 1f84b56b-5481-4ee4-8236-8a3831ee5892, e34288d0-7617-11e2-9243-0024d70cf6c4, true, '7943-07-25');")
+        (execute "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, created)
+       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true, '7943-07-23');")
 
         ;; do the thing
         (test-runner)
