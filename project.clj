@@ -13,8 +13,8 @@
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
              :1.5  {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :1.6  {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
-             :dev  {:dependencies [[clj-time "0.4.4"]]}
-             :test  {:dependencies [[clj-time "0.4.4"]]
+             :dev  {:dependencies [[clj-time "0.5.0"]]}
+             :test  {:dependencies [[clj-time "0.5.0"]]
                      :resource-paths ["test/resources"]}}
 
   :codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master"
