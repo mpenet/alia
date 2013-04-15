@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.0.0-beta8
+
+* remove `keywordize` option, useless feature
+
 ### 1.0.0-beta7
 
 * Update java-driver to beta2, see

@@ -62,12 +62,6 @@
   `(binding [qbits.alia/*executor* ~executor]
      ~@body))
 
-(def ^:dynamic *keywordize* true)
-
-(def set-keywordize!
-  "Sets root value of *keywordize*"
-  (utils/var-root-setter *keywordize*))
-
 (def ^:dynamic *hayt-raw-fn* (memo/memo-lu hayt/->raw 100))
 (def set-hayt-raw-fn!
   "Sets root value of *hayt-raw-fn*, allowing to change
@@ -157,30 +151,27 @@ directly.
 So 2 signatures:
 
  [session query & {:keys [consistency routing-key retry-policy
-                          tracing? keywordize? values]
+                          tracing? values]
                   :or {executor default-async-executor
-                       consistency *consistency*
-                       keywordize? *keywordize*}}]
+                       consistency *consistency*}}]
 
 or
 
  [query & {:keys [consistency routing-key retry-policy
-                  tracing? keywordize? values]
+                  tracing? values]
                   :or {executor default-async-executor
-                       consistency *consistency*
-                       keywordize? *keywordize*}}]
+                       consistency *consistency*}}]
 
 If you chose the latter the Session must be bound with
 `with-session`."
   [& args]
   (let [[^Session session query & {:keys [consistency routing-key retry-policy
-                                          tracing? values keywordize?]
-                                   :or {consistency *consistency*
-                                        keywordize? *keywordize*}}]
+                                          tracing? values]
+                                   :or {consistency *consistency*}}]
         (execute-args args)
         ^Query statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
-    (codec/result-set->maps (.execute session statement) keywordize?)))
+    (codec/result-set->maps (.execute session statement))))
 
 (defn execute-async
   "Same as execute, but returns a promise and accepts :success and :error
@@ -189,10 +180,9 @@ If you chose the latter the Session must be bound with
   [& args]
   (let [[^Session session query & {:keys [success error executor consistency
                                           routing-key retry-policy tracing?
-                                          values keywordize?]
+                                          values]
                                    :or {executor *executor*
-                                        consistency *consistency*
-                                        keywordize? *keywordize*}}]
+                                        consistency *consistency*}}]
         (execute-args args)
         ^Query statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
@@ -204,8 +194,7 @@ If you chose the latter the Session must be bound with
        (reify FutureCallback
          (onSuccess [_ result]
            (l/success async-result
-                      (codec/result-set->maps (.get rs-future)
-                                              keywordize?)))
+                      (codec/result-set->maps (.get rs-future))))
          (onFailure [_ err]
            (l/error async-result err)))
        executor)
