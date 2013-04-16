@@ -9,7 +9,7 @@
    [lamina.core :as l]
    [qbits.alia.cluster-options :as copt])
   (:import
-   [com.datastax.driver.core
+   (com.datastax.driver.core
     BoundStatement
     Cluster
     Cluster$Builder
@@ -19,11 +19,11 @@
     ResultSet
     ResultSetFuture
     Session
-    SimpleStatement]
-   [com.google.common.util.concurrent
+    SimpleStatement)
+   (com.google.common.util.concurrent
     Futures
-    FutureCallback]
-   [java.nio ByteBuffer]))
+    FutureCallback)
+   (java.nio ByteBuffer)))
 
 (def ^:dynamic *consistency* :one)
 (def consistency-levels (utils/enum-values->map (ConsistencyLevel/values)))

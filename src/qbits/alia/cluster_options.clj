@@ -1,17 +1,17 @@
 (ns qbits.alia.cluster-options
   (:require [qbits.alia.utils :as utils])
   (:import
-   [com.datastax.driver.core
+   (com.datastax.driver.core
     Cluster$Builder
     HostDistance
     PoolingOptions
     ProtocolOptions$Compression
     SimpleAuthInfoProvider
-    SocketOptions]
-   [com.datastax.driver.core.policies
+    SocketOptions)
+   (com.datastax.driver.core.policies
     LoadBalancingPolicy
     ReconnectionPolicy
-    RetryPolicy]))
+    RetryPolicy)))
 
 (def host-distance (utils/enum-values->map (HostDistance/values)))
 (def compression (utils/enum-values->map (ProtocolOptions$Compression/values)))
