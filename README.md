@@ -46,7 +46,6 @@ A simple query execution using Hayt would look like this:
 
 ```clojure
 (execute (select :users (where {:name :foo})))
-
 ```
 
 But first things first, here is an example of a complete session using
