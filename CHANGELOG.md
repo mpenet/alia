@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.0.0-beta9
+
+* Lift restriction on nil values (supported in C* 1.2.4+)
+
 ### 1.0.0-beta8
 
 * remove `keywordize` option, useless feature
