@@ -28,11 +28,9 @@ If you want a Thrift based client for Clojure you could give a try to
 ## What Alia can do
 
 * Nice simple and extensible api to work with string queries or
-  prepared statements, synchronous/asynchronous execution, using
-  `lamina/result-channels` (promises) or success/error callbacks
-  depending on the mode you choose,, with transparent handling of
-  clojure datatypes, all cassandra data types are supported.
-
+  prepared statements, synchronous/asynchronous execution using simple
+  success/error callbacks or `deref`, with transparent handling of clojure
+  datatypes, all cassandra data types are supported.
 
 * The exposed parts of the public api all allow to extend it to fit
   your needs and leverage all the good stuff available from
@@ -108,7 +106,8 @@ Asynchronous interface:
 You need to use execute-async, which is used the same way as execute,
 the return value is a
 [result-channel](https://github.com/ztellman/lamina/wiki/Result-Channels) from
-[Lamina](https://github.com/ztellman/lamina) (you can think of it as a promise).
+[Lamina](https://github.com/ztellman/lamina) (you can think of it as
+an equivalent of a clojure.core/promise).
 
 ```clojure
 (def result (alia/execute-async "select * from users;"))
