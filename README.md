@@ -27,7 +27,7 @@ If you want a Thrift based client for Clojure you could give a try to
 ## Status
 
 Alia is currently in beta, but this is mostly because the underlying
-driver and CQL3 are still in beta (a RC of the driver is will happen
+driver and CQL3 are still in beta (a RC of the driver will happen
 soon).
 But from my experience it's already usable and stable, and
 alia's code doesn't do anything too exotic, so there should be no
