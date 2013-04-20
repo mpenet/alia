@@ -11,45 +11,45 @@ It allows do to everything
 [datastax/java-driver](https://github.com/datastax/java-driver) has to offer
 with an idiomatic API, from a handfull of functions. The learning
 curve or need to reach for the docs should be minimal.
-Alia also comes with [Hayt](#hayt-query-dsl) a CQL query DSL inspired
+Alia also integrates with [Hayt](#hayt-query-dsl), a CQL query DSL inspired
 by korma/ClojureQL.
 
 About datastax/java-driver:
 It's built on top of the new binary protocol, can handle
 pooling/balancing/failover/metrics, is very active, has synchronous and
 asynchronous APIs, is likely to become the standard client for java
-(it's the only one I know that uses the new protocol) and you can
-trust [datastax](http://datastax.com/) people to improve and maintain
-it.
+(it's the only one I know that uses the new protocol), and you can
+trust [datastax](http://datastax.com/) to improve and maintain it.
 
 If you want a Thrift based client for Clojure you could give a try to
 [casyn](https://github.com/mpenet/casyn)
 
-## What Alia can do
+## Status
 
-* Nice simple and extensible api to work with string queries or
-  prepared statements, synchronous/asynchronous execution using simple
-  success/error callbacks or `deref`, with transparent handling of clojure
-  datatypes, all cassandra data types are supported.
-
-* The exposed parts of the public api all allow to extend it to fit
-  your needs and leverage all the good stuff available from
-  [datastax/java-driver](https://github.com/datastax/java-driver).
+Alia is currently in beta, but this is mostly because the underlying
+driver and CQL3 are still in beta (a RC of the driver is will happen
+soon).
+But from my experience it's already usable and stable, and
+alia's code doesn't do anything too exotic, so there should be no
+surprises here.
 
 ## Documentation
 
 [A first draft can be found here](https://github.com/mpenet/alia/blob/master/docs/guide.md) and you can also consult the [codox generated documentation](http://mpenet.github.com/alia/#docs).
 
-## Show me some code!
+## Quickstart
 
-A simple query execution using Hayt would look like this:
+Simple query execution using alia+hayt would look like this:
 
 ```clojure
-(execute (select :users (where {:name :foo})))
+(execute (select :users
+                 (where {:name :foo})
+                 (columns :bar "baz")))
 ```
 
-But first things first, here is an example of a complete session using
-raw queries for now.
+
+But first things first: here is an example of a complete session using
+raw queries.
 
 
 ```clojure
@@ -134,12 +134,12 @@ Or we can use `success`/`error` handlers (it still returns a
 
 ```clojure
 (alia/execute-async "select * from users;"
-                    :success (fn [r] (do-something-with-result r)
-                    :error (fn [e] (print "fail!"))))
+                    :success (fn [rows] (do-something-with-result rows)
+                    :error (fn [err] (print "fail!"))))
 
 ```
 
-And it can do a tons more! Head to the
+And it can do a lot more! Head to the
 [docs](https://github.com/mpenet/alia/blob/master/docs/guide.md) or
 the
 [codox generated documentation](http://mpenet.github.com/alia/#docs).
@@ -149,7 +149,9 @@ the
 There is a nicer way to write your queries using
 [Hayt](https://github.com/mpenet/hayt), this should be familiar if you
 know Korma or ClojureQL.
-One of the major difference is that Hayt doesn't use macros.
+One of the major difference is that Hayt doesn't use macros and just
+generates maps, so if you need to compose clauses or queries together
+you can just use the clojure.core functions that work on maps.
 
 Some examples:
 
@@ -224,6 +226,13 @@ Then add this to your dependencies:
 Please check the
 [Changelog](https://github.com/mpenet/alia/blob/master/CHANGELOG.md)
 if you are upgrading.
+
+## Mailing list
+
+Alia has a
+[mailing list](https://groups.google.com/forum/?fromgroups#!forum/alia-cassandra)
+hosted on google groups.
+Do not hesitate to ask your questions there.
 
 ## License
 
