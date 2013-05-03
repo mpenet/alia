@@ -69,17 +69,18 @@
   (encode [x] x))
 
 (defn result-set->maps
-  [^ResultSet result-set]
-  (-> (map (fn [^Row row]
-             (let [cdef (.getColumnDefinitions row)
-                   len (.size cdef)]
-               (loop [idx (int 0)
-                      row-map (transient {})]
-                 (if (= idx len)
-                   (persistent! row-map)
-                   (recur (int (inc idx))
-                          (assoc! row-map
-                                  (keyword (.getName cdef idx))
-                                  (decode row idx (.getType cdef idx))))))))
-           result-set)
-      (vary-meta assoc :execution-info (.getExecutionInfo result-set))))
+  [^ResultSet result-set keywordize?]
+  (let [key-fn (if keywordize? keyword identity)]
+    (-> (map (fn [^Row row]
+               (let [cdef (.getColumnDefinitions row)
+                     len (.size cdef)]
+                 (loop [idx (int 0)
+                        row-map (transient {})]
+                   (if (= idx len)
+                     (persistent! row-map)
+                     (recur (int (inc idx))
+                            (assoc! row-map
+                                    (key-fn (.getName cdef idx))
+                                    (decode row idx (.getType cdef idx))))))))
+             result-set)
+        (vary-meta assoc :execution-info (.getExecutionInfo result-set)))))

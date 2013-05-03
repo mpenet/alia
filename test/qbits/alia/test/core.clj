@@ -75,6 +75,13 @@
         (shutdown)
         (shutdown *cluster*)))))
 
+(deftest test-keywordize
+  (is (= (map (fn [user-map]
+                (into {} (map (juxt (comp name key) val)
+                              user-map)))
+              user-data-set)
+         (execute "select * from users;" :keywordize? false))))
+
 (deftest test-sync-execute
   (is (= user-data-set
          (execute "select * from users;")
