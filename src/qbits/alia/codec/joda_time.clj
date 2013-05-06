@@ -1,7 +1,9 @@
 (ns qbits.alia.codec.joda-time
-  (:require [qbits.alia.codec :as codec]))
+  (:require
+   [qbits.alia.codec :as codec]
+   [clj-time.coerce :as ct]))
 
 (extend-protocol codec/PCodec
   org.joda.time.DateTime
   (encode [x]
-    (.toDate x)))
+    (ct/to-long x)))
