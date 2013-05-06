@@ -1,5 +1,13 @@
 # Changelog
 
+### 1.0.0-rc1
+
+* Upgraded to java-driver rc1
+
+* Upgraded hayt to 0.5.0
+
+* Restored `keywordize?`
+
 ### 1.0.0-beta9
 
 * Lift restriction on nil values (supported in C* 1.2.4+)

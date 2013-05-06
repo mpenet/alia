@@ -3,7 +3,7 @@
 
 > Coan-Teen, the female death spirit who walks without feet.
 
-Cassandra CQL3 client for Clojure wrapping [datastax/java-driver 1.0.0-beta2](https://github.com/datastax/java-driver).
+Cassandra CQL3 client for Clojure wrapping [datastax/java-driver 1.0.0-rc1](https://github.com/datastax/java-driver).
 
 Alia's goal is to be a very simple to use library without trading
 performance, features or exensibility.
@@ -26,12 +26,9 @@ If you want a Thrift based client for Clojure you could give a try to
 
 ## Status
 
-Alia is currently in beta, but this is mostly because the underlying
-driver and CQL3 are still in beta (a RC of the driver will happen
-soon).
-But from my experience it's already usable and stable, and
-alia's code doesn't do anything too exotic, so there should be no
-surprises here.
+Alia is currently stable, and used in production by some users.
+Its code doesn't do anything too exotic, so there shouldn't be any
+surprises.
 
 ## Documentation
 
@@ -220,7 +217,7 @@ In the cassandra.yaml file, you need to set:
 Then add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia "1.0.0-beta8"]
+[cc.qbits/alia "1.0.0-rc1"]
 ```
 
 Please check the
