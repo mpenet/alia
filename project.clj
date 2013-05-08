@@ -6,7 +6,7 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/core.memoize "0.5.3"]
                  [cc.qbits/knit "0.2.1"]
-                 [cc.qbits/hayt "0.5.0"]
+                 [cc.qbits/hayt "0.5.1"]
                  [cc.qbits/tardis "1.0.0"]
                  [lamina "0.5.0-rc1"]
                  [com.datastax.cassandra/cassandra-driver-core "1.0.0-rc1"]]
