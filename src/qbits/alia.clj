@@ -122,7 +122,7 @@ used in `execute` after it's been bound with `bind`"
 
   clojure.lang.IPersistentMap
   (query->statement [q _]
-    (query->statement (hayt/*query* q) nil)))
+    (query->statement (hayt/*query-fn* q) nil)))
 
 (defn ^:private set-statement-options!
   [^Query statement routing-key retry-policy tracing? consistency]
