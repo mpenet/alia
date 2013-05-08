@@ -1,11 +1,10 @@
 (ns qbits.alia
   (:require
-   [clojure.core.memoize :as memo]
    [qbits.knit :as knit]
-   [qbits.hayt :as hayt]
    [qbits.alia.codec :as codec]
    [qbits.alia.codec.eaio-uuid]
    [qbits.alia.utils :as utils]
+   [qbits.alia.hayt :as hayt]
    [lamina.core :as l]
    [qbits.alia.cluster-options :as copt])
   (:import
@@ -61,12 +60,6 @@
   [executor & body]
   `(binding [qbits.alia/*executor* ~executor]
      ~@body))
-
-(def ^:dynamic *hayt-raw-fn* (memo/memo-lu hayt/->raw 100))
-(def set-hayt-raw-fn!
-  "Sets root value of *hayt-raw-fn*, allowing to change
-   the cache factory, defaults to LU with a threshold of 100"
-  (utils/var-root-setter *hayt-raw-fn*))
 
 (def ^:dynamic *keywordize* true)
 
@@ -129,7 +122,7 @@ used in `execute` after it's been bound with `bind`"
 
   clojure.lang.IPersistentMap
   (query->statement [q _]
-    (query->statement (*hayt-raw-fn* q) nil)))
+    (query->statement (hayt/*query* q) nil)))
 
 (defn ^:private set-statement-options!
   [^Query statement routing-key retry-policy tracing? consistency]
