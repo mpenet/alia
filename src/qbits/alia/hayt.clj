@@ -1,9 +1,8 @@
 (ns qbits.alia.hayt
-  "Hot to handle hayt queries, "
+  "Hayt Query strategies (query caching, raw query execution)"
   (:require [clojure.core.memoize :as memo]
             [qbits.hayt :as hayt]
             [qbits.alia.utils :as utils]))
-
 
 (defmulti query-strategy (fn [k & _] k))
 
