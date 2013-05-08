@@ -8,14 +8,13 @@
   ```clojure
   (qbits.alia.hayt/set-query-strategy! (qbits.alia.hayt/query-strategy :lu 100))
   ```
-  A query strategy is just a function of 1 arg that deals with an
-  input hayt query.
+  A query strategy is just a function of 1 arg that transforms an
+  input hayt query to a string query, a number of strategies are available from
+  `qbits.alia.hayt/query-strategy` are `:lu` `:lru` `:ttl` `:fifo` and
+  `:raw`, they map to the corresponding function in core.memoize.
 
-  Available strategies are `:lu` `:lru` `:ttl` `:fifo` and `:raw`,
-  they map to the corresponding function in core.memoize.
-
-  You can add strategies yourself using the
-  `qbits.alia.hayt/query-strategy` multimethod.
+  You can to set qbits.alia.hayt/*query-fn* directly with
+  your own strategy.
 
 ### 1.0.0-rc1
 
