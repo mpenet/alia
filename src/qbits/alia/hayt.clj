@@ -9,8 +9,8 @@
 
 ;; always compile
 (defmethod query-strategy :raw
-  [q & _]
-  (hayt/->raw q))
+  [_ & _]
+  hayt/->raw)
 
 ;; cache query in LU
 (defmethod query-strategy :lu
