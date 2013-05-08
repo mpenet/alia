@@ -200,10 +200,10 @@ Ex:
 (execute (select :users (where {:name :foo})))
 ```
 
-It is still in developement but it covers everything that is possible
-with CQL3 (functions, handling of collection types and their
-operations, ddl, prepared statements, etc).
-Proper documentation will come soon, if you want to know more about it head to
+It covers everything that is possible with CQL3 (functions, handling
+of collection types and their operations, ddl, prepared statements,
+etc).
+If you want to know more about it head to its [codox documentation](http://mpenet.github.com/hayt/codox/qbits.hayt.html) or
 [Hayt's tests](https://github.com/mpenet/hayt/blob/master/test/qbits/hayt/core_test.clj).
 
 ## Installation
