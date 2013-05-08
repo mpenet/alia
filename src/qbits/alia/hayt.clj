@@ -8,28 +8,28 @@
 (defmulti query-strategy (fn [k & _] k))
 
 ;; always compile
-(defmethod query-strategy :default
+(defmethod query-strategy :raw
   [q & _]
   (hayt/->raw q))
 
 ;; cache query in LU
-(defmethod query-strategy :LU
+(defmethod query-strategy :lu
   [_ & [size]]
   (memo/memo-lu hayt/->raw size))
 
-(defmethod query-strategy :LRU
+(defmethod query-strategy :lru
   [_ & [size]]
   (memo/memo-lru hayt/->raw size))
 
-(defmethod query-strategy :TTL
+(defmethod query-strategy :ttl
   [_ & [ms]]
   (memo/memo-ttl hayt/->raw ms))
 
-(defmethod query-strategy :FIFO
+(defmethod query-strategy :fifo
   [_ & [size]]
   (memo/memo-fifo hayt/->raw size))
 
-(def ^:dynamic *query* (query-strategy :LU 100))
+(def ^:dynamic *query* (query-strategy :lu 100))
 
 (def set-query-strategy!
   "Sets root value of *query-cach-fn*, allowing to change
