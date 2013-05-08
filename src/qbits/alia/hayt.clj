@@ -13,11 +13,23 @@
   (hayt/->raw q))
 
 ;; cache query in LU
-(defmethod query-strategy :last-used
+(defmethod query-strategy :LU
   [_ & [size]]
   (memo/memo-lu hayt/->raw size))
 
-(def ^:dynamic *query* (query-strategy :last-used 100))
+(defmethod query-strategy :LRU
+  [_ & [size]]
+  (memo/memo-lru hayt/->raw size))
+
+(defmethod query-strategy :TTL
+  [_ & [ms]]
+  (memo/memo-ttl hayt/->raw ms))
+
+(defmethod query-strategy :FIFO
+  [_ & [size]]
+  (memo/memo-fifo hayt/->raw size))
+
+(def ^:dynamic *query* (query-strategy :LU 100))
 
 (def set-query-strategy!
   "Sets root value of *query-cach-fn*, allowing to change
