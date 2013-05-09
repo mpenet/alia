@@ -1,6 +1,9 @@
 # Changelog
 
-### X.X.X
+### 1.0.0
+
+* `:auth-info` option on `cluster` becomes `:credentials`
+  as SimpleAuthInfoProvider is gone and replaced with .withCredentials.
 
 ### 1.0.0-rc1
 
