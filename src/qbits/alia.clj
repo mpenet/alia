@@ -4,8 +4,9 @@
    [qbits.alia.codec :as codec]
    [qbits.alia.codec.eaio-uuid]
    [qbits.alia.utils :as utils]
-   [qbits.alia.hayt :as hayt]
+   [qbits.hayt :as hayt]
    [lamina.core :as l]
+   [clojure.core.memoize :as memo]
    [qbits.alia.cluster-options :as copt])
   (:import
    (com.datastax.driver.core
@@ -67,6 +68,13 @@
   "Sets root value of *keywordize*"
   (utils/var-root-setter *keywordize*))
 
+(def ^:dynamic *hayt-query-fn* (memo/memo-lu hayt/->raw 100))
+
+(def set-hayt-query-fn!
+  "Sets root value of *query-fn*, allowing to control how
+   hayt queries are executed , defaults to LU with a threshold of 100"
+  (utils/var-root-setter *hayt-query-fn*))
+
 (defn cluster
   "Returns a new com.datastax.driver.core/Cluster instance"
   [hosts & {:as options}]
@@ -122,7 +130,7 @@ used in `execute` after it's been bound with `bind`"
 
   clojure.lang.IPersistentMap
   (query->statement [q _]
-    (query->statement (hayt/*query-fn* q) nil)))
+    (query->statement (*hayt-query-fn* q) nil)))
 
 (defn ^:private set-statement-options!
   [^Query statement routing-key retry-policy tracing? consistency]
