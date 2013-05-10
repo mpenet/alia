@@ -63,9 +63,8 @@ The following options are supported:
 * `:metrics?`: Toggles metrics collection for the created cluster
   (metrics are enabled by default otherwise).
 
-* `:auth-info`: Use the provided AuthInfoProvider to connect to
-  Cassandra hosts. A clojure map that will be used to construct as
-  SimpleAuthInfoProvider.
+* `:credentials`: Takes a username and password for use with
+  Cassandra's PasswordAuthenticator
 
 * `:compression`: Compression supported by the Cassandra binary
   protocol. Can be `:none` or `:snappy`.
@@ -280,6 +279,8 @@ mention earlier, you can specify
 * `:retry-policy` [RetryPolicy](#retry-policy)
 * `:routing-key` [RoutingKey](#routing-key)
 * `:tracing?` (boolean) triggers tracing (defaults to false)
+* `:keywordize?` (boolean, defaults true) rows use clojure keywords
+   as keys instead of strings, settable globally with `set-keywordize!`
 
 Additionaly `execute-async` accepts
 an `:executor` option that will set the java.util.concurrent
