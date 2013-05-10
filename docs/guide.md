@@ -460,8 +460,8 @@ Ex:
 (execute (select :users (where {:name :foo})))
 ```
 You can have control over the query caching using
-`set-hayt-raw-fn!` or via a binding on
-`*hayt-raw-fn*` and provide your own memoize implementation.
+`set-hayt-query-fn!` or via a binding on
+`*hayt-query-fn*` and provide your own memoize implementation.
 The default uses `clojure.core.memoize` with a LU cache with a `:threshold`
 of 100.
 
