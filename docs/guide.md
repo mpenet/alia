@@ -461,7 +461,8 @@ Ex:
 ```
 You can have control over the query caching using
 `set-hayt-query-fn!` or via a binding on
-`*hayt-query-fn*` and provide your own memoize implementation.
+`*hayt-query-fn*` and provide your own memoize implementation or you
+can set its value to `qbits.hayt/->raw` if you prefer not to use query caching.
 The default uses `clojure.core.memoize` with a LU cache with a `:threshold`
 of 100.
 
