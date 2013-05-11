@@ -67,6 +67,19 @@
         (execute "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid)
        VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true);")
 
+
+        (execute "CREATE TABLE items (
+                    id int,
+                    si int,
+                    text varchar,
+                    PRIMARY KEY (id)
+                  );")
+
+        (execute "CREATE INDEX ON items (si);")
+
+        (dotimes [i 12]
+          (execute (format "INSERT INTO items (id, text, si) VALUES(%s, 'prout', %s);" i i)))
+
         ;; do the thing
         (test-runner)
 
@@ -133,6 +146,16 @@
     ;; (is (= user-data-set (execute (bind s-parameterized-nil nil))))
     ;; 'null' parameters are not allowed since CQL3 does not (yet) supports them (see https://issues.apache.org/jira/browse/CASSANDRA-3783)
 ))
+
+
+(deftest test-lazy-query
+  (is (= 10 (count (take 10 (lazy-query
+                             (select :items
+                                     (limit 2)
+                                     (where {:si (int 1)}))
+                             (fn [q coll]
+                               (merge q (where {:si (-> coll last :si inc)})))
+                             :keywordize? true))))))
 
 
 ;; (run-tests)

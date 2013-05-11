@@ -144,7 +144,7 @@ used in `execute` after it's been bound with `bind`"
 
   (.setConsistencyLevel statement (consistency-levels consistency)))
 
-(defn ^:private execute-args
+(defn ^:private fix-session-arg
   [args]
   (if (instance? Session (first args))
     args
@@ -176,7 +176,7 @@ If you chose the latter the Session must be bound with
                                           tracing? keywordize? values]
                                    :or {keywordize? *keywordize*
                                         consistency *consistency*}}]
-        (execute-args args)
+        (fix-session-arg args)
         ^Query statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
     (codec/result-set->maps (.execute session statement) keywordize?)))
@@ -192,7 +192,7 @@ If you chose the latter the Session must be bound with
                                    :or {executor *executor*
                                         keywordize? *keywordize*
                                         consistency *consistency*}}]
-        (execute-args args)
+        (fix-session-arg args)
         ^Query statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
     (let [^ResultSetFuture rs-future (.executeAsync session statement)
@@ -208,3 +208,23 @@ If you chose the latter the Session must be bound with
            (l/error async-result err)))
        executor)
       async-result)))
+
+(defn ^:private lazy-query-
+  [session query pred coll opts]
+  (lazy-cat coll
+   (let [coll (apply execute session query opts)]
+     (lazy-query- session (pred query coll) pred coll opts))))
+
+(defn lazy-query
+  "Takes a query (hayt, raw or prepared) and a modifier predicate that
+   takes the current query and current seq state, and returns a lazy
+   sequence.  You must pass the session as first argument or use a
+   binding.  It also accepts all execute options as trailing arguments
+
+   ex: (lazy-query (select :items (limit 2) (where {:x (int 1)}))
+                     (fn [q coll]
+                       (merge q (where {:si (-> coll last :x inc)})))
+                     :consistency :quorum :tracing? true)"
+  [& args]
+  (let [[session query pred & opts] (fix-session-arg args)]
+    (lazy-query- session query pred [] opts)))
