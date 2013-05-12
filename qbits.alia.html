@@ -3,7 +3,7 @@
 used with `execute`</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L110">Source</a></div></div><div class="public" id="var-cluster"><h3>cluster</h3><div class="usage"><code>(cluster hosts &amp; {:as options})</code></div><pre class="doc">Returns a new com.datastax.driver.core/Cluster instance
 </pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L78">Source</a></div></div><div class="public" id="var-connect"><h3>connect</h3><div class="usage"><code>(connect cluster keyspace)</code><code>(connect cluster)</code></div><pre class="doc">Returns a new com.datastax.driver.core/Session instance. We need to
 have this separate in order to allow users to connect to multiple
-keyspaces from a single cluster instance</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L85">Source</a></div></div><div class="public" id="var-execute"><h3>execute</h3><div class="usage"><code>(execute &amp; args)</code></div><pre class="doc">Executes querys against a session. Returns a collection of rows.
+keyspaces from a single cluster instance</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L85">Source</a></div></div><div class="public" id="var-execute"><h3>execute</h3><div class="usage"><code>(execute &amp; args)</code></div><pre class="doc">Executes a query against a session. Returns a collection of rows.
 The first argument can be either a Session instance or the query
 directly.
 
@@ -22,9 +22,13 @@ or
                        consistency *consistency*}}]
 
 If you chose the latter the Session must be bound with
-`with-session`.</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L154">Source</a></div></div><div class="public" id="var-execute-async"><h3>execute-async</h3><div class="usage"><code>(execute-async &amp; args)</code></div><pre class="doc">Same as execute, but returns a promise and accepts :success and :error
+`with-session`.
+
+The query can be a raw string, a PreparedStatement (returned by
+`prepare`) with values passed as `:values` that will be bound by
+`execute`, BoundStatement (returned by `bind`), or a Hayt query.</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L154">Source</a></div></div><div class="public" id="var-execute-async"><h3>execute-async</h3><div class="usage"><code>(execute-async &amp; args)</code></div><pre class="doc">Same as execute, but returns a promise and accepts :success and :error
 handlers, you can also pass :executor for the ResultFuture, it
-defaults to a cachedThreadPool if you don't</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L185">Source</a></div></div><div class="public" id="var-lazy-query"><h3>lazy-query</h3><div class="usage"><code>(lazy-query &amp; args)</code></div><pre class="doc">Takes a query (hayt, raw or prepared) and a modifier predicate that
+defaults to a cachedThreadPool if you don't</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L190">Source</a></div></div><div class="public" id="var-lazy-query"><h3>lazy-query</h3><div class="usage"><code>(lazy-query &amp; args)</code></div><pre class="doc">Takes a query (hayt, raw or prepared) and a modifier predicate that
 takes the current query and current seq state, and returns a lazy
 sequence.  You must pass the session as first argument or use a
 binding.  It also accepts all execute options as trailing arguments
@@ -32,7 +36,7 @@ binding.  It also accepts all execute options as trailing arguments
 ex: (lazy-query (select :items (limit 2) (where {:x (int 1)}))
                   (fn [q coll]
                     (merge q (where {:si (-&gt; coll last :x inc)})))
-                  :consistency :quorum :tracing? true)</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L219">Source</a></div></div><div class="public" id="var-prepare"><h3>prepare</h3><div class="usage"><code>(prepare session query)</code><code>(prepare query)</code></div><pre class="doc">Returns a com.datastax.driver.core.PreparedStatement instance to be
+                  :consistency :quorum :tracing? true)</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L224">Source</a></div></div><div class="public" id="var-prepare"><h3>prepare</h3><div class="usage"><code>(prepare session query)</code><code>(prepare query)</code></div><pre class="doc">Returns a com.datastax.driver.core.PreparedStatement instance to be
 used in `execute` after it's been bound with `bind`</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L102">Source</a></div></div><div class="public" id="var-set-consistency%21"><h3>set-consistency!</h3><div class="usage"></div><pre class="doc">Sets root value of *consistency*
 </pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L37">Source</a></div></div><div class="public" id="var-set-executor%21"><h3>set-executor!</h3><div class="usage"></div><pre class="doc">Sets root value of *executor*
 </pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L55">Source</a></div></div><div class="public" id="var-set-hayt-query-fn%21"><h3>set-hayt-query-fn!</h3><div class="usage"></div><pre class="doc">Sets root value of *query-fn*, allowing to control how
