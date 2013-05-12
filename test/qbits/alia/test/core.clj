@@ -77,7 +77,7 @@
 
         (execute "CREATE INDEX ON items (si);")
 
-        (dotimes [i 12]
+        (dotimes [i 10]
           (execute (format "INSERT INTO items (id, text, si) VALUES(%s, 'prout', %s);" i i)))
 
         ;; do the thing
@@ -152,10 +152,18 @@
   (is (= 10 (count (take 10 (lazy-query
                              (select :items
                                      (limit 2)
-                                     (where {:si (int 1)}))
+                                     (where {:si (int 0)}))
                              (fn [q coll]
                                (merge q (where {:si (-> coll last :si inc)})))
-                             :keywordize? true))))))
+                             :keywordize? true)))))
 
+  (is (= 4 (count (take 10 (lazy-query
+                            (select :items
+                                    (limit 2)
+                                    (where {:si (int 0)}))
+                            (fn [q coll]
+                              (when (< (-> coll last :si) 3)
+                                (merge q (where {:si (-> coll last :si inc)}))))
+                            :keywordize? true))))))
 
 ;; (run-tests)

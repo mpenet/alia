@@ -218,19 +218,30 @@ The query can be a raw string, a PreparedStatement (returned by
 (defn ^:private lazy-query-
   [session query pred coll opts]
   (lazy-cat coll
-   (let [coll (apply execute session query opts)]
-     (lazy-query- session (pred query coll) pred coll opts))))
+            (when query
+              (let [coll (apply execute session query opts)]
+                (lazy-query- session (pred query coll) pred coll opts)))))
 
 (defn lazy-query
-  "Takes a query (hayt, raw or prepared) and a modifier predicate that
-   takes the current query and current seq state, and returns a lazy
-   sequence.  You must pass the session as first argument or use a
-   binding.  It also accepts all execute options as trailing arguments
+  "Takes a query (hayt, raw or prepared) and a query modifier fn (that
+receives the last query and last chunk and returns a new query or nil).
+The first chunk will be the original query result, then for each
+subsequent chunk the query will be the result of last query
+modified by the modifier fn unless the fn returns nil,
+which would causes the iteration to stop.
 
-   ex: (lazy-query (select :items (limit 2) (where {:x (int 1)}))
-                     (fn [q coll]
-                       (merge q (where {:si (-> coll last :x inc)})))
-                     :consistency :quorum :tracing? true)"
+You must pass the session as first argument or
+use a binding.  It also accepts any `execute` options as trailing
+arguments.
+
+2 signatures:
+  [session query pred & opts] or [query pred & opts]
+
+ex: (lazy-query (select :items (limit 2) (where {:x (int 1)}))
+                  (fn [q coll]
+                    (merge q (where {:si (-> coll last :x inc)})))
+                  :consistency :quorum :tracing? true)"
   [& args]
-  (let [[session query pred & opts] (fix-session-arg args)]
+  (let [[session query pred & opts]
+        (fix-session-arg args)]
     (lazy-query- session query pred [] opts)))
