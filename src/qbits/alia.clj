@@ -114,7 +114,8 @@ used in `execute` after it's been bound with `bind`"
   (.bind prepared-statement (to-array (map codec/encode values))))
 
 (defprotocol PStatement
-  (query->statement [q values] "Encodes input into a Statement (Query) instance"))
+  (^:no-doc query->statement
+    [q values] "Encodes input into a Statement (Query) instance"))
 
 (extend-protocol PStatement
   Query
