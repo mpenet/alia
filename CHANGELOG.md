@@ -1,5 +1,9 @@
 # Changelog
 
+### x.x.x
+
+* Added `qbits.alia/lazy-query`: lazy sequences over CQL queries
+
 ### 1.0.0
 
 * `:auth-info` option on `cluster` becomes `:credentials`
