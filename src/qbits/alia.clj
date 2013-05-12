@@ -152,7 +152,7 @@ used in `execute` after it's been bound with `bind`"
     (conj args *session*)))
 
 (defn execute
-  "Executes querys against a session. Returns a collection of rows.
+  "Executes a query against a session. Returns a collection of rows.
 The first argument can be either a Session instance or the query
 directly.
 
@@ -171,7 +171,12 @@ or
                        consistency *consistency*}}]
 
 If you chose the latter the Session must be bound with
-`with-session`."
+`with-session`.
+
+The query can be a raw string, a PreparedStatement (returned by
+`prepare`) with values passed as `:values` that will be bound by
+`execute`, BoundStatement (returned by `bind`), or a Hayt query.
+"
   [& args]
   (let [[^Session session query & {:keys [consistency routing-key retry-policy
                                           tracing? keywordize? values]
