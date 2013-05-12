@@ -29,7 +29,7 @@ The query can be a raw string, a PreparedStatement (returned by
 `execute`, BoundStatement (returned by `bind`), or a Hayt query.</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L154">Source</a></div></div><div class="public" id="var-execute-async"><h3>execute-async</h3><div class="usage"><code>(execute-async &amp; args)</code></div><pre class="doc">Same as execute, but returns a promise and accepts :success and :error
 handlers, you can also pass :executor for the ResultFuture, it
 defaults to a cachedThreadPool if you don't</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L190">Source</a></div></div><div class="public" id="var-lazy-query"><h3>lazy-query</h3><div class="usage"><code>(lazy-query &amp; args)</code></div><pre class="doc">Takes a query (hayt, raw or prepared) and a query modifier fn (that
-receives the last query and last chunk and a new query or nil).
+receives the last query and last chunk and returns a new query or nil).
 The first chunk will be the original query result, then for each
 subsequent chunk the query will be the result of last query
 modified by the modifier fn unless the fn returns nil,
