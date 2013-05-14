@@ -1,8 +1,10 @@
 # Changelog
 
-### x.x.x
+### 1.1.0
 
 * Added `qbits.alia/lazy-query`: lazy sequences over CQL queries
+
+* Depend on hayt 1.0.2 (bugfixes)
 
 ### 1.0.0
 
