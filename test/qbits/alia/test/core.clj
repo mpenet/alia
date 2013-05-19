@@ -3,6 +3,7 @@
         clojure.data
         qbits.alia
         qbits.alia.codec.joda-time
+	qbits.alia.codec.eaio-uuid
         qbits.tardis
         qbits.hayt
         qbits.alia.test.embedded))
