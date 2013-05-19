@@ -6,7 +6,7 @@
     RoundRobinPolicy
     TokenAwarePolicy)))
 
-(defn round-robin
+(defn round-robin-policy
 "A Round-robin load balancing policy.
 
 This policy queries nodes in a round-robin fashion. For a given query,
@@ -16,13 +16,13 @@ tried, until all hosts have been tried.
 This policy is not datacenter aware and will include every known
 Cassandra host in its round robin algorithm. If you use multiple
 datacenter this will be inefficient and you will want to use the
-`dc-aware-round-robin` load balancing policy instead.
+`dc-aware-round-robin-policy` load balancing policy instead.
 
 http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/RoundRobinPolicy.html"
   []
   (RoundRobinPolicy.))
 
-(defn token-aware
+(defn token-aware-policy
   "A wrapper load balancing policy that add token awareness to a child policy.
 
 This policy encapsulates another policy. The resulting policy works in
@@ -46,7 +46,7 @@ http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/T
   [child]
   (TokenAwarePolicy. child))
 
-(defn dc-aware-round-robin
+(defn dc-aware-round-robin-policy
     "A data-center aware Round-robin load balancing policy.
 
 This policy provides round-robin queries over the node of the local
@@ -58,7 +58,7 @@ no host in the local datacenter can be reached.
 
 If used with a single datacenter, this policy is equivalent to the
 LoadBalancingPolicy.RoundRobin policy, but its DC awareness incurs a
-slight overhead so the `round-robin` policy could
+slight overhead so the `round-robin-policy` policy could
 be prefered to this policy in that case.
 
 http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/DCAwareRoundRobinPolicy.html"
