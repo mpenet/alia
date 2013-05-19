@@ -60,8 +60,8 @@
   builder)
 
 (defmethod set-cluster-option! :credentials
-  [_ ^Cluster$Builder builder user pwd]
-  (.withCredentials builder user pwd))
+  [_ ^Cluster$Builder builder {:keys [user password]}]
+  (.withCredentials builder user password))
 
 (defmethod set-cluster-option! :compression
   [_ ^Cluster$Builder builder option]
