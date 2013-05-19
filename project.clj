@@ -12,7 +12,7 @@
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
              :1.5  {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :1.6  {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
-             :dev  {:dependencies [[org.xerial.snappy/snappy-java "1.0.5-SNAPSHOT"]
+             :dev  {:dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
                                    [clj-time "0.5.0"]
                                    [cc.qbits/tardis "1.0.0"]
                                    [commons-lang/commons-lang "2.6"]]}
