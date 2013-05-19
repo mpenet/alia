@@ -99,3 +99,38 @@ The logging is done at the INFO level.
 http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/LoggingRetryPolicy.html"
   [retry-policy]
   (LoggingRetryPolicy. retry-policy))
+
+(defn on-read-timeout
+  "Defines whether to retry and at which consistency level on a read timeout."
+  [^RetryPolicy policy
+   cl required-responses received-responses data-retrieved? nb-retry]
+  (.onReadTimeout policy
+                  query
+                  cl
+                  (int required-responses)
+                  (int received-responses)
+                  data-retrieved?
+                  (int nb-retry)))
+
+(defn on-unavailable
+  "Defines whether to retry and at which consistency level on an unavailable
+exception."
+  [^RetryPolicy policy
+   query cl required-responses required-replica alive-responses nb-retry]
+  (.onReadTimeout policy
+                  query
+                  cl
+                  (int required-replica)
+                  (int alive-responses)
+                  (int nb-retry)))
+
+(defn on-write-timeout
+  "Defines whether to retry and at which consistency level on a write timeout."
+  [^RetryPolicy policy
+   query cl write-type required-acks received-acks nb-retry]
+    (.onReadTimeout policy
+                    cl
+                    write-type
+                    (int required-acks)
+                    (int received-acks)
+                    (int nb-retry)))
