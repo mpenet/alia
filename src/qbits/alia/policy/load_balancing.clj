@@ -1,4 +1,5 @@
 (ns qbits.alia.policy.load-balancing
+  "The policy that decides which Cassandra hosts to contact for each new query."
   (:import
    (com.datastax.driver.core.policies
     DCAwareRoundRobinPolicy
