@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.2.0
+
+* `qbits.tardis` is now optional
+
 ### 1.1.0
 
 * Added `qbits.alia/lazy-query`: lazy sequences over CQL queries
