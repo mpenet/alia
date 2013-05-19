@@ -4,6 +4,8 @@
 
 * `qbits.tardis` is now optional
 
+* Added wrappers for retry/load-balancing/reconnection policies
+
 ### 1.1.0
 
 * Added `qbits.alia/lazy-query`: lazy sequences over CQL queries
