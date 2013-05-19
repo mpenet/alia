@@ -5,6 +5,7 @@ the handling of query retries, allowing to minimize the need for exception
 catching/handling in business code."
   (:require [qbits.alia.utils :as utils])
   (:import (com.datastax.driver.core.policies
+            RetryPolicy
             DefaultRetryPolicy
             DowngradingConsistencyRetryPolicy
             FallthroughRetryPolicy
@@ -106,7 +107,7 @@ http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/L
 
 (defn on-read-timeout
   "Defines whether to retry and at which consistency level on a read timeout."
-  [^RetryPolicy policy cl required-responses received-responses data-retrieved?
+  [^RetryPolicy policy query cl required-responses received-responses data-retrieved?
    nb-retry]
   (doto policy
     (.onReadTimeout query
@@ -122,7 +123,7 @@ exception."
   [^RetryPolicy policy query cl required-responses required-replica
    alive-responses nb-retry]
   (doto policy
-    (.onReadTimeout query
+    (.onUnavailable query
                     cl
                     (int required-replica)
                     (int alive-responses)
@@ -133,8 +134,9 @@ exception."
 write-type accepts a write-type keyword or a WriteType instance"
   [^RetryPolicy policy query cl write-type required-acks received-acks nb-retry]
   (doto policy
-    (.onReadTimeout cl
-                    (get write-types write-type write-type)
-                    (int required-acks)
-                    (int received-acks)
-                    (int nb-retry))))
+    (.onWriteTimeout query
+                     cl
+                     (get write-types write-type write-type)
+                     (int required-acks)
+                     (int received-acks)
+                     (int nb-retry))))
