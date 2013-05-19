@@ -17,7 +17,7 @@ Cassandra host in its round robin algorithm. If you use multiple
 datacenter this will be inefficient and you will want to use the
 `dc-aware-round-robin` load balancing policy instead.
 
-http://www.datastax.com/drivers/java/apidocs/"
+http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/RoundRobinPolicy.html"
   []
   (RoundRobinPolicy.))
 
