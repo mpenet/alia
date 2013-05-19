@@ -3,7 +3,7 @@
 TimeoutException or an UnavailableException. Such policy allows to centralize
 the handling of query retries, allowing to minimize the need for exception
 catching/handling in business code."
-  (:require [qbits.alia.utils :as utils])
+  (:require [qbits.alia.enum :as enum])
   (:import (com.datastax.driver.core.policies
             RetryPolicy
             DefaultRetryPolicy
@@ -12,9 +12,6 @@ catching/handling in business code."
             LoggingRetryPolicy)
            (com.datastax.driver.core WriteType)
            (com.datastax.driver.core ConsistencyLevel)))
-
-(def write-types (utils/enum-values->map (WriteType/values)))
-(def consistency-levels (utils/enum-values->map (ConsistencyLevel/values)))
 
 (def default-retry-policy
   "The default retry policy.
@@ -113,7 +110,7 @@ http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/L
    data-retrieved? nb-retry]
   (doto policy
     (.onReadTimeout query
-                    (consistency-levels consistency)
+                    (enum/consistency-levels consistency)
                     (int required-responses)
                     (int received-responses)
                     data-retrieved?
@@ -126,20 +123,19 @@ exception."
    alive-responses nb-retry]
   (doto policy
     (.onUnavailable query
-                    (consistency-levels consistency)
+                    (enum/consistency-levels consistency)
                     (int required-replica)
                     (int alive-responses)
                     (int nb-retry))))
 
 (defn on-write-timeout
-  "Defines whether to retry and at which consistency level on a write timeout.
-write-type accepts a write-type keyword or a WriteType instance"
+  "Defines whether to retry and at which consistency level on a write timeout"
   [^RetryPolicy policy query consistency write-type required-acks received-acks
    nb-retry]
   (doto policy
     (.onWriteTimeout query
-                     (consistency-levels consistency)
-                     (get write-types write-type write-type)
+                     (enum/consistency-levels consistency)
+                     (enum/write-types write-type)
                      (int required-acks)
                      (int received-acks)
                      (int nb-retry))))

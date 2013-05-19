@@ -1,5 +1,5 @@
 (ns qbits.alia.cluster-options
-  (:require [qbits.alia.utils :as utils])
+  (:require [qbits.alia.enum :as enum])
   (:import
    (com.datastax.driver.core
     Cluster$Builder
@@ -11,9 +11,6 @@
     LoadBalancingPolicy
     ReconnectionPolicy
     RetryPolicy)))
-
-(def host-distance (utils/enum-values->map (HostDistance/values)))
-(def compression (utils/enum-values->map (ProtocolOptions$Compression/values)))
 
 (defmulti set-cluster-option! (fn [k ^Cluster$Builder builder option] k))
 
@@ -43,16 +40,16 @@
   [_ ^Cluster$Builder builder options]
   (let [^PoolingOptions po (.poolingOptions builder)]
     (doseq [[dist value] (:core-connections-per-host options)]
-      (.setCoreConnectionsPerHost po (host-distance dist) (int value)))
+      (.setCoreConnectionsPerHost po (enum/host-distance dist) (int value)))
     (doseq [[dist value] (:max-connections-per-host options)]
-      (.setMaxConnectionsPerHost po (host-distance dist) (int value)))
+      (.setMaxConnectionsPerHost po (enum/host-distance dist) (int value)))
     (doseq [[dist value] (:max-simultaneous-requests-per-connection options)]
       (.setMaxSimultaneousRequestsPerConnectionTreshold po
-                                                        (host-distance dist)
+                                                        (enum/host-distance dist)
                                                         (int value)))
     (doseq [[dist value] (:min-simultaneous-requests-per-connection options)]
       (.setMinSimultaneousRequestsPerConnectionTreshold po
-                                                        (host-distance dist)
+                                                        (enum/host-distance dist)
                                                         (int value))))
   builder)
 
@@ -68,7 +65,7 @@
 
 (defmethod set-cluster-option! :compression
   [_ ^Cluster$Builder builder option]
-  (.withCompression builder (compression option)))
+  (.withCompression builder (enum/compression option)))
 
 (defn set-cluster-options!
   ^Cluster$Builder

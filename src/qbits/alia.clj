@@ -3,6 +3,7 @@
    [qbits.knit :as knit]
    [qbits.alia.codec :as codec]
    [qbits.alia.utils :as utils]
+   [qbits.alia.enum :as enum]
    [qbits.hayt :as hayt]
    [lamina.core :as l]
    [clojure.core.memoize :as memo]
@@ -12,7 +13,6 @@
     BoundStatement
     Cluster
     Cluster$Builder
-    ConsistencyLevel
     PreparedStatement
     Query
     ResultSet
@@ -25,7 +25,6 @@
    (java.nio ByteBuffer)))
 
 (def ^:dynamic *consistency* :one)
-(def consistency-levels (utils/enum-values->map (ConsistencyLevel/values)))
 
 (defmacro with-consistency
   "Binds qbits.alia/*consistency*"
@@ -142,7 +141,7 @@ used in `execute` after it's been bound with `bind`"
   (when tracing?
     (.enableTracing statement))
 
-  (.setConsistencyLevel statement (consistency-levels consistency)))
+  (.setConsistencyLevel statement (enum/consistency-levels consistency)))
 
 (defn ^:private fix-session-arg
   [args]
