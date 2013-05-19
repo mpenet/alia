@@ -106,8 +106,8 @@ http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/L
 
 (defn on-read-timeout
   "Defines whether to retry and at which consistency level on a read timeout."
-  [^RetryPolicy policy
-   cl required-responses received-responses data-retrieved? nb-retry]
+  [^RetryPolicy policy cl required-responses received-responses data-retrieved?
+   nb-retry]
   (.onReadTimeout policy
                   query
                   cl
@@ -119,8 +119,8 @@ http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/L
 (defn on-unavailable
   "Defines whether to retry and at which consistency level on an unavailable
 exception."
-  [^RetryPolicy policy
-   query cl required-responses required-replica alive-responses nb-retry]
+  [^RetryPolicy policy query cl required-responses required-replica
+   alive-responses nb-retry]
   (.onReadTimeout policy
                   query
                   cl
@@ -130,8 +130,7 @@ exception."
 
 (defn on-write-timeout
   "Defines whether to retry and at which consistency level on a write timeout."
-  [^RetryPolicy policy
-   query cl write-type required-acks received-acks nb-retry]
+  [^RetryPolicy policy query cl write-type required-acks received-acks nb-retry]
     (.onReadTimeout policy
                     cl
                     ;; write type accepts a write-type keyword or a
