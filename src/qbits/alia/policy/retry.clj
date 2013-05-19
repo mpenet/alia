@@ -108,35 +108,33 @@ http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/L
   "Defines whether to retry and at which consistency level on a read timeout."
   [^RetryPolicy policy cl required-responses received-responses data-retrieved?
    nb-retry]
-  (.onReadTimeout policy
-                  query
-                  cl
-                  (int required-responses)
-                  (int received-responses)
-                  data-retrieved?
-                  (int nb-retry)))
+  (doto policy
+    (.onReadTimeout query
+                    cl
+                    (int required-responses)
+                    (int received-responses)
+                    data-retrieved?
+                    (int nb-retry))))
 
 (defn on-unavailable
   "Defines whether to retry and at which consistency level on an unavailable
 exception."
   [^RetryPolicy policy query cl required-responses required-replica
    alive-responses nb-retry]
-  (.onReadTimeout policy
-                  query
-                  cl
-                  (int required-replica)
-                  (int alive-responses)
-                  (int nb-retry)))
+  (doto policy
+    (.onReadTimeout query
+                    cl
+                    (int required-replica)
+                    (int alive-responses)
+                    (int nb-retry))))
 
 (defn on-write-timeout
-  "Defines whether to retry and at which consistency level on a write timeout."
+  "Defines whether to retry and at which consistency level on a write timeout.
+write-type accepts a write-type keyword or a WriteType instance"
   [^RetryPolicy policy query cl write-type required-acks received-acks nb-retry]
-    (.onReadTimeout policy
-                    cl
-                    ;; write type accepts a write-type keyword or a
-                    ;; WriteType instance
-                    (get write-types write-type
-                         write-type)
+  (doto policy
+    (.onReadTimeout cl
+                    (get write-types write-type write-type)
                     (int required-acks)
                     (int received-acks)
-                    (int nb-retry)))
+                    (int nb-retry))))
