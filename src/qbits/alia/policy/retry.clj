@@ -10,9 +10,11 @@ catching/handling in business code."
             DowngradingConsistencyRetryPolicy
             FallthroughRetryPolicy
             LoggingRetryPolicy)
-           (com.datastax.driver.core WriteType)))
+           (com.datastax.driver.core WriteType)
+           (com.datastax.driver.core ConsistencyLevel)))
 
 (def write-types (utils/enum-values->map (WriteType/values)))
+(def consistency-levels (utils/enum-values->map (ConsistencyLevel/values)))
 
 (def default-retry-policy
   "The default retry policy.
@@ -107,11 +109,11 @@ http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/L
 
 (defn on-read-timeout
   "Defines whether to retry and at which consistency level on a read timeout."
-  [^RetryPolicy policy query cl required-responses received-responses data-retrieved?
-   nb-retry]
+  [^RetryPolicy policy query consistency required-responses received-responses
+   data-retrieved? nb-retry]
   (doto policy
     (.onReadTimeout query
-                    cl
+                    (consistency-levels consistency)
                     (int required-responses)
                     (int received-responses)
                     data-retrieved?
@@ -120,11 +122,11 @@ http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/L
 (defn on-unavailable
   "Defines whether to retry and at which consistency level on an unavailable
 exception."
-  [^RetryPolicy policy query cl required-responses required-replica
+  [^RetryPolicy policy query consistency required-responses required-replica
    alive-responses nb-retry]
   (doto policy
     (.onUnavailable query
-                    cl
+                    (consistency-levels consistency)
                     (int required-replica)
                     (int alive-responses)
                     (int nb-retry))))
@@ -132,10 +134,11 @@ exception."
 (defn on-write-timeout
   "Defines whether to retry and at which consistency level on a write timeout.
 write-type accepts a write-type keyword or a WriteType instance"
-  [^RetryPolicy policy query cl write-type required-acks received-acks nb-retry]
+  [^RetryPolicy policy query consistency write-type required-acks received-acks
+   nb-retry]
   (doto policy
     (.onWriteTimeout query
-                     cl
+                     (consistency-levels consistency)
                      (get write-types write-type write-type)
                      (int required-acks)
                      (int received-acks)
