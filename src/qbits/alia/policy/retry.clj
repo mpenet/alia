@@ -3,11 +3,15 @@
 TimeoutException or an UnavailableException. Such policy allows to centralize
 the handling of query retries, allowing to minimize the need for exception
 catching/handling in business code."
+  (:require [qbits.alia.utils :as utils])
   (:import (com.datastax.driver.core.policies
             DefaultRetryPolicy
             DowngradingConsistencyRetryPolicy
             FallthroughRetryPolicy
-            LoggingRetryPolicy)))
+            LoggingRetryPolicy)
+           (com.datastax.driver.core WriteType)))
+
+(def write-types (utils/enum-values->map (WriteType/values)))
 
 (def default-retry-policy
   "The default retry policy.
@@ -130,7 +134,10 @@ exception."
    query cl write-type required-acks received-acks nb-retry]
     (.onReadTimeout policy
                     cl
-                    write-type
+                    ;; write type accepts a write-type keyword or a
+                    ;; WriteType instance
+                    (get write-types write-type
+                         write-type)
                     (int required-acks)
                     (int received-acks)
                     (int nb-retry)))
