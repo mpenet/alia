@@ -2,7 +2,6 @@
   (:require
    [qbits.knit :as knit]
    [qbits.alia.codec :as codec]
-   [qbits.alia.codec.eaio-uuid]
    [qbits.alia.utils :as utils]
    [qbits.hayt :as hayt]
    [lamina.core :as l]
