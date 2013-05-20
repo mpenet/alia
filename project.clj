@@ -18,7 +18,11 @@
                                    [commons-lang/commons-lang "2.6"]]}
              :test  {:resource-paths ["test/resources"]}}
   :codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master"
-          :src-linenum-anchor-prefix "L"}
+          :src-linenum-anchor-prefix "L"
+          :exclude [qbits.alia.enum
+                    qbits.alia.utils
+                    qbits.alia.codec
+                    qbits.alia.cluster-options]}
   :warn-on-reflection true
   :repositories {"sonatype" {:url "http://oss.sonatype.org/content/repositories/releases"
                              :snapshots false
