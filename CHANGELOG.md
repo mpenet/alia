@@ -4,7 +4,7 @@
 
 * `qbits.tardis` is now optional
 
-* Added wrappers for retry/load-balancing/reconnection policies
+* Added wrappers for retry/load-balancing/reconnection policies see `qbits.alia.policy.*`
 
 ### 1.1.0
 
