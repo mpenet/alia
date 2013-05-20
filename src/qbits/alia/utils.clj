@@ -5,4 +5,5 @@
      (alter-var-root (var ~x)
                      (constantly arg#)
                      (when (thread-bound? (var ~x))
-                       (set! ~x arg#)))))
+                       (set! ~x arg#)))
+     arg#))
