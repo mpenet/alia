@@ -52,12 +52,16 @@ The following options are supported:
   active on the nodes: `start_native_transport: true` in
   cassandra.yaml). Defaults to 9042 if not supplied.
 
-* `:load-balancing-policy`: Configure the [LoadBalancingPolicy](http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/LoadBalancingPolicy.html) to use for the new cluster.
+* `:load-balancing-policy`: Configure the
+  [Load Balancing Policy](http://mpenet.github.io/alia/qbits.alia.policy.load-balancing.html)
+  to use for the new cluster.
 
-* `:reconnection-policy`: Configure the [ReconnectionPolicy](http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/ReconnectionPolicy.html) to use for the new cluster.
+* `:reconnection-policy`: Configure the
+  [Reconnection Policy](http://mpenet.github.io/alia/qbits.alia.policy.reconnection.html)
+  to use for the new cluster.
 
 * `:retry-policy`: Configure the
-  [RetryPolicy](http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/RetryPolicy.html)
+  [Retry Policy](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
   to use for the new cluster.
 
 * `:metrics?`: Toggles metrics collection for the created cluster
@@ -106,6 +110,19 @@ The handling of these options is achieved with a multimethod that you
 could extend if you need to handle some special case or want to create
 your own options templates.
 See `qbits.alia.cluster-options/set-cluster-option!` [[source]](../src/qbits/alia/cluster_options.clj#L19)
+
+## Retry, Reconnection, Load balancing policies
+
+These are all available from `qbits.alia.policy.*`.
+
+Consult the codox documentation for details about these, they are
+described in detail:
+
+* [Load Balancing Policies](http://mpenet.github.io/alia/qbits.alia.policy.load-balancing.html)
+
+* [Reconnection Policies](http://mpenet.github.io/alia/qbits.alia.policy.reconnection.html)
+
+* [Retry Policies](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
 
 ## Creating Sessions from a cluster instance
 
@@ -276,7 +293,7 @@ The complete signature of execute looks like this
 `execute` and `execute-async` support a number of options I didn't
 mention earlier, you can specify
 * `:consistency` [Consistency](#consistency)
-* `:retry-policy` [RetryPolicy](#retry-policy)
+* `:retry-policy` [Retry Policy](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
 * `:routing-key` [RoutingKey](#routing-key)
 * `:tracing?` (boolean) triggers tracing (defaults to false)
 * `:keywordize?` (boolean, defaults true) rows use clojure keywords
@@ -366,7 +383,7 @@ returned by Policies.getRetryPolicy() in the cluster
 configuration. This method is thus only useful in case you want to
 punctually override the default policy for this request.
 
-RetryPolicy on datastax doc: (http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/Query.html#setRetryPolicy(com.datastax.driver.core.policies.RetryPolicy)
+[Retry Policies](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
 
 ## Shuting down
 
