@@ -59,6 +59,13 @@
     (.withoutMetrics builder))
   builder)
 
+(defmethod set-cluster-option! :jmx-reporting?
+  [_ ^Cluster$Builder builder jmx-reporting?]
+  (when (not jmx-reporting?)
+    (.withoutJMXReporting builder))
+  builder)
+
+
 (defmethod set-cluster-option! :credentials
   [_ ^Cluster$Builder builder {:keys [user password]}]
   (.withCredentials builder user password))
