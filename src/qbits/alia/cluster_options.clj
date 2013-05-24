@@ -65,7 +65,6 @@
     (.withoutJMXReporting builder))
   builder)
 
-
 (defmethod set-cluster-option! :credentials
   [_ ^Cluster$Builder builder {:keys [user password]}]
   (.withCredentials builder user password))

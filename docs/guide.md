@@ -67,6 +67,8 @@ The following options are supported:
 * `:metrics?`: Toggles metrics collection for the created cluster
   (metrics are enabled by default otherwise).
 
+* `:jmx-reporting?`: Toggles JMX reporting of the metrics.
+
 * `:credentials`: Takes a username and password for use with
   Cassandra's PasswordAuthenticator
 

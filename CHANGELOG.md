@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.3.0
+
+* Added support for `JMXReporting` toggling at the cluster level
+
 ### 1.2.0
 
 * `qbits.tardis` is now optional
