@@ -76,9 +76,9 @@
                      len (.size cdef)]
                  (loop [idx (int 0)
                         row-map (transient {})]
-                   (if (= idx len)
+                   (if (== idx len)
                      (persistent! row-map)
-                     (recur (int (inc idx))
+                     (recur (int (unchecked-inc idx))
                             (assoc! row-map
                                     (key-fn (.getName cdef idx))
                                     (decode row idx (.getType cdef idx))))))))
