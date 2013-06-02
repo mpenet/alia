@@ -78,7 +78,7 @@
                         row-map (transient {})]
                    (if (== idx len)
                      (persistent! row-map)
-                     (recur (int (unchecked-inc idx))
+                     (recur (unchecked-inc-int idx)
                             (assoc! row-map
                                     (key-fn (.getName cdef idx))
                                     (decode row idx (.getType cdef idx))))))))
