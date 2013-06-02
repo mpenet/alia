@@ -76,7 +76,7 @@
                      len (.size cdef)]
                  (loop [idx (int 0)
                         row-map (transient {})]
-                   (if (== idx len)
+                   (if (= idx len)
                      (persistent! row-map)
                      (recur (unchecked-inc-int idx)
                             (assoc! row-map
