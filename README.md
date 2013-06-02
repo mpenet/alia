@@ -32,7 +32,9 @@ surprises.
 
 ## Documentation
 
-[A first draft can be found here](https://github.com/mpenet/alia/blob/master/docs/guide.md) and you can also consult the [codox generated documentation](http://mpenet.github.com/alia/#docs).
+[A guide](https://github.com/mpenet/alia/blob/master/docs/guide.md) is
+available and you can also consult the
+[codox generated documentation](http://mpenet.github.com/alia/#docs).
 
 ## Quickstart
 
