@@ -1,31 +1,35 @@
 # Changelog
 
-### 1.3.1
+## 1.3.2
+
+* update dependency `core.memoize` to 0.5.4
+
+## 1.3.1
 
 * ResultSet decoding performance improvements
 
-### 1.3.0
+## 1.3.0
 
 * Added support for `JMXReporting` toggling at the cluster level
 
-### 1.2.0
+## 1.2.0
 
 * `qbits.tardis` is now optional
 
 * Added wrappers for retry/load-balancing/reconnection policies see `qbits.alia.policy.*`
 
-### 1.1.0
+## 1.1.0
 
 * Added `qbits.alia/lazy-query`: lazy sequences over CQL queries
 
 * Depend on hayt 1.0.2 (bugfixes)
 
-### 1.0.0
+## 1.0.0
 
 * `:auth-info` option on `cluster` becomes `:credentials`
   as SimpleAuthInfoProvider is gone and replaced with .withCredentials.
 
-### 1.0.0-rc1
+## 1.0.0-rc1
 
 * Upgraded to java-driver rc1
 
@@ -33,15 +37,15 @@
 
 * Restored `keywordize?`
 
-### 1.0.0-beta9
+## 1.0.0-beta9
 
 * Lift restriction on nil values (supported in C* 1.2.4+)
 
-### 1.0.0-beta8
+## 1.0.0-beta8
 
 * remove `keywordize` option, useless feature
 
-### 1.0.0-beta7
+## 1.0.0-beta7
 
 * Update java-driver to beta2, see
   [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/master/driver-core/CHANGELOG.rst)
@@ -55,7 +59,7 @@
 * C* CUSTOM type support see
   [JAVA-61](https://datastax-oss.atlassian.net/browse/JAVA-61)
 
-### 1.0.0-beta6
+## 1.0.0-beta6
 
 * `async-execute` now returns a `lamina.core/result-channel`, the only
   difference for end-users should be the behavior when an error occurs
@@ -64,7 +68,7 @@
 
 * Added [Lamina](https://github.com/ztellman/lamina) as a dependency.
 
-### 1.0.0-beta5
+## 1.0.0-beta5
 
 * BREAKING CHANGE: Column names are now returned as keywords by
   default (way more convenient in real world use), you can change that
@@ -73,17 +77,17 @@
 
 * Depend on clojure 1.5.1 by default.
 
-### 1.0.0-beta4
+## 1.0.0-beta4
 
 * update hayt to 0.4.0-beta3
 * update core.memoize to 0.5.3
 * minor code changes to avoid repetitions in alia.clj
 
-### 1.0.0-beta3
+## 1.0.0-beta3
 
 * add hayt raw query execution support, with query caching.
 
-### 1.0.0-beta2
+## 1.0.0-beta2
 
 * update hayt to 0.4.0-beta1
 
