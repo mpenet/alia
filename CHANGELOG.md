@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0
+
+* add simple wrapper to time 1 UUIDs
+
 ## 1.3.2
 
 * update dependency `core.memoize` to 0.5.4
