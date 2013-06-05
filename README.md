@@ -3,7 +3,7 @@
 
 > Coan-Teen, the female death spirit who walks without feet.
 
-Cassandra CQL3 client for Clojure wrapping [datastax/java-driver 1.0.0](https://github.com/datastax/java-driver).
+Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github.com/datastax/java-driver).
 
 Alia's goal is to be a very simple to use library without trading
 performance, features or exensibility.
