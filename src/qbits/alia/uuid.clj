@@ -22,3 +22,8 @@
   "Return the unix timestamp contained by the provided time-based UUID."
   [uuid]
   (UUIDs/unixTimestamp uuid))
+
+(defn random
+  "Creates a new random (version 4) UUID."
+  []
+  (UUIDs/random))
