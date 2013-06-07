@@ -6,7 +6,8 @@
     HostDistance
     PoolingOptions
     ProtocolOptions$Compression
-    SocketOptions)
+    SocketOptions
+    SSLOptions)
    (com.datastax.driver.core.policies
     LoadBalancingPolicy
     ReconnectionPolicy
@@ -72,6 +73,16 @@
 (defmethod set-cluster-option! :compression
   [_ ^Cluster$Builder builder option]
   (.withCompression builder (enum/compression option)))
+
+(defmethod set-cluster-option! :ssl?
+  [_ ^Cluster$Builder builder ssl?]
+  (when ssl? (.withSSL builder)))
+
+(defmethod set-cluster-option! :ssl-options
+  [_ ^Cluster$Builder builder ssl-options]
+  (assert (instance? ssl-options SSLOptions)
+          "Expects an om.datastax.driver.core.SSLOptions instance")
+  (.withSSL builder ssl-options))
 
 (defn set-cluster-options!
   ^Cluster$Builder
