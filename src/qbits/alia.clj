@@ -66,7 +66,7 @@
   "Sets root value of *keywordize*"
   (utils/var-root-setter *keywordize*))
 
-(def ^:dynamic *hayt-query-fn* (memo/memo-lu hayt/->raw 100))
+(def ^:dynamic *hayt-query-fn* (memo/lu hayt/->raw :lu/threshold 100))
 
 (def set-hayt-query-fn!
   "Sets root value of *query-fn*, allowing to control how

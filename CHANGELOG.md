@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1
+
+* bump hayt to 1.0.5 https://github.com/mpenet/hayt/blob/master/CHANGELOG.md#105
+
+* bump core.memoize to 0.5.5
+
 ## 1.4.0
 
 * add simple wrapper to time 1 UUIDs
