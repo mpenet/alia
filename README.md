@@ -193,9 +193,8 @@ Some examples:
 ```
 
 Alia supports hayt query direct execution, if you pass a non-compiled
-query, it will be compiled and cached, this works for raw queries only atm,
-on a LU cache with a threshold of 100 (the cache function is user
-settable), so to be used carefully.
+query to `execute` or `execute-async`, it will be compiled and cached on a LU cache with a threshold of
+100 (the cache function is user settable), so to be used carefully. The same is true with `prepare`.
 
 Ex:
 ```clojure
