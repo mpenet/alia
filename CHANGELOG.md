@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0
+
+* Add support for hayt query input in `alia/prepare`
+
 ## 1.4.1
 
 * bump hayt to 1.0.5 https://github.com/mpenet/hayt/blob/master/CHANGELOG.md#105
