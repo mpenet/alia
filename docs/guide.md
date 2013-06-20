@@ -472,7 +472,14 @@ To compile the queries just use `->raw` or `->prepared`
 ```
 
 Alia supports hayt query direct execution, if you pass a non-compiled
-query, it will be compiled and cached (works for raw queries only atm).
+query, it will be compiled and cached.
+
+The same is true with `prepare`, the query gets prepared (ignoring the
+values, it's for convenience really, it compiles the query under the
+hood and only passes the parameterized string with ? placeholders).
+```clojure
+(prepare (select :user (where {:foo :bar})))
+```
 
 Ex:
 ```clojure
