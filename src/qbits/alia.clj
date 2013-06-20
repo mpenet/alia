@@ -100,8 +100,11 @@ pools/connections"
 (defn prepare
   "Returns a com.datastax.driver.core.PreparedStatement instance to be
 used in `execute` after it's been bound with `bind`"
-  ([^Session session ^String query]
-     (.prepare session query))
+  ([^Session session query]
+     (.prepare session
+               ^String (if (map? query)
+                         (first (hayt/->prepared query))
+                         query)))
   ([query]
      (prepare *session* query)))
 

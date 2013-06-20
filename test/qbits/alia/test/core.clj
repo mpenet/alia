@@ -116,7 +116,7 @@
 
 (deftest test-prepared
   (let [s-simple (prepare "select * from users;")
-        s-parameterized-simple (prepare "select * from users where user_name=?;")
+        s-parameterized-simple (prepare (select :users (where {:user_name :foo})))
         s-prepare-types (prepare "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?);")
         ;; s-parameterized-set (prepare  "select * from users where emails=?;")
         ;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
