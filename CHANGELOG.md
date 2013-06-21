@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1
+
+* Add support for raw byte-arrays from hayt queries and prepared statements
+
 ## 1.5.0
 
 * Add support for hayt query input in `alia/prepare`

@@ -218,7 +218,7 @@ In the cassandra.yaml file, you need to set:
 Then add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia "1.5.0"]
+[cc.qbits/alia "1.5.1"]
 ```
 
 Please check the
