@@ -1,5 +1,6 @@
 (ns qbits.alia.codec
   (:import
+   (java.nio ByteBuffer)
    (com.datastax.driver.core
     DataType
     DataType$Name
@@ -58,6 +59,10 @@
     statements (usefull for external libs such as joda time)"))
 
 (extend-protocol PCodec
+
+  (Class/forName "[B")
+  (encode [x]
+    (ByteBuffer/wrap x))
 
   clojure.lang.Keyword
   (encode [x] (name x))
