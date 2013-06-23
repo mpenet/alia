@@ -5,30 +5,26 @@
 
 Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github.com/datastax/java-driver).
 
-Alia's goal is to be a very simple to use library without trading
-performance, features or exensibility.
-It allows do to everything
-[datastax/java-driver](https://github.com/datastax/java-driver) has to offer
-with an idiomatic API, from a handfull of functions. The learning
-curve or need to reach for the docs should be minimal.
-Alia also integrates with [Hayt](#hayt-query-dsl), a CQL query DSL inspired
-by korma/ClojureQL.
+## What's in the box?
 
-About datastax/java-driver:
-It's built on top of the new binary protocol, can handle
-pooling/balancing/failover/metrics, is very active, has synchronous and
-asynchronous APIs, is likely to become the standard client for java
-(it's the only one I know that uses the new protocol), and you can
-trust [datastax](http://datastax.com/) to improve and maintain it.
-
-If you want a Thrift based client for Clojure you could give a try to
-[casyn](https://github.com/mpenet/casyn)
-
-## Status
-
-Alia is stable, and used in production by some users.
-Its code doesn't do anything too exotic, so there shouldn't be any
-surprises.
+* Built on an **extremely solid base**,
+  [datastax/java-driver](https://github.com/datastax/java-driver),
+  based on the new **CQL native protocol**
+* **Simple API** with a minimal learning curve
+* **Great performance**
+* Provides a **versatile CQL3+ DSL**, [Hayt](#hayt-query-dsl)
+* Support for **Raw queries**, **Prepared Statements** or **[Hayt](#hayt-query-dsl) queries**
+* Can do both **Synchronous and Asynchronous** query execution, using
+  a promise like api
+* Support for **all of
+  [datastax/java-driver](https://github.com/datastax/java-driver)
+  advanced options**: jmx, auth, compression, consistency, custom
+  executors, custom routing and more
+* Suport and sugar for **query tracing**, **metrics**, **retry
+  policies**, *load balancing policies**, **reconnection policies**
+  and **GUIDs** generation
+* Extensible **Clojure data types support**
+* **Lazy and potentialy chunked sequences over queries**
 
 ## Documentation
 
