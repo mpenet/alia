@@ -22,7 +22,7 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
   executors, custom routing and more
 * Support and sugar for **query tracing**, **metrics**, **retry
   policies**, **load balancing policies**, **reconnection policies**
-  and **GUIDs** generation
+  and **UUIDs** generation
 * Extensible **Clojure data types support**
 * **Lazy and potentialy chunked sequences over queries**
 
