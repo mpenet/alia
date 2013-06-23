@@ -26,6 +26,24 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 * Extensible **Clojure data types support**
 * **Lazy and potentialy chunked sequences over queries**
 
+## Installation
+
+The binary protocol server is not started with the default
+configuration file coming with Cassandra 1.2.
+In the cassandra.yaml file, you need to set:
+
+`start_native_transport: true`
+
+Then add this to your dependencies:
+
+```clojure
+[cc.qbits/alia "1.5.1"]
+```
+
+Please check the
+[Changelog](https://github.com/mpenet/alia/blob/master/CHANGELOG.md)
+if you are upgrading.
+
 ## Documentation
 
 [A guide](https://github.com/mpenet/alia/blob/master/docs/guide.md) is
@@ -202,24 +220,6 @@ of collection types and their operations, ddl, prepared statements,
 etc).
 If you want to know more about it head to its [codox documentation](http://mpenet.github.com/hayt/codox/qbits.hayt.html) or
 [Hayt's tests](https://github.com/mpenet/hayt/blob/master/test/qbits/hayt/core_test.clj).
-
-## Installation
-
-The binary protocol server is not started with the default
-configuration file coming with Cassandra 1.2.
-In the cassandra.yaml file, you need to set:
-
-`start_native_transport: true`
-
-Then add this to your dependencies:
-
-```clojure
-[cc.qbits/alia "1.5.1"]
-```
-
-Please check the
-[Changelog](https://github.com/mpenet/alia/blob/master/CHANGELOG.md)
-if you are upgrading.
 
 ## Mailing list
 
