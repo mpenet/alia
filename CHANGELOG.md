@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.2
+
+* Make it clj 1.4+ compatible instead of 1.5+ (dependency on latest hayt)
+
 ## 1.5.1
 
 * Add support for raw byte-arrays from hayt queries and prepared statements
