@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.3
+
+* Update core.memoize dependency (fixes annoying assert bug)
+
 ## 1.5.2
 
 * Make it clj 1.4+ compatible instead of 1.5+ (dependency on latest hayt)
