@@ -81,7 +81,7 @@
 (defmethod set-cluster-option! :ssl-options
   [_ ^Cluster$Builder builder ssl-options]
   (assert (instance? ssl-options SSLOptions)
-          "Expects an om.datastax.driver.core.SSLOptions instance")
+          "Expects a com.datastax.driver.core.SSLOptions instance")
   (.withSSL builder ssl-options))
 
 (defn set-cluster-options!
