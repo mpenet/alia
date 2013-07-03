@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0
+
+* Use java-driver 1.0.1 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/master/driver-core/CHANGELOG.rst)
+
+* Add SSL support
+
 ## 1.5.3
 
 * Update core.memoize dependency (fixes annoying assert bug)
