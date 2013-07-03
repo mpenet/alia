@@ -8,7 +8,7 @@
                  [cc.qbits/knit "0.2.1"]
                  [cc.qbits/hayt "1.1.2"]
                  [lamina "0.5.0-rc2"]
-                 [com.datastax.cassandra/cassandra-driver-core "1.0.0"]]
+                 [com.datastax.cassandra/cassandra-driver-core "1.0.1"]]
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
              :1.5  {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :1.6  {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
