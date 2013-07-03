@@ -45,11 +45,11 @@
     (doseq [[dist value] (:max-connections-per-host options)]
       (.setMaxConnectionsPerHost po (enum/host-distance dist) (int value)))
     (doseq [[dist value] (:max-simultaneous-requests-per-connection options)]
-      (.setMaxSimultaneousRequestsPerConnectionTreshold po
+      (.setMaxSimultaneousRequestsPerConnectionThreshold po
                                                         (enum/host-distance dist)
                                                         (int value)))
     (doseq [[dist value] (:min-simultaneous-requests-per-connection options)]
-      (.setMinSimultaneousRequestsPerConnectionTreshold po
+      (.setMinSimultaneousRequestsPerConnectionThreshold po
                                                         (enum/host-distance dist)
                                                         (int value))))
   builder)
