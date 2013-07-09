@@ -23,7 +23,7 @@
                     qbits.alia.utils
                     qbits.alia.codec
                     qbits.alia.cluster-options]}
-  :warn-on-reflection true
+  :global-vars {*warn-on-reflection* true}
   :repositories {"sonatype" {:url "http://oss.sonatype.org/content/repositories/releases"
                              :snapshots false
                              :releases {:checksum :fail :update :always}}
