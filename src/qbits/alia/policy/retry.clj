@@ -113,7 +113,7 @@ http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/L
                     (enum/consistency-levels consistency)
                     (int required-responses)
                     (int received-responses)
-                    data-retrieved?
+                    (boolean data-retrieved?)
                     (int nb-retry))))
 
 (defn on-unavailable
