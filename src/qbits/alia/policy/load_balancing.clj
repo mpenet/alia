@@ -63,6 +63,6 @@ be prefered to this policy in that case.
 
 http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/DCAwareRoundRobinPolicy.html"
   ([dc used-hosts-per-remote-dc]
-     (DCAwareRoundRobinPolicy. dc used-hosts-per-remote-dc))
+     (DCAwareRoundRobinPolicy. dc (int used-hosts-per-remote-dc)))
   ([dc]
      (DCAwareRoundRobinPolicy. dc)))
