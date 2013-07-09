@@ -37,7 +37,7 @@ In the cassandra.yaml file, you need to set:
 Then add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia "1.6.0"]
+[cc.qbits/alia "1.6.1"]
 ```
 
 Please check the
