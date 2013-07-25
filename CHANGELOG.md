@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.0
+
+* Use java-driver 1.0.2 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/master/driver-core/CHANGELOG.rst)
+
 ## 1.6.0
 
 * Use java-driver 1.0.1 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/master/driver-core/CHANGELOG.rst)

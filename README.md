@@ -29,7 +29,7 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 ## Installation
 
 The binary protocol server is not started with the default
-configuration file coming with Cassandra 1.2.
+configuration file coming with Cassandra 1.2+
 In the cassandra.yaml file, you need to set:
 
 `start_native_transport: true`
@@ -37,7 +37,7 @@ In the cassandra.yaml file, you need to set:
 Then add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia "1.6.1"]
+[cc.qbits/alia "1.7.0"]
 ```
 
 Please check the
