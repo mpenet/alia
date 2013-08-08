@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.1
+
+* Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+
 ## 1.7.0
 
 * Use java-driver 1.0.2 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/master/driver-core/CHANGELOG.rst)
