@@ -6,7 +6,8 @@
         qbits.alia.codec.eaio-uuid
         qbits.tardis
         qbits.hayt
-        qbits.alia.test.embedded))
+        qbits.alia.test.embedded
+        clojure.core.async))
 
 (def ^:dynamic *cluster*)
 
@@ -113,6 +114,18 @@
     (execute-async  "select * from users;"
                     :success (fn [r] (deliver p r)))
     (is (= user-data-set @p))))
+
+(deftest test-core-async-execute
+  (is (= user-data-set
+         (<!! (execute-chan "select * from users;"))))
+  ;; Something smarter could be done with alt! (select) but this will
+  ;; do for a test
+  (is (= 3 (count (<!! (go
+                        (loop [i 0 ret []]
+                          (if (= 3 i)
+                            ret
+                            (recur (inc i)
+                                   (conj ret (<! (execute-chan "select * from users limit 1"))))))))))))
 
 (deftest test-prepared
   (let [s-simple (prepare "select * from users;")

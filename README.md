@@ -14,8 +14,8 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 * **Great performance**
 * Provides a **versatile CQL3+ DSL**, [Hayt](#hayt-query-dsl)
 * Support for **Raw queries**, **Prepared Statements** or **[Hayt](#hayt-query-dsl) queries**
-* Can do both **Synchronous and Asynchronous** query execution, using
-  a promise like api
+* Can do both **Synchronous and Asynchronous** query execution (using
+  **Lamina** or an experimental **clojure.core.async interface**).
 * Support for **all of
   [datastax/java-driver](https://github.com/datastax/java-driver)
   advanced options**: jmx, auth, SSL, compression, consistency, custom
@@ -38,7 +38,7 @@ In the cassandra.yaml file, you need to set:
 Then add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia "1.7.1"]
+[cc.qbits/alia "1.8.0-beta1"]
 ```
 
 Please check the
