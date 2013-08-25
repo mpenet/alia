@@ -118,6 +118,12 @@
 (deftest test-core-async-execute
   (is (= user-data-set
          (<!! (execute-chan "select * from users;"))))
+
+  (let [p (promise)]
+    (take! (execute-chan  "select * from users;")
+           (fn [r] (deliver p r)))
+    (is (= user-data-set @p)))
+
   ;; Something smarter could be done with alt! (select) but this will
   ;; do for a test
   (is (= 3 (count (<!! (go
