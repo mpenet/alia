@@ -221,7 +221,7 @@ The query can be a raw string, a PreparedStatement (returned by
   "Alpha, subject to changes:
   Same as execute, but returns a clojure.core.async/chan that is
   wired to the underlying ResultSetFuture. This means this is usable
-  with go blocks among other things. Exceptions are sent to the
+  with `go` blocks or `take!`. Exceptions are sent to the
   channel as a value, it's your responsability to handle these how you
   deem appropriate."
   [& args]
