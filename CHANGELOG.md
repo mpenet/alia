@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.0-beta1
+
+* Add support for clojure.core.async via `qbits.alia/execute-chan`,
+  returning a channel usable with go blocks or `clojure.core.async/take!`.
+
 ## 1.7.1
 
 * Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
