@@ -217,7 +217,7 @@ The query can be a raw string, a PreparedStatement (returned by
        executor)
       async-result)))
 
-(defn execute-async-chan
+(defn execute-chan
   "Alpha, subject to changes:
   Same as execute, but returns a clojure.core.async/chan that is
   wired to the underlying ResultSetFuture. This means this is usable

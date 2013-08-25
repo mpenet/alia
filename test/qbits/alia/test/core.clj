@@ -117,7 +117,7 @@
 
 (deftest test-core-async-execute
   (is (= user-data-set
-         (<!! (execute-async-chan "select * from users;"))))
+         (<!! (execute-chan "select * from users;"))))
   ;; Something smarter could be done with alt! (select) but this will
   ;; do for a test
   (is (= 3 (count (<!! (go
@@ -125,7 +125,7 @@
                           (if (= 3 i)
                             ret
                             (recur (inc i)
-                                   (conj ret (<! (execute-async-chan "select * from users limit 1"))))))))))))
+                                   (conj ret (<! (execute-chan "select * from users limit 1"))))))))))))
 
 (deftest test-prepared
   (let [s-simple (prepare "select * from users;")
