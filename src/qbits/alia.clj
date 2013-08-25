@@ -7,6 +7,7 @@
    [qbits.hayt :as hayt]
    [lamina.core :as l]
    [clojure.core.memoize :as memo]
+   [clojure.core.async :as async]
    [qbits.alia.cluster-options :as copt])
   (:import
    (com.datastax.driver.core
@@ -215,6 +216,42 @@ The query can be a raw string, a PreparedStatement (returned by
            (l/error async-result err)))
        executor)
       async-result)))
+
+(defn execute-async-chan
+  "Alpha, subject to changes:
+  Same as execute, but returns a clojure.core.async/chan that is
+  wired to the underlying ResultSetFuture. This means this is usable
+  with go blocks among other things. Exceptions are sent to the
+  channel as a value, it's your responsability to handle these how you
+  deem appropriate."
+  [& args]
+  (let [[^Session session query & {:keys [executor consistency
+                                          routing-key retry-policy tracing?
+                                          keywordize? values]
+                                   :or {executor *executor*
+                                        keywordize? *keywordize*
+                                        consistency *consistency*}}]
+        (fix-session-arg args)
+        ^Query statement (query->statement query values)]
+    (set-statement-options! statement routing-key retry-policy tracing? consistency)
+    (let [^ResultSetFuture rs-future (.executeAsync session statement)
+          ch (async/chan 1)]
+      (Futures/addCallback
+       rs-future
+       (reify FutureCallback
+         (onSuccess [_ result]
+           (async/>!! ch (codec/result-set->maps (.get rs-future) keywordize?)))
+         (onFailure [_ err]
+           (async/>!! ch err)))
+       executor)
+      ch)))
+
+(defn ^:private lazy-query-
+  [session query pred coll opts]
+  (lazy-cat coll
+            (when query
+              (let [coll (apply execute session query opts)]
+                (lazy-query- session (pred query coll) pred coll opts)))))
 
 (defn ^:private lazy-query-
   [session query pred coll opts]
