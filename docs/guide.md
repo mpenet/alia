@@ -269,18 +269,23 @@ Once you run it you have a couple of options to pull data from it.
 
 + using `clojure.core.async/take!` which takes the channel as first argument
 and a callback as second:
+
 ```clojure
 (take! (execute-chan  "select * from users;")
        (fn [rows-or-exception]
          (do-something rows)))
 ```
+
 + using `clojure.core.async/<!!` to block and pull the rows/exception
   from the channel.
+
 ```clojure
 (def rows-or-exception (<!! (execute-chan "select * from users;")))
 ```
+
 + using `clojure.core.async/go` block potentially using
   `clojure.core.async/alt!`.
+
 ```clojure
 (go
   (loop [i 0 ret []]
