@@ -235,7 +235,7 @@ The query can be a raw string, a PreparedStatement (returned by
         ^Query statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
     (let [^ResultSetFuture rs-future (.executeAsync session statement)
-          ch (async/chan)]
+          ch (async/chan 1)]
       (Futures/addCallback
        rs-future
        (reify FutureCallback
