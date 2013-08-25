@@ -151,8 +151,8 @@ or if you want to use a particular keyspace from the start:
 ## Executing queries
 
 You can interact with C* using either raw queries or prepared statements.
-There are two function that allow you to do that: `alia/execute`
-and `alia/execute-async`.
+There are three function that allow you to do that: `alia/execute`,
+`alia/execute-async` and `alia/execute-chan`.
 
 These functions support a number of options, but the simplest example
 of its use would look like this:
@@ -181,7 +181,7 @@ As you can see C* datatypes are translated to clojure friendly types
 when it's possible: in this example `:emails` is a C* native Set,
 `:tags` is a native list and `:amap` is a native map.
 
-`alia/execute` and `alia/execute-async` have 2 distinct arity, you can
+`alia/execute*` functions have 2 distinct arity, you can
 skip the session parameter if you have set it using `with-session` or
 `set-session!`:
 
@@ -209,6 +209,12 @@ using `set-session!` to be more succint.
 
 The previous examples will block until a response is received from
 cassandra. But it is possible to avoid that and perform them asynchronously.
+
+There are currently 2 interfaces for doing so. One using Lamina that
+returns a result-channel (a promise) and additionaly an experimental
+interface using `clojure.core.async` returning a clojure.core.async/chan.
+
+#### Lamina asynchronous interface
 
 You will need to use `execute-async` which returns
 [result-channel](https://github.com/ztellman/lamina/wiki/Result-Channels)
@@ -251,6 +257,48 @@ asynchronous situations, I encourage you to read about
 [pipelines](https://github.com/ztellman/lamina/wiki/Pipelines-new) and
 [channels](https://github.com/ztellman/lamina/wiki/Channels-new) in
 particular, its API is really rich.
+
+
+#### clojure.core.async asynchronous interface
+
+`alia/execute-chan` has the same signature as the other execute
+functions and as the name implies returns a clojure.core.async
+channel that will contain a list of rows at some point or an exception instance.
+
+Once you run it you have a couple of options to pull data from it.
+
++ using `clojure.core.async/take!` which takes the channel as first argument
+and a callback as second:
+
+```clojure
+(take! (execute-chan  "select * from users;")
+       (fn [rows-or-exception]
+         (do-something rows)))
+```
+
++ using `clojure.core.async/<!!` to block and pull the rows/exception
+  from the channel.
+```clojure
+(def rows-or-exception (<!! (execute-chan "select * from users;")))
+
+```
+
++ using `clojure.core.async/go` block potentially using
+  `clojure.core.async/alt!`.
+
+```clojure
+(go
+  (loop [i 0 ret []]
+    (if (= 3 i)
+      ret
+      (recur (inc i)
+             (conj ret (<! (execute-chan "select * from users limit 1")))))))
+```
+
+Some interesting examples are in the
+[official walkthrough](https://github.com/clojure/core.async/blob/master/examples/walkthrough.clj)
+
+This is experimental at this point and subject to changes.
 
 ### Prepared statements
 
