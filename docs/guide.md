@@ -212,7 +212,7 @@ cassandra. But it is possible to avoid that and perform them asynchronously.
 
 There are currently 2 interfaces for doing so. One using Lamina that
 returns a result-channel (a promise) and additionaly an experimental
-interface using `clojure.core.async` returning a clojure.core.async/chan.
+interface using `clojure/core.async` returning a clojure.core.async/chan.
 
 #### Lamina asynchronous interface
 
@@ -259,10 +259,10 @@ asynchronous situations, I encourage you to read about
 particular, its API is really rich.
 
 
-#### clojure.core.async asynchronous interface
+#### clojure/core.async asynchronous interface
 
 `alia/execute-chan` has the same signature as the other execute
-functions and as the name implies returns a clojure.core.async
+functions and as the name implies returns a clojure/core.async
 channel that will contain a list of rows at some point or an exception instance.
 
 Once you run it you have a couple of options to pull data from it.

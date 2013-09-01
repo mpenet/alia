@@ -14,8 +14,8 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 * **Great performance**
 * Provides a **versatile CQL3+ DSL**, [Hayt](#hayt-query-dsl)
 * Support for **Raw queries**, **Prepared Statements** or **[Hayt](#hayt-query-dsl) queries**
-* Can do both **Synchronous and Asynchronous** query execution (using
-  **Lamina** or an experimental **clojure.core.async interface**).
+* Can do both **Synchronous and Asynchronous** query execution, using
+  **Lamina** or an experimental **clojure/core.async** interface.
 * Support for **all of
   [datastax/java-driver](https://github.com/datastax/java-driver)
   advanced options**: jmx, auth, SSL, compression, consistency, custom
@@ -72,7 +72,7 @@ raw queries.
 ```
 
 Sessions are separate so that you can interact with multiple
-keyspaces from the same cluster definition(
+keyspaces from the same cluster definition.
 
 ```clojure
 (def session (alia/connect cluster))
@@ -122,9 +122,15 @@ alia/execute and alia/prepare) using `with-session` or `set-session!`:
        :user_name "frodo"})
 ```
 
-Asynchronous interface:
+### Asynchronous interfaces:
 
-You need to use execute-async, which is used the same way as execute,
+There are currently 2 ways to use the asynchronous methods of the
+underlying driver, using a **Lamina** based api or the newly released
+**clojure/core.async**
+
+#### Async using the Lamina based api
+
+Using `execute-async` which is used the same way as execute,
 the return value is a
 [result-channel](https://github.com/ztellman/lamina/wiki/Result-Channels) from
 [Lamina](https://github.com/ztellman/lamina) (you can think of it as
@@ -150,6 +156,44 @@ Or we can use `success`/`error` handlers (it still returns a
                     :success (fn [rows] (do-something-with-result rows)
                     :error (fn [err] (print "fail!"))))
 
+```
+
+#### Async using clojure/core.async
+
+
+`alia/execute-chan` has the same signature as the other execute
+functions and as the name implies returns a clojure/core.async
+channel that will contain a list of rows at some point or an exception
+instance.
+
+Once you run it you have a couple of options to pull data from it.
+
++ using `clojure.core.async/take!` which takes the channel as first argument
+and a callback as second:
+
+```clojure
+(take! (execute-chan  "select * from users;")
+       (fn [rows-or-exception]
+         (do-something rows)))
+```
+
++ using `clojure.core.async/<!!` to block and pull the rows/exception
+  from the channel.
+
+```clojure
+(def rows-or-exception (<!! (execute-chan "select * from users;")))
+```
+
++ using `clojure.core.async/go` block, and potentially using
+  `clojure.core.async/alt!`.
+
+```clojure
+(go
+  (loop [i 0 ret []]
+    (if (= 3 i)
+      ret
+      (recur (inc i)
+             (conj ret (<! (execute-chan "select * from users limit 1")))))))
 ```
 
 And it can do a lot more! Head to the
