@@ -4,6 +4,8 @@
 
 * Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
 
+* Make sure namespace keywords are properly encoded in prepared statements
+
 ## 1.8.0-beta1
 
 * Add support for clojure.core.async via `qbits.alia/execute-chan`,
