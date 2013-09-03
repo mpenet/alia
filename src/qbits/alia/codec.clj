@@ -65,7 +65,7 @@
     (ByteBuffer/wrap x))
 
   clojure.lang.Keyword
-  (encode [x] (name x))
+  (encode [x] (.substring (str x) 1))
 
   Object
   (encode [x] x)
