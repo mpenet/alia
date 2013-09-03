@@ -240,10 +240,10 @@ The query can be a raw string, a PreparedStatement (returned by
        rs-future
        (reify FutureCallback
          (onSuccess [_ result]
-           (async/>!! ch (codec/result-set->maps (.get rs-future) keywordize?))
+           (async/put! ch (codec/result-set->maps (.get rs-future) keywordize?))
            (async/close! ch))
          (onFailure [_ err]
-           (async/>!! ch err)
+           (async/put! ch err)
            (async/close! ch)))
        executor)
       ch)))
