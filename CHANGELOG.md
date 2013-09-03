@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.0-beta2
+
+* Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+
 ## 1.8.0-beta1
 
 * Add support for clojure.core.async via `qbits.alia/execute-chan`,
