@@ -8,7 +8,7 @@
                  [cc.qbits/knit "0.2.1"]
                  [cc.qbits/hayt "1.1.4"]
                  [lamina "0.5.0"]
-                 [com.datastax.cassandra/cassandra-driver-core "1.0.3"]
+                 [com.datastax.cassandra/cassandra-driver-core "2.0.0-beta1"]
                  [org.clojure/core.async "0.1.0-SNAPSHOT"]]
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
              :1.5  {:dependencies [[org.clojure/clojure "1.5.1"]]}
@@ -17,7 +17,8 @@
                                    [clj-time "0.5.0"]
                                    [cc.qbits/tardis "1.0.0"]
                                    [commons-lang/commons-lang "2.6"]]}
-             :test  {:resource-paths ["test/resources"]}}
+             :test  {:resource-paths ["test/resources"]
+                     :dependencies [[org.apache.cassandra/cassandra-all "2.0.0"]]}}
   :codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master"
           :src-linenum-anchor-prefix "L"
           :exclude [qbits.alia.enum

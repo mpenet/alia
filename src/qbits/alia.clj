@@ -15,7 +15,7 @@
     Cluster
     Cluster$Builder
     PreparedStatement
-    Query
+    Statement
     ResultSet
     ResultSetFuture
     Session
@@ -117,10 +117,10 @@ used in `execute` after it's been bound with `bind`"
 
 (defprotocol PStatement
   (^:no-doc query->statement
-    [q values] "Encodes input into a Statement (Query) instance"))
+    [q values] "Encodes input into a Statement instance"))
 
 (extend-protocol PStatement
-  Query
+  Statement
   (query->statement [q _] q)
 
   PreparedStatement
@@ -136,7 +136,7 @@ used in `execute` after it's been bound with `bind`"
     (query->statement (*hayt-query-fn* q) nil)))
 
 (defn ^:private set-statement-options!
-  [^Query statement routing-key retry-policy tracing? consistency]
+  [^Statement statement routing-key retry-policy tracing? consistency]
   (when routing-key
     (.setRoutingKey ^SimpleStatement statement
                     ^ByteBuffer routing-key))
@@ -185,7 +185,7 @@ The query can be a raw string, a PreparedStatement (returned by
                                    :or {keywordize? *keywordize*
                                         consistency *consistency*}}]
         (fix-session-arg args)
-        ^Query statement (query->statement query values)]
+        ^Statement statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
     (codec/result-set->maps (.execute session statement) keywordize?)))
 
@@ -201,7 +201,7 @@ The query can be a raw string, a PreparedStatement (returned by
                                         keywordize? *keywordize*
                                         consistency *consistency*}}]
         (fix-session-arg args)
-        ^Query statement (query->statement query values)]
+        ^Statement statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
     (let [^ResultSetFuture rs-future (.executeAsync session statement)
           async-result (l/result-channel)]
@@ -232,7 +232,7 @@ The query can be a raw string, a PreparedStatement (returned by
                                         keywordize? *keywordize*
                                         consistency *consistency*}}]
         (fix-session-arg args)
-        ^Query statement (query->statement query values)]
+        ^Statement statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
     (let [^ResultSetFuture rs-future (.executeAsync session statement)
           ch (async/chan 1)]
