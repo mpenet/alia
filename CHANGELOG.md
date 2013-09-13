@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.0
+
+* Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+* Use  clojure.core.async alpha release instead of SNAPSHOT
+
 ## 1.8.0-beta3
 
 * Use java-driver 1.0.3 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/master/driver-core/CHANGELOG.rst)
