@@ -86,7 +86,7 @@
 have this separate in order to allow users to connect to multiple
 keyspaces from a single cluster instance"
   ([^Cluster cluster keyspace]
-     (.connect cluster keyspace))
+     (.connect cluster (name keyspace)))
   ([^Cluster cluster]
      (.connect cluster)))
 
