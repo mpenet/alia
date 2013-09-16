@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.2
+
+* Allow to pass keyspace id as a keyword in `qbits.alia/connect`
+
 ## 1.8.1
 
 * Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
