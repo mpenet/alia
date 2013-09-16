@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.1
+
+* Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+
 ## 1.8.0
 
 * Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
