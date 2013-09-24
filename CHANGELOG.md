@@ -20,6 +20,7 @@ you just need to do it explicitly
 (prepare (first pq))
 ...
 ```
+
 ## 1.8.3
 
 * Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
