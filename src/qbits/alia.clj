@@ -100,12 +100,14 @@ pools/connections"
 
 (defn prepare
   "Returns a com.datastax.driver.core.PreparedStatement instance to be
-used in `execute` after it's been bound with `bind`"
+used in `execute` after it's been bound with `bind`. Can take a string query or
+a Hayt query, in that case they will be compiled with ->raw internaly.
+ex: (prepare (select :foo (where {:bar ?})))"
   ([^Session session query]
      (.prepare session
                ^String (if (map? query)
-                         (first (hayt/->prepared query))
-                         query)))
+                            (hayt/->raw query)
+                            query)))
   ([query]
      (prepare *session* query)))
 
