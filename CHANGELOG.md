@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.9.0
+
+### **Breaking change** `qbits.alia/prepare`
+
+* `prepare` used to be able to convert the query argument when coming
+from hayt using `->prepared` and only take the first value of the
+returned vector. While this was useful, this was often hiding the
+resulting query and limiting in some way (you don't necessarly want to
+have every value prepared), forcing the user to compile it in the repl
+first to have an idea of what it would look like.  `prepare` has been
+changed so that it never compiles with `->prepare` but now does it
+with `->raw`.
+Meaning you can now do the following `(prepare (select :foo (where {:bar ?})))`
+You can still use `prepare` with queries generated with `->prepared`
+you just need to do it explicitly
+```clojure
+(def pq (->prepared (select :foo (where {:bar 1}))))
+(prepare (first pq))
+...
+```
+
+## 1.8.3
+
+* Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+
+## 1.8.2
+
+* Allow to pass keyspace id as a keyword in `qbits.alia/connect`
+
+## 1.8.1
+
+* Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+
+## 1.8.0
+
+* Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+* Use  clojure.core.async alpha release instead of SNAPSHOT
+
 ## 1.8.0-beta3
 
 * Use java-driver 1.0.3 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/master/driver-core/CHANGELOG.rst)
