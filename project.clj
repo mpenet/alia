@@ -1,4 +1,4 @@
-(defproject cc.qbits/alia "2.0.0"
+(defproject cc.qbits/alia "2.0.0-beta1"
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"
@@ -13,8 +13,7 @@
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
              :1.5  {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :1.6  {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
-             :dev  {:dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
-                                   [clj-time "0.5.0"]
+             :dev  {:dependencies [[clj-time "0.5.0"]
                                    [cc.qbits/tardis "1.0.0"]
                                    [commons-lang/commons-lang "2.6"]]}
              :test  {:resource-paths ["test/resources"]

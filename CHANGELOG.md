@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.0-beta1
+
+### **Breaking change**
+
+* keyword values are no longer encoded as strings (you have to
+manually handle this)
+
+* Use latest Hayt (2.x) https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+
+
 ## 1.9.0
 
 ### **Breaking change** `qbits.alia/prepare`
