@@ -146,8 +146,6 @@
     ;; manually  bound
     (is (= [(first user-data-set)]
            (execute (bind s-parameterized-simple ["mpenet"]))))
-    (is (= [(first user-data-set)]
-           (execute s-parameterized-simple :values [:mpenet])))
     (is (= [] (execute s-prepare-types :values ["foobar"
                                                 0
                                                 #uuid "b474e171-7757-449a-87be-d2797d1336e3"
