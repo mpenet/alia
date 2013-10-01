@@ -1,4 +1,4 @@
-(defproject cc.qbits/alia "1.9.0"
+(defproject cc.qbits/alia "1.9.1"
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"
@@ -9,14 +9,13 @@
                  [cc.qbits/hayt "1.4.0"]
                  [lamina "0.5.0"]
                  [com.datastax.cassandra/cassandra-driver-core "1.0.3"]
-                 [org.clojure/core.async "0.1.222.0-83d0c2-alpha"]]
+                 [org.clojure/core.async "0.1.242.0-44b1e3-alpha"]]
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
              :1.5  {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :1.6  {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
              :dev  {:dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
                                    [clj-time "0.5.0"]
-                                   [cc.qbits/tardis "1.0.0"]
-                                   [commons-lang/commons-lang "2.6"]]}
+                                   [cc.qbits/tardis "1.0.0"]]}
              :test  {:resource-paths ["test/resources"]}}
   :codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master"
           :src-linenum-anchor-prefix "L"
@@ -24,10 +23,4 @@
                     qbits.alia.utils
                     qbits.alia.codec
                     qbits.alia.cluster-options]}
-  :global-vars {*warn-on-reflection* true}
-  :repositories {"sonatype" {:url "http://oss.sonatype.org/content/repositories/releases"
-                             :snapshots false
-                             :releases {:checksum :fail :update :always}}
-                 "sonatype-snapshots" {:url "http://oss.sonatype.org/content/repositories/snapshots"
-                                       :snapshots true
-                                       :releases {:checksum :fail :update :always}}})
+  :global-vars {*warn-on-reflection* true})
