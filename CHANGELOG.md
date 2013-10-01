@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.1
+
+* Update clojure.core.async dependency and cleanup project.clj
+
 ## 1.9.0
 
 ### **Breaking change** `qbits.alia/prepare`
