@@ -38,21 +38,54 @@
   (.withRetryPolicy builder policy))
 
 (defmethod set-cluster-option! :pooling-options
-  [_ ^Cluster$Builder builder options]
-  (let [^PoolingOptions po (.poolingOptions builder)]
-    (doseq [[dist value] (:core-connections-per-host options)]
+  [_ ^Cluster$Builder builder {:keys [core-connections-per-host
+                                      max-connections-per-host
+                                      max-simultaneous-requests-per-connection
+                                      min-simultaneous-requests-per-connection]}]
+  (let [^PoolingOptions po (PoolingOptions.)]
+    (doseq [[dist value] core-connections-per-host]
       (.setCoreConnectionsPerHost po (enum/host-distance dist) (int value)))
-    (doseq [[dist value] (:max-connections-per-host options)]
+    (doseq [[dist value] max-connections-per-host]
       (.setMaxConnectionsPerHost po (enum/host-distance dist) (int value)))
-    (doseq [[dist value] (:max-simultaneous-requests-per-connection options)]
+    (doseq [[dist value] max-simultaneous-requests-per-connection]
       (.setMaxSimultaneousRequestsPerConnectionThreshold po
-                                                        (enum/host-distance dist)
-                                                        (int value)))
-    (doseq [[dist value] (:min-simultaneous-requests-per-connection options)]
+                                                         (enum/host-distance dist)
+                                                         (int value)))
+    (doseq [[dist value] min-simultaneous-requests-per-connection]
       (.setMinSimultaneousRequestsPerConnectionThreshold po
-                                                        (enum/host-distance dist)
-                                                        (int value))))
+                                                         (enum/host-distance dist)
+                                                         (int value)))
+    (.withPoolingOptions builder po))
   builder)
+
+(defmethod set-cluster-option! :socket-options
+  [_ ^Cluster$Builder builder {:keys [connect-timeout-millis
+                                      read-timeout-millis
+                                      receive-buffer-size
+                                      send-buffer-size
+                                      so-linger
+                                      tcp-no-delay?
+                                      reuse-address?
+                                      keep-alive?]}]
+  (let [so (SocketOptions.)]
+    (when connect-timeout-millis
+      (.setConnectTimeoutMillis so (int connect-timeout-millis)))
+    (when read-timeout-millis
+      (.setReadTimeoutMillis so (int read-timeout-millis)))
+    (when receive-buffer-size
+      (.setReceiveBufferSize so (int receive-buffer-size)))
+    (when send-buffer-size
+      (.setSendBufferSize so (int send-buffer-size)))
+    (when so-linger
+      (.setSoLinger so (int so-linger)))
+    (when tcp-no-delay?
+      (.setTcpNoDelay so (boolean tcp-no-delay?)))
+    (when reuse-address?
+      (.setReuseAddress so (boolean reuse-address?)))
+    (when keep-alive?
+      (.setKeepAlive so (boolean keep-alive?)))
+
+    (.withSocketOptions builder so)))
 
 (defmethod set-cluster-option! :metrics?
   [_ ^Cluster$Builder builder metrics?]
@@ -83,6 +116,11 @@
   (assert (instance? ssl-options SSLOptions)
           "Expects a com.datastax.driver.core.SSLOptions instance")
   (.withSSL builder ssl-options))
+
+(defmethod set-cluster-option! :defer-initialization
+  [_ ^Cluster$Builder builder defer?]
+  (when defer?
+    (.withDeferredInitialization builder)))
 
 (defn set-cluster-options!
   ^Cluster$Builder

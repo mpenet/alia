@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.2
+
+* Use java-driver 1.0.4
+  [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/1.0/driver-core/CHANGELOG.rst)
+* Add add support for `:socket-options` and `:defer-initialization` via
+  `cluster` options
+* Use new java-driver 1.0.4 api for pooling-options & socket-options
+  (backward compatible)
+
 ## 1.9.1
 
 * Update clojure.core.async dependency and cleanup project.clj
