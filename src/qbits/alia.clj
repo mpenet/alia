@@ -99,7 +99,7 @@ pools/connections"
   ([]
      (shutdown *session*)))
 
-(defn query-ex->ex-info
+(defn ^:private query-ex->ex-info
   ([^Exception ex ^Statement statement values message]
      (ex-info message
               {:exception ex
