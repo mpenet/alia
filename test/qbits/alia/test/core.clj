@@ -170,10 +170,6 @@
 
 (deftest test-error
   (let [stmt "slect prout from 1;"]
-    (try (execute "slect prout from 1;")
-         (catch Exception ex
-           (println (ex-data ex))))
-
     (is (= stmt (:query (try (execute stmt)
                                  (catch Exception ex
                                    (ex-data ex))))))
