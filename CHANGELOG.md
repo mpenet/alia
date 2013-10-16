@@ -7,14 +7,14 @@
   instances that hold a map with the original statement and the Query
   string used.  You can get to this info from the ExceptionInfo
   instance using `clojure.core/ex-data`.
-  ```clj
+  ```clojure
   (try
     (execute "slect prout from 1;")
     (catch Exception ex
        (println (ex-data ex))))
   ```
   The map looks like this:
-  ```clj
+  ```clojure
   {:exception #<SyntaxError com.datastax.driver.core.exceptions.SyntaxError: line 1:0 no viable alternative at input 'slect'>
    :query "slect prout from 1;"
    :values nil
