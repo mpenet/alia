@@ -23,7 +23,8 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 * Support and sugar for **query tracing**, **metrics**, **retry
   policies**, **load balancing policies**, **reconnection policies**
   and **UUIDs** generation
-* Extensible **Clojure data types support**
+* Extensible **Clojure data types support** & **clojure.core/ex-data**
+  integration
 * **Lazy and potentialy chunked sequences over queries**
 
 ## Installation
@@ -37,7 +38,7 @@ In the cassandra.yaml file, you need to set:
 Then add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia "1.9.2"]
+[cc.qbits/alia "1.10.0"]
 ```
 
 Please check the

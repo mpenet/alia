@@ -131,11 +131,11 @@ ex: (prepare (select :foo (where {:bar ?})))"
 (defn bind
   "Returns a com.datastax.driver.core.BoundStatement instance to be
   used with `execute`"
-  [^PreparedStatement prepared-statement values]
+  [^PreparedStatement statement values]
   (try
-    (.bind prepared-statement (to-array (map codec/encode values)))
+    (.bind statement (to-array (map codec/encode values)))
     (catch Exception ex
-      (throw (query-ex->ex-info ex prepared-statement values "Query binding failed")))))
+      (throw (query-ex->ex-info ex statement values "Query binding failed")))))
 
 (defprotocol PStatement
   (^:no-doc query->statement
