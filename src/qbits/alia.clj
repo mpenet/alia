@@ -100,15 +100,16 @@ pools/connections"
      (shutdown *session*)))
 
 (defn ^:private query-ex->ex-info
-  ([^Exception ex ^Statement statement values message]
+  ([^Exception ex ^Statement statement values type message]
      (ex-info message
-              {:exception ex
+              {:type type
+               :exception ex
                :query (.getQueryString statement)
                :values values
                :statement statement}
               (.getCause ex)))
   ([ex statement values]
-     (query-ex->ex-info ex statement values "Query execution failed")))
+     (query-ex->ex-info ex statement values ::execute "Query execution failed")))
 
 (defn prepare
   "Returns a com.datastax.driver.core.PreparedStatement instance to be
@@ -123,7 +124,9 @@ ex: (prepare (select :foo (where {:bar ?})))"
          (.prepare session q)
          (catch Exception ex
            (throw (ex-info "Query prepare failed"
-                           {:exception ex :query q}
+                           {:type ::prepare
+                            :exception ex
+                            :query q}
                            (.getCause ex)))))))
   ([query]
      (prepare *session* query)))
@@ -135,7 +138,7 @@ ex: (prepare (select :foo (where {:bar ?})))"
   (try
     (.bind statement (to-array (map codec/encode values)))
     (catch Exception ex
-      (throw (query-ex->ex-info ex statement values "Query binding failed")))))
+      (throw (query-ex->ex-info ex statement values ::bind "Query binding failed")))))
 
 (defprotocol PStatement
   (^:no-doc query->statement
