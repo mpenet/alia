@@ -19,7 +19,8 @@
     ResultSet
     ResultSetFuture
     Session
-    SimpleStatement)
+    SimpleStatement
+    Statement)
    (com.google.common.util.concurrent
     Futures
     FutureCallback)
@@ -98,16 +99,29 @@ pools/connections"
   ([]
      (shutdown *session*)))
 
+(defn query-ex->ex-info
+  [^Exception ex ^Statement statement values]
+  (ex-info "Query execution failed"
+           {:exception ex
+            :query (.getQueryString statement)
+            :values values
+            :statement statement}
+           (.getCause ex)))
+
 (defn prepare
   "Returns a com.datastax.driver.core.PreparedStatement instance to be
 used in `execute` after it's been bound with `bind`. Can take a string query or
 a Hayt query, in that case they will be compiled with ->raw internaly.
 ex: (prepare (select :foo (where {:bar ?})))"
   ([^Session session query]
-     (.prepare session
-               ^String (if (map? query)
-                            (hayt/->raw query)
-                            query)))
+     (let [^String q (if (map? query)
+                       (hayt/->raw query)
+                       query)]
+       (try
+         (.prepare session q)
+         (catch Exception ex
+           (throw (ex-info {:exception ex :query q}
+                           (.getCause ex)))))))
   ([query]
      (prepare *session* query)))
 
@@ -115,7 +129,10 @@ ex: (prepare (select :foo (where {:bar ?})))"
   "Returns a com.datastax.driver.core.BoundStatement instance to be
   used with `execute`"
   [^PreparedStatement prepared-statement values]
-  (.bind prepared-statement (to-array (map codec/encode values))))
+  (try
+    (.bind prepared-statement (to-array (map codec/encode values)))
+    (catch Exception ex
+      (throw (query-ex->ex-info ex prepared-statement values)))))
 
 (defprotocol PStatement
   (^:no-doc query->statement
@@ -136,6 +153,7 @@ ex: (prepare (select :foo (where {:bar ?})))"
   clojure.lang.IPersistentMap
   (query->statement [q _]
     (query->statement (*hayt-query-fn* q) nil)))
+
 
 (defn ^:private set-statement-options!
   [^Query statement routing-key retry-policy tracing? consistency]
@@ -189,7 +207,10 @@ The query can be a raw string, a PreparedStatement (returned by
         (fix-session-arg args)
         ^Query statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
-    (codec/result-set->maps (.execute session statement) keywordize?)))
+    (try
+      (codec/result-set->maps (.execute session statement) keywordize?)
+      (catch Exception err
+        (throw (query-ex->ex-info err statement values))))))
 
 (defn execute-async
   "Same as execute, but returns a promise and accepts :success and :error
@@ -205,7 +226,10 @@ The query can be a raw string, a PreparedStatement (returned by
         (fix-session-arg args)
         ^Query statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
-    (let [^ResultSetFuture rs-future (.executeAsync session statement)
+    (let [^ResultSetFuture rs-future
+          (try (.executeAsync session statement)
+               (catch Exception ex
+                 (throw (query-ex->ex-info ex statement values))))
           async-result (l/result-channel)]
       (l/on-realized async-result success error)
       (Futures/addCallback
@@ -215,7 +239,7 @@ The query can be a raw string, a PreparedStatement (returned by
            (l/success async-result
                       (codec/result-set->maps (.get rs-future) keywordize?)))
          (onFailure [_ err]
-           (l/error async-result err)))
+           (l/error async-result (query-ex->ex-info err statement values))))
        executor)
       async-result)))
 
@@ -245,7 +269,7 @@ The query can be a raw string, a PreparedStatement (returned by
            (async/put! ch (codec/result-set->maps (.get rs-future) keywordize?))
            (async/close! ch))
          (onFailure [_ err]
-           (async/put! ch err)
+           (async/put! ch (query-ex->ex-info err statement values))
            (async/close! ch)))
        executor)
       ch)))

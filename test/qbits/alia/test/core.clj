@@ -168,6 +168,15 @@
 ))
 
 
+(deftest test-error
+  (let [stmt "slect prout from 1;"]
+    (is (= stmt (:query (try (execute "slect prout from 1;")
+                                 (catch Exception ex
+                                   (ex-data ex))))))
+    (is (= stmt (:query (try @(execute-async "slect prout from 1;")
+                             (catch Exception ex
+                               (ex-data ex))))))))
+
 (deftest test-lazy-query
   (is (= 10 (count (take 10 (lazy-query
                              (select :items
