@@ -170,22 +170,22 @@
 
 (deftest test-error
   (let [stmt "slect prout from 1;"]
-    (is (= stmt (:query (try (execute stmt)
-                                 (catch Exception ex
-                                   (ex-data ex))))))
+    (is (:query (try (execute stmt)
+                     (catch Exception ex
+                       (ex-data ex)))))
 
-    (is (= stmt (:query (try @(execute-async stmt)
-                             (catch Exception ex
-                               (ex-data ex))))))
+    (is (:query (try @(execute-async stmt)
+                     (catch Exception ex
+                       (ex-data ex)))))
 
-    (is (= stmt (:query (try @(prepare stmt)
-                             (catch Exception ex
-                               (ex-data ex))))))
+    (is (:query (try @(prepare stmt)
+                     (catch Exception ex
+                       (ex-data ex)))))
 
     (let [stmt "select * from foo where bar = ?;" values [1 2]]
-      (is (= stmt (:query (try @(bind (prepare stmt) values)
-                               (catch Exception ex
-                                 (ex-data ex)))))))))
+      (is (:query (try @(bind (prepare stmt) values)
+                       (catch Exception ex
+                         (ex-data ex))))))))
 
 (deftest test-lazy-query
   (is (= 10 (count (take 10 (lazy-query

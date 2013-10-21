@@ -99,17 +99,15 @@ pools/connections"
   ([]
      (shutdown *session*)))
 
-(defn ^:private query-ex->ex-info
-  ([^Exception ex ^Statement statement values type message]
-     (ex-info message
-              {:type type
-               :exception ex
-               :query (.getQueryString statement)
-               :values values
-               :statement statement}
+(defn ^:private ex->ex-info
+  ([^Exception ex data msg]
+     (ex-info msg
+              (merge {:type ::execute
+                      :exception ex}
+                     data)
               (.getCause ex)))
-  ([ex statement values]
-     (query-ex->ex-info ex statement values ::execute-error "Query execution failed")))
+  ([ex data]
+     (ex->ex-info ex data "Query execution failed")))
 
 (defn prepare
   "Returns a com.datastax.driver.core.PreparedStatement instance to be
@@ -123,11 +121,10 @@ ex: (prepare (select :foo (where {:bar ?})))"
        (try
          (.prepare session q)
          (catch Exception ex
-           (throw (ex-info "Query prepare failed"
+           (throw (ex->ex-info ex
                            {:type ::prepare-error
-                            :exception ex
                             :query q}
-                           (.getCause ex)))))))
+                           "Query prepare failed"))))))
   ([query]
      (prepare *session* query)))
 
@@ -138,7 +135,10 @@ ex: (prepare (select :foo (where {:bar ?})))"
   (try
     (.bind statement (to-array (map codec/encode values)))
     (catch Exception ex
-      (throw (query-ex->ex-info ex statement values ::bind-error "Query binding failed")))))
+      (throw (ex->ex-info ex {:query statement
+                              :type ::bind-error
+                              :values values}
+                          "Query binding failed")))))
 
 (defprotocol PStatement
   (^:no-doc query->statement
@@ -216,7 +216,7 @@ The query can be a raw string, a PreparedStatement (returned by
     (try
       (codec/result-set->maps (.execute session statement) keywordize?)
       (catch Exception err
-        (throw (query-ex->ex-info err statement values))))))
+        (throw (ex->ex-info err {:query statement :values values}))))))
 
 (defn execute-async
   "Same as execute, but returns a promise and accepts :success and :error
@@ -233,9 +233,10 @@ The query can be a raw string, a PreparedStatement (returned by
         ^Query statement (query->statement query values)]
     (set-statement-options! statement routing-key retry-policy tracing? consistency)
     (let [^ResultSetFuture rs-future
-          (try (.executeAsync session statement)
-               (catch Exception ex
-                 (throw (query-ex->ex-info ex statement values))))
+          (try
+            (.executeAsync session statement)
+            (catch Exception ex
+              (throw (ex->ex-info ex {:query statement :values values}))))
           async-result (l/result-channel)]
       (l/on-realized async-result success error)
       (Futures/addCallback
@@ -244,8 +245,9 @@ The query can be a raw string, a PreparedStatement (returned by
          (onSuccess [_ result]
            (l/success async-result
                       (codec/result-set->maps (.get rs-future) keywordize?)))
-         (onFailure [_ err]
-           (l/error async-result (query-ex->ex-info err statement values))))
+         (onFailure [_ ex]
+           (l/error async-result
+                    (ex->ex-info ex {:query statement :values values}))))
        executor)
       async-result)))
 
@@ -274,8 +276,9 @@ The query can be a raw string, a PreparedStatement (returned by
          (onSuccess [_ result]
            (async/put! ch (codec/result-set->maps (.get rs-future) keywordize?))
            (async/close! ch))
-         (onFailure [_ err]
-           (async/put! ch (query-ex->ex-info err statement values))
+         (onFailure [_ ex]
+           (async/put! ch
+                       (ex->ex-info ex {:query statement :values values}))
            (async/close! ch)))
        executor)
       ch)))

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.1
+
+* Fix/modify ExceptionInfo map, we don't try to get queryString
+  manually since it's not always available (BoundStatement vs
+  Statement) and generates an error.
+
 ## 1.10.0 **Breaking change**
 
 * Improved exception handling, query
