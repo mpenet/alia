@@ -190,11 +190,26 @@ and a callback as second:
 
 ```clojure
 (go
-  (loop [i 0 ret []]
-    (if (= 3 i)
-      ret
-      (recur (inc i)
-             (conj ret (<! (execute-chan "select * from users limit 1")))))))
+ (loop [;;the list of queries remaining
+        queries [(alia/execute-chan (select :foo))
+                 (alia/execute-chan (select :bar))
+                 (alia/execute-chan (select :baz))]
+        ;; where we'll store our results
+        query-results '()]
+   ;; If we are done with our queries return them, it's the exit clause
+   (if (empty? queries)
+     query-results
+     ;; else wait for one query to complete (first completed first served)
+     (let [[result channel] (alts!! queries)]
+       (println "Received result: "  result " from channel: " channel)
+       (recur
+        ;; we remove the channel that just completed from our
+        ;; pending queries collection
+        (remove #{channel} queries)
+
+        ;; and finally we add the result of this query to our
+        ;; bag of results
+        (conj query-results result))))))
 ```
 
 And it can do a lot more! Head to the
