@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.2
+
+* Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+
 ## 1.10.1
 
 * Fix/modify ExceptionInfo map, we don't try to get queryString
