@@ -136,11 +136,13 @@
 (deftest test-prepared
   (let [s-simple (prepare "select * from users;")
         s-parameterized-simple (prepare (select :users (where {:user_name ?})))
+        s-parameterized-in (prepare (select :users (where {:user_name [:in ?]})))
         s-prepare-types (prepare "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")
         ;; s-parameterized-set (prepare  "select * from users where emails=?;")
         ;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
         ]
     (is (= user-data-set (execute s-simple)))
+    (is (= user-data-set (execute s-parameterized-in :values [["mpenet" "frodo"]])))
     (is (= [(first user-data-set)]
            (execute s-parameterized-simple :values ["mpenet"])))
     ;; manually  bound
