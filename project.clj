@@ -10,7 +10,7 @@
                  [lamina "0.5.0"]
                  ;; [com.datastax.cassandra/cassandra-driver-core "1.0.4"]
                  [com.datastax.cassandra/cassandra-driver-core "2.0.0-rc1"]
-                 [org.clojure/core.async "0.1.242.0-44b1e3-alpha"]]
+                 [org.clojure/core.async "0.1.256.0-1bf8cf-alpha"]]
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
              :1.5  {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :1.6  {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
