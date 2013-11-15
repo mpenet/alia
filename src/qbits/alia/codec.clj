@@ -61,11 +61,7 @@
 (extend-protocol PCodec
 
   (Class/forName "[B")
-  (encode [x]
-    (ByteBuffer/wrap x))
-
-  clojure.lang.Keyword
-  (encode [x] (.substring (str x) 1))
+  (encode [x] (ByteBuffer/wrap x))
 
   Object
   (encode [x] x)

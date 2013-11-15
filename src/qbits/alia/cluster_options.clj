@@ -117,11 +117,6 @@
           "Expects a com.datastax.driver.core.SSLOptions instance")
   (.withSSL builder ssl-options))
 
-(defmethod set-cluster-option! :defer-initialization
-  [_ ^Cluster$Builder builder defer?]
-  (when defer?
-    (.withDeferredInitialization builder)))
-
 (defn set-cluster-options!
   ^Cluster$Builder
   [^Cluster$Builder builder options]

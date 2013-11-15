@@ -1,4 +1,4 @@
-(defproject cc.qbits/alia "1.10.2"
+(defproject cc.qbits/alia "2.0.0-beta1"
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"
@@ -6,21 +6,25 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/core.memoize "0.5.6"]
                  [cc.qbits/knit "0.2.1"]
-                 [cc.qbits/hayt "1.4.1"]
+                 [cc.qbits/hayt "2.0.0-beta1"]
                  [lamina "0.5.0"]
-                 [com.datastax.cassandra/cassandra-driver-core "1.0.4"]
+                 ;; [com.datastax.cassandra/cassandra-driver-core "1.0.4"]
+                 [com.datastax.cassandra/cassandra-driver-core "2.0.0-rc1"]
                  [org.clojure/core.async "0.1.242.0-44b1e3-alpha"]]
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
              :1.5  {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :1.6  {:dependencies [[org.clojure/clojure "1.6.0-master-SNAPSHOT"]]}
              :dev  {:dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
                                    [clj-time "0.5.0"]
-                                   [cc.qbits/tardis "1.0.0"]]}
-             :test  {:resource-paths ["test/resources"]}}
-  :codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master"
-          :src-linenum-anchor-prefix "L"
-          :exclude [qbits.alia.enum
-                    qbits.alia.utils
-                    qbits.alia.codec
-                    qbits.alia.cluster-options]}
-  :global-vars {*warn-on-reflection* true})
+                                   [cc.qbits/tardis "1.0.0"]]
+                    :jvm-opts     ["-Dlog4j.configuration=log4j.properties.unit"
+                                   "-javaagent:lib/jamm-0.2.5.jar"]}
+             :test  {:resource-paths ["test/resources"]
+                     :dependencies [[org.apache.cassandra/cassandra-all "2.0.2"]]}}
+:codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master"
+        :src-linenum-anchor-prefix "L"
+        :exclude [qbits.alia.enum
+                  qbits.alia.utils
+                  qbits.alia.codec
+                  qbits.alia.cluster-options]}
+:global-vars {*warn-on-reflection* true})
