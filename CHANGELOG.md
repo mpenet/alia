@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-beta2
+
+* Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+
 ## 2.0.0-beta1
 
 ### **Breaking changes** (if you are using Cassandra 2.0- you need to keep using 1.10.2)
