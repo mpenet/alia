@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0-beta3
+
+* Use java-driver 2.0.0-rc2
+  [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/1.0/driver-core/CHANGELOG.rst)
+* Use latest core.async
+
 ## 2.0.0-beta2
 
 * Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
