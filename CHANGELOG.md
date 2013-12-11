@@ -3,7 +3,7 @@
 ## 2.0.0-beta3
 
 * Use java-driver 2.0.0-rc2
-  [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/1.0/driver-core/CHANGELOG.rst)
+  [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/2.0/driver-core/CHANGELOG.rst)
 * Use latest core.async
 
 ## 2.0.0-beta2
@@ -15,7 +15,7 @@
 ### **Breaking changes** (if you are using Cassandra 2.0- you need to keep using 1.10.2)
 
 * Use java-driver 2.0.0-rc1
-  [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/1.0/driver-core/CHANGELOG.rst)
+  [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/2.0/driver-core/CHANGELOG.rst)
 
 * keyword cql-values are no longer encoded as strings (you have to
   manually handle this), since keywords will be used as named bind
