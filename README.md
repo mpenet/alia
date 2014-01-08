@@ -39,7 +39,7 @@ Then add this to your dependencies:
 
 If you are running Cassandra 2.0+:
 ```clojure
-[cc.qbits/alia "2.0.0-beta3"]
+[cc.qbits/alia "2.0.0-beta4"]
 ```
 
 If you are running Cassandra 1.2:
@@ -297,6 +297,6 @@ Do not hesitate to ask your questions there.
 
 ## License
 
-Copyright © 2013 [Max Penet](https://twitter.com/mpenet)
+Copyright © 2013-2014 [Max Penet](https://twitter.com/mpenet)
 
 Distributed under the Eclipse Public License, the same as Clojure.

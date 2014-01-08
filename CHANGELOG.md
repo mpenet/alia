@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-beta4
+
+* Use newest core.async
+
 ## 2.0.0-beta3
 
 * Use java-driver 2.0.0-rc2
