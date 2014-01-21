@@ -9,17 +9,22 @@ directly.
 
 So 2 signatures:
 
- [session query &amp; {:keys [consistency routing-key retry-policy
-                          tracing? values]
+ [session query &amp; {:keys [consistency serial-consistency
+                          routing-key retry-policy
+                          tracing? values fetch-size]
                   :or {executor default-async-executor
-                       consistency *consistency*}}]
+                       consistency *consistency*
+                       serial-consistency *serial-consistency*
+                       fetch-size *fetch-size*}}]
 
 or
 
- [query &amp; {:keys [consistency routing-key retry-policy
-                  tracing? values]
+ [query &amp; {:keys [consistency serial-consistency routing-key retry-policy
+                  tracing? values fetch-size]
                   :or {executor default-async-executor
-                       consistency *consistency*}}]
+                       consistency *consistency*
+                       serial-consistency *serial-consistency*
+                       fetch-size *fetch-size*}}]
 
 If you chose the latter the Session must be bound with
 `with-session`.
@@ -28,12 +33,12 @@ The query can be a raw string, a PreparedStatement (returned by
 `prepare`) with values passed as `:values` that will be bound by
 `execute`, BoundStatement (returned by `bind`), or a Hayt query.</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L200">Source</a></div></div><div class="public" id="var-execute-async"><h3>execute-async</h3><div class="usage"><code>(execute-async &amp; args)</code></div><pre class="doc">Same as execute, but returns a promise and accepts :success and :error
 handlers, you can also pass :executor for the ResultFuture, it
-defaults to a cachedThreadPool if you don't</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L244">Source</a></div></div><div class="public" id="var-execute-chan"><h3>execute-chan</h3><div class="usage"><code>(execute-chan &amp; args)</code></div><pre class="doc">Alpha, subject to changes:
+defaults to a cachedThreadPool if you don't</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L249">Source</a></div></div><div class="public" id="var-execute-chan"><h3>execute-chan</h3><div class="usage"><code>(execute-chan &amp; args)</code></div><pre class="doc">Alpha, subject to changes:
 Same as execute, but returns a clojure.core.async/chan that is
 wired to the underlying ResultSetFuture. This means this is usable
 with `go` blocks or `take!`. Exceptions are sent to the
 channel as a value, it's your responsability to handle these how you
-deem appropriate.</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L281">Source</a></div></div><div class="public" id="var-lazy-query"><h3>lazy-query</h3><div class="usage"><code>(lazy-query &amp; args)</code></div><pre class="doc">Takes a query (hayt, raw or prepared) and a query modifier fn (that
+deem appropriate.</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L286">Source</a></div></div><div class="public" id="var-lazy-query"><h3>lazy-query</h3><div class="usage"><code>(lazy-query &amp; args)</code></div><pre class="doc">Takes a query (hayt, raw or prepared) and a query modifier fn (that
 receives the last query and last chunk and returns a new query or nil).
 The first chunk will be the original query result, then for each
 subsequent chunk the query will be the result of last query
@@ -50,7 +55,7 @@ arguments.
 ex: (lazy-query (select :items (limit 2) (where {:x (int 1)}))
                   (fn [q coll]
                     (merge q (where {:si (-&gt; coll last :x inc)})))
-                  :consistency :quorum :tracing? true)</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L330">Source</a></div></div><div class="public" id="var-prepare"><h3>prepare</h3><div class="usage"><code>(prepare session query)</code><code>(prepare query)</code></div><pre class="doc">Returns a com.datastax.driver.core.PreparedStatement instance to be
+                  :consistency :quorum :tracing? true)</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L335">Source</a></div></div><div class="public" id="var-prepare"><h3>prepare</h3><div class="usage"><code>(prepare session query)</code><code>(prepare query)</code></div><pre class="doc">Returns a com.datastax.driver.core.PreparedStatement instance to be
 used in `execute` after it's been bound with `bind`. Can take a string query or
 a Hayt query, in that case they will be compiled with -&gt;raw internaly.
 ex: (prepare (select :foo (where {:bar ?})))</pre><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L125">Source</a></div></div><div class="public" id="var-set-consistency%21"><h3>set-consistency!</h3><div class="usage"></div><pre class="doc">Sets root value of *consistency*
