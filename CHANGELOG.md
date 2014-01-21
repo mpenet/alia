@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0-beta5
+
+* Add [Statement.setFetchSize](http://www.datastax.com/drivers/java/2.0/com/datastax/driver/core/Statement.html#setFetchSize(int)) - Thanks @coltnz
+
+* Add serial consistency support
+
 ## 2.0.0-beta4
 
 * Use newest core.async
