@@ -26,12 +26,20 @@
     FutureCallback)
    (java.nio ByteBuffer)))
 
-(def ^:dynamic *consistency* :one)
+(def ^:dynamic *consistency* nil)
 
 (defmacro with-consistency
   "Binds qbits.alia/*consistency*"
   [consistency & body]
   `(binding [qbits.alia/*consistency* ~consistency]
+     ~@body))
+
+(def ^:dynamic *serial-consistency* nil)
+
+(defmacro with-serial-consistency
+  "Binds qbits.alia/*serial-consistency*"
+  [serial-consistency & body]
+  `(binding [qbits.alia/*serial-consistency* ~serial-consistency]
      ~@body))
 
 (def set-consistency!
@@ -165,9 +173,9 @@ ex: (prepare (select :foo (where {:bar ?})))"
   (query->statement [q _]
     (query->statement (*hayt-query-fn* q) nil)))
 
-
 (defn ^:private set-statement-options!
-  [^Statement statement routing-key retry-policy tracing? consistency fetch-size]
+  [^Statement statement routing-key retry-policy tracing? consistency
+   serial-consistency fetch-size]
   (when routing-key
     (.setRoutingKey ^SimpleStatement statement
                     ^ByteBuffer routing-key))
@@ -177,8 +185,11 @@ ex: (prepare (select :foo (where {:bar ?})))"
     (.enableTracing statement))
   (when fetch-size
     (.setFetchSize statement fetch-size))
-
-  (.setConsistencyLevel statement (enum/consistency-levels consistency)))
+  (when serial-consistency
+    (.setSerialConsistencyLevel statement
+                                (enum/consistency-levels serial-consistency)))
+  (when consistency
+    (.setConsistencyLevel statement (enum/consistency-levels consistency))))
 
 (defn ^:private fix-session-arg
   [args]
@@ -213,14 +224,18 @@ The query can be a raw string, a PreparedStatement (returned by
 `execute`, BoundStatement (returned by `bind`), or a Hayt query.
 "
   [& args]
-  (let [[^Session session query & {:keys [consistency routing-key retry-policy
-                                          tracing? keywordize? fetch-size values]
+  (let [[^Session session query & {:keys [consistency serial-consistency
+                                          routing-key retry-policy
+                                          tracing? keywordize?
+                                          fetch-size values]
                                    :or {keywordize? *keywordize*
                                         consistency *consistency*
+                                        serial-consistency *serial-consistency*
                                         fetch-size *fetch-size*}}]
         (fix-session-arg args)
         ^Statement statement (query->statement query values)]
-    (set-statement-options! statement routing-key retry-policy tracing? consistency fetch-size)
+    (set-statement-options! statement routing-key retry-policy tracing?
+                            consistency serial-consistency fetch-size)
     (try
       (codec/result-set->maps (.execute session statement) keywordize?)
       (catch Exception err
@@ -232,15 +247,18 @@ The query can be a raw string, a PreparedStatement (returned by
   defaults to a cachedThreadPool if you don't"
   [& args]
   (let [[^Session session query & {:keys [success error executor consistency
-                                          routing-key retry-policy tracing?
+                                          serial-consistency routing-key
+                                          retry-policy tracing?
                                           keywordize? fetch-size values]
                                    :or {executor *executor*
                                         keywordize? *keywordize*
                                         consistency *consistency*
+                                        serial-consistency *serial-consistency*
                                         fetch-size *fetch-size*}}]
         (fix-session-arg args)
         ^Statement statement (query->statement query values)]
-    (set-statement-options! statement routing-key retry-policy tracing? consistency fetch-size)
+    (set-statement-options! statement routing-key retry-policy tracing?
+                            consistency serial-consistency fetch-size)
     (let [^ResultSetFuture rs-future
           (try
             (.executeAsync session statement)
@@ -268,16 +286,18 @@ The query can be a raw string, a PreparedStatement (returned by
   channel as a value, it's your responsability to handle these how you
   deem appropriate."
   [& args]
-  (let [[^Session session query & {:keys [executor consistency
+  (let [[^Session session query & {:keys [executor consistency serial-consistency
                                           routing-key retry-policy tracing?
                                           keywordize? fetch-size values]
                                    :or {executor *executor*
                                         keywordize? *keywordize*
                                         consistency *consistency*
+                                        serial-consistency *serial-consistency*
                                         fetch-size *fetch-size*}}]
         (fix-session-arg args)
         ^Statement statement (query->statement query values)]
-    (set-statement-options! statement routing-key retry-policy tracing? consistency fetch-size)
+    (set-statement-options! statement routing-key retry-policy tracing?
+                            consistency serial-consistency fetch-size)
     (let [^ResultSetFuture rs-future (.executeAsync session statement)
           ch (async/chan 1)]
       (Futures/addCallback
