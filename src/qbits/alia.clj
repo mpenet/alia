@@ -34,6 +34,10 @@
   `(binding [qbits.alia/*consistency* ~consistency]
      ~@body))
 
+(def set-consistency!
+  "Sets root value of *consistency*"
+  (utils/var-root-setter *consistency*))
+
 (def ^:dynamic *serial-consistency* nil)
 
 (defmacro with-serial-consistency
@@ -42,9 +46,9 @@
   `(binding [qbits.alia/*serial-consistency* ~serial-consistency]
      ~@body))
 
-(def set-consistency!
-  "Sets root value of *consistency*"
-  (utils/var-root-setter *consistency*))
+(def set-serial-consistency!
+  "Sets root value of *serial-consistency*"
+  (utils/var-root-setter *serial-consistency*))
 
 (def ^:dynamic *session*)
 
