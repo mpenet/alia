@@ -1,13 +1,16 @@
 (ns qbits.alia.test.core
-  (:use clojure.test
+    (:import (com.datastax.driver.core Statement))
+    (:use clojure.test
         clojure.data
         qbits.alia
+        qbits.alia.codec
         qbits.alia.codec.joda-time
         qbits.alia.codec.eaio-uuid
         qbits.tardis
         qbits.hayt
         qbits.alia.test.embedded)
-  (:require [ clojure.core.async :as async]))
+  (:require [ clojure.core.async :as async]
+            [ lamina.core :as lamina]))
 
 (def ^:dynamic *cluster*)
 
@@ -204,5 +207,37 @@
                               (when (< (-> coll last :si) 3)
                                 (merge q (where {:si (-> coll last :si inc)}))))
                             :keywordize? true))))))
+
+(defn ^:private get-private-field [instance field-name]
+  (.get
+    (doto (.getDeclaredField (class instance) field-name)
+      (.setAccessible true))
+      instance))
+
+(deftest test-fetch-size
+  (with-redefs [result-set->maps (fn [result-set keywordize?]
+                                       result-set)]
+    (let [query "select * from items;"
+          result-set (execute query :fetch-size 3)
+          ^Statement statement (get-private-field result-set "statement")]
+      (is (= 3 (.getFetchSize statement))))))
+
+(deftest test-fetch-size-async
+  (with-redefs [result-set->maps (fn [result-set keywordize?]
+                                       result-set)]
+    (let [query "select * from items;"
+          result-channel (execute-async query :fetch-size 4)
+          result-set (lamina/wait-for-result result-channel)
+          ^Statement statement (get-private-field result-set "statement")]
+      (is (= 4 (.getFetchSize statement))))))
+
+(deftest test-fetch-size-chan
+  (with-redefs [result-set->maps (fn [result-set keywordize?]
+                                       result-set)]
+    (let [query "select * from items;"
+          result-channel (execute-chan query :fetch-size 5)
+          result-set (async/<!! result-channel)
+          ^Statement statement (get-private-field result-set "statement")]
+      (is (= 5 (.getFetchSize statement))))))
 
 ;; (run-tests)

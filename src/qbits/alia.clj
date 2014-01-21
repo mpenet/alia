@@ -75,6 +75,11 @@
    hayt queries are executed , defaults to LU with a threshold of 100"
   (utils/var-root-setter *hayt-query-fn*))
 
+(def ^:dynamic *fetch-size* nil)
+
+(def set-fetch-size!
+    (utils/var-root-setter *fetch-size*))
+
 (defn cluster
   "Returns a new com.datastax.driver.core/Cluster instance"
   [hosts & {:as options}]
@@ -162,7 +167,7 @@ ex: (prepare (select :foo (where {:bar ?})))"
 
 
 (defn ^:private set-statement-options!
-  [^Statement statement routing-key retry-policy tracing? consistency]
+  [^Statement statement routing-key retry-policy tracing? consistency fetch-size]
   (when routing-key
     (.setRoutingKey ^SimpleStatement statement
                     ^ByteBuffer routing-key))
@@ -170,6 +175,8 @@ ex: (prepare (select :foo (where {:bar ?})))"
     (.setRetryPolicy statement retry-policy))
   (when tracing?
     (.enableTracing statement))
+  (when fetch-size
+    (.setFetchSize statement fetch-size))
 
   (.setConsistencyLevel statement (enum/consistency-levels consistency)))
 
@@ -207,12 +214,13 @@ The query can be a raw string, a PreparedStatement (returned by
 "
   [& args]
   (let [[^Session session query & {:keys [consistency routing-key retry-policy
-                                          tracing? keywordize? values]
+                                          tracing? keywordize? fetch-size values]
                                    :or {keywordize? *keywordize*
-                                        consistency *consistency*}}]
+                                        consistency *consistency*
+                                        fetch-size *fetch-size*}}]
         (fix-session-arg args)
         ^Statement statement (query->statement query values)]
-    (set-statement-options! statement routing-key retry-policy tracing? consistency)
+    (set-statement-options! statement routing-key retry-policy tracing? consistency fetch-size)
     (try
       (codec/result-set->maps (.execute session statement) keywordize?)
       (catch Exception err
@@ -225,13 +233,14 @@ The query can be a raw string, a PreparedStatement (returned by
   [& args]
   (let [[^Session session query & {:keys [success error executor consistency
                                           routing-key retry-policy tracing?
-                                          keywordize? values]
+                                          keywordize? fetch-size values]
                                    :or {executor *executor*
                                         keywordize? *keywordize*
-                                        consistency *consistency*}}]
+                                        consistency *consistency*
+                                        fetch-size *fetch-size*}}]
         (fix-session-arg args)
         ^Statement statement (query->statement query values)]
-    (set-statement-options! statement routing-key retry-policy tracing? consistency)
+    (set-statement-options! statement routing-key retry-policy tracing? consistency fetch-size)
     (let [^ResultSetFuture rs-future
           (try
             (.executeAsync session statement)
@@ -261,13 +270,14 @@ The query can be a raw string, a PreparedStatement (returned by
   [& args]
   (let [[^Session session query & {:keys [executor consistency
                                           routing-key retry-policy tracing?
-                                          keywordize? values]
+                                          keywordize? fetch-size values]
                                    :or {executor *executor*
                                         keywordize? *keywordize*
-                                        consistency *consistency*}}]
+                                        consistency *consistency*
+                                        fetch-size *fetch-size*}}]
         (fix-session-arg args)
         ^Statement statement (query->statement query values)]
-    (set-statement-options! statement routing-key retry-policy tracing? consistency)
+    (set-statement-options! statement routing-key retry-policy tracing? consistency fetch-size)
     (let [^ResultSetFuture rs-future (.executeAsync session statement)
           ch (async/chan 1)]
       (Futures/addCallback
