@@ -204,17 +204,22 @@ directly.
 
 So 2 signatures:
 
- [session query & {:keys [consistency routing-key retry-policy
-                          tracing? values]
+ [session query & {:keys [consistency serial-consistency
+                          routing-key retry-policy
+                          tracing? values fetch-size]
                   :or {executor default-async-executor
-                       consistency *consistency*}}]
+                       consistency *consistency*
+                       serial-consistency *serial-consistency*
+                       fetch-size *fetch-size*}}]
 
 or
 
- [query & {:keys [consistency routing-key retry-policy
-                  tracing? values]
+ [query & {:keys [consistency serial-consistency routing-key retry-policy
+                  tracing? values fetch-size]
                   :or {executor default-async-executor
-                       consistency *consistency*}}]
+                       consistency *consistency*
+                       serial-consistency *serial-consistency*
+                       fetch-size *fetch-size*}}]
 
 If you chose the latter the Session must be bound with
 `with-session`.
