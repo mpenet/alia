@@ -1,11 +1,11 @@
 # Alia
 
 Alia's goal is to be a very simple to use library without trading
-performance, features or exensibility.
+performance, features or extensibility.
 
 It allows do to everything
 [datastax/java-driver](https://github.com/datastax/java-driver) has to offer
-with an idiomatic API, from a handfull of functions. The learning
+with an idiomatic API, from a handful of functions. The learning
 curve or need to reach for the docs should be minimal.
 
 Alia also comes with [Hayt](#hayt-query-dsl) a CQL query DSL inspired
@@ -329,11 +329,11 @@ query time for every call to `execute` or `execute-async`).
 (alia/execute bst)
 ```
 
-You don't have to deal with translations of datatypes, this is
+You don't have to deal with translations of data types, this is
 done under the hood.
 
 And this is it for the core of the function you need to know.
-There are a few other that can be usefull though.
+There are a few other that can be useful though.
 
 ### `alia/execute` & `alia/execute-async` advanced options
 
@@ -348,8 +348,9 @@ mention earlier, you can specify
 * `:tracing?` (boolean) triggers tracing (defaults to false)
 * `:keywordize?` (boolean, defaults true) rows use clojure keywords
    as keys instead of strings, settable globally with `set-keywordize!`
+* `:fetch-size` (int) sets max number of rows returned from server at a time.
 
-Additionaly `execute-async` accepts
+Additionally `execute-async` accepts
 an `:executor` option that will set the java.util.concurrent
 `ExecutorService` instance to be used for the ResultFuture (see:
 [Executors](#executors)).
@@ -366,7 +367,7 @@ Here are the supported consistency levels:
 ```
 
 This is one way of setting consistency, per query, but you can also
-set its default or using a binding similar to what we showed earier
+set its default or using a binding similar to what we showed earlier
 with sessions.
 
 ```clojure
@@ -385,7 +386,7 @@ or
 
 #### Executors
 
-The executor used to deal with resultset futures (in asynchronous
+The executor used to deal with result set futures (in asynchronous
 mode) can be passed as a named argument to `alia/execute-async`, or like
 sessions, and consistency be set with a function globally or with a
 binding:
@@ -435,7 +436,7 @@ punctually override the default policy for this request.
 
 [Retry Policies](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
 
-## Shuting down
+## Shutting down
 
 To clean up the resources used by alia once you are done, you can call
 `alia/shutdown` on both/either the cluster and the session.
@@ -451,7 +452,7 @@ or
 
 ## Extending data type support
 
-If you want alia to be able to encode custom datatypes without having
+If you want alia to be able to encode custom data types without having
 to do it yourself for every query you can extend the following
 protocol `qbits.alia.codec/PCodec`'s `encode` function.
 
@@ -519,7 +520,7 @@ To compile the queries just use `->raw` or `->prepared`
 
 ```
 
-Alia supports hayt query direct execution, if you pass a non-compiled
+Alia supports Hayt query direct execution, if you pass a non-compiled
 query, it will be compiled and cached.
 
 The same is true with `prepare`, the query gets prepared (ignoring the
