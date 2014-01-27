@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.0-beta6
+
+* Add QueryOptions [com.datastax.driver.core.QueryOptions](http://www.datastax.com/drivers/java/2.0/apidocs/com/datastax/driver/core/QueryOptions.html)
+  support at cluster level
+
 ## 2.0.0-beta5
 
 * Add [Statement.setFetchSize](http://www.datastax.com/drivers/java/2.0/com/datastax/driver/core/Statement.html#setFetchSize(int)) - Thanks @coltnz
