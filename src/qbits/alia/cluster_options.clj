@@ -6,6 +6,7 @@
     HostDistance
     PoolingOptions
     ProtocolOptions$Compression
+    QueryOptions
     SocketOptions
     SSLOptions)
    (com.datastax.driver.core.policies
@@ -86,6 +87,20 @@
       (.setKeepAlive so (boolean keep-alive?)))
 
     (.withSocketOptions builder so)))
+
+
+(defmethod set-cluster-option! :query-options
+  [_ ^Cluster$Builder builder {:keys [fetch-size
+                                      consistency
+                                      serial-consistency]}]
+  (let [qo (QueryOptions.)]
+    (when fetch-size
+      (.setFetchSize qo (int fetch-size)))
+    (when consistency
+      (.setConsistencyLevel qo (enum/consistency-levels consistency)))
+    (when serial-consistency
+      (.setSerialConsistencyLevel qo (enum/consistency-levels serial-consistency)))
+    (.withQueryOptions builder qo)))
 
 (defmethod set-cluster-option! :metrics?
   [_ ^Cluster$Builder builder metrics?]
