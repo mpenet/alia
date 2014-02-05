@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-beta7
+
+* Use Lamina 0.5.2
+
 ## 2.0.0-beta6
 
 * Add QueryOptions [com.datastax.driver.core.QueryOptions](http://www.datastax.com/drivers/java/2.0/apidocs/com/datastax/driver/core/QueryOptions.html)
