@@ -2,7 +2,7 @@
 
 ## 2.0.0-beta7
 
-* Use Lamina 0.5.2
+* Use Lamina 0.5.2, fixed repl reloading see https://github.com/ztellman/lamina/issues/82
 
 ## 2.0.0-beta6
 
