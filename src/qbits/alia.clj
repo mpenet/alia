@@ -111,8 +111,8 @@ keyspaces from a single cluster instance"
 (defn shutdown
   "Shutdowns Session or Cluster instance, clearing the underlying
 pools/connections"
-  ([cluster-or-session]
-     (.shutdown cluster-or-session))
+  ([^java.io.Closeable c]
+     (.closeAsync c))
   ([]
      (shutdown *session*)))
 

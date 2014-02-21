@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.0-beta8
+
+* Use java-driver 2.0.0-rc3
+  [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/2.0/driver-core/CHANGELOG.rst)
+
 ## 2.0.0-beta7
 
 * Use Lamina 0.5.2, fixed repl reloading see https://github.com/ztellman/lamina/issues/82
