@@ -286,7 +286,7 @@ It covers everything that is possible with CQL3 (functions, handling
 of collection types and their operations, ddl, prepared statements,
 etc).
 If you want to know more about it head to its [codox documentation](http://mpenet.github.com/hayt/codox/qbits.hayt.html) or
-[Hayt's tests](https://github.com/mpenet/hayt/blob/master/test/qbits/hayt/core_test.clj).
+[Hayt's tests](https://github.com/mpenet/hayt/blob/db46ff531860911251023add45caa3f0a40e056a/test/qbits/hayt/core_test.clj).
 
 ## Mailing list
 
