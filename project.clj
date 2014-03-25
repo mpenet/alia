@@ -3,7 +3,7 @@
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.5.1"]
+  :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/core.memoize "0.5.6"]
                  [cc.qbits/knit "0.2.1"]
                  [cc.qbits/hayt "2.0.0-beta3"]
@@ -12,7 +12,8 @@
                  [org.clojure/core.async "0.1.278.0-76b25b-alpha" ]]
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
              :1.5  {:dependencies [[org.clojure/clojure "1.5.1"]]}
-             :1.6  {:dependencies [[org.clojure/clojure "1.6.0-RC1"]]}
+             :1.6  {:dependencies [[org.clojure/clojure "1.6.0"]]}
+             ;; :1.7  {:dependencies [[org.clojure/clojure "1.7.0-SNAPSHOT"]]}
              :dev  {:dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
                                    [clj-time "0.6.0"]
                                    [cc.qbits/tardis "1.0.0"]]
