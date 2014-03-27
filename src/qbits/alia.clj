@@ -329,13 +329,6 @@ The query can be a raw string, a PreparedStatement (returned by
               (let [coll (apply execute session query opts)]
                 (lazy-query- session (pred query coll) pred coll opts)))))
 
-(defn ^:private lazy-query-
-  [session query pred coll opts]
-  (lazy-cat coll
-            (when query
-              (let [coll (apply execute session query opts)]
-                (lazy-query- session (pred query coll) pred coll opts)))))
-
 (defn lazy-query
   "Takes a query (hayt, raw or prepared) and a query modifier fn (that
 receives the last query and last chunk and returns a new query or nil).
