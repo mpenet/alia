@@ -39,7 +39,7 @@ Then add this to your dependencies:
 
 If you are running Cassandra 2.0+:
 ```clojure
-[cc.qbits/alia "2.0.0-beta10"]
+[cc.qbits/alia "2.0.0-beta11"]
 ```
 
 If you are running Cassandra 1.2:
@@ -246,11 +246,11 @@ Some examples:
 
 (update :foo
          (set-columns {:bar 1
-                       :baz [+ 2]})
-         (where {:foo :bar
-                 :moo [> 3]
-                 :meh [:> 4]
-                 :baz [:in [5 6 7]]}))
+                       :baz (inc-by 2)}
+         (where [[= :foo :bar]
+                 [> :moo 3]
+                 [> :meh 4]
+                 [:in :baz  [5 6 7]]]))
 
 
 ;; Composability using normal map manipulation functions

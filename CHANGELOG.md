@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0-beta11
+
+* **Breaking changes** Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+
 ## 2.0.0-beta10
 
 * Use java-driver 2.0.1
