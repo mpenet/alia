@@ -2,6 +2,21 @@
 
 ## 2.0.0-beta11
 
+API cleanup **Breaking changes**
+
+* We got rid of all the dynamic vars and related functions/macros
+  (`set-*`, `with-*`)
+* All `execute*` functions, as well as `prepare`, now require an explicit
+  session argument (it was optional before)
+* `cluster` now takes an map instead of hosts + kwargs
+* Performance improvement (as a result of the previous changes)
+* No longer leaks the default-executor for async, it will be
+  initialized lazily the first time it's needed (if at all)
+
+The next release will likely be 2.0 final, and the API be stable from now on.
+
+## 2.0.0-beta11
+
 * **Breaking changes** Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
 
 ## 2.0.0-beta10
