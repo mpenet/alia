@@ -39,7 +39,7 @@ Then add this to your dependencies:
 
 If you are running Cassandra 2.0+:
 ```clojure
-[cc.qbits/alia "2.0.0-beta11"]
+[cc.qbits/alia "2.0.0-SNAPSHOT"]
 ```
 
 If you are running Cassandra 1.2:
@@ -72,9 +72,9 @@ raw queries.
 
 
 ```clojure
-(require '[qbits.alia :as alia] )
+(require '[qbits.alia :as alia])
 
-(def cluster (alia/cluster "localhost"))
+(def cluster (alia/cluster {:contact-points ["localhost"]}))
 ```
 
 Sessions are separate so that you can interact with multiple
@@ -87,34 +87,31 @@ keyspaces from the same cluster definition.
                        WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 3};")
 ```
 
-Every function that requires session as first argument can be also
-used without this argument if you provide a binding or set it globally (valid for
-alia/execute and alia/prepare) using `with-session` or `set-session!`:
+
 
 ```clojure
-(alia/with-session session
-   (alia/execute "USE alia;")
-   (alia/execute "CREATE TABLE users (user_name varchar,
-                                     first_name varchar,
-                                     last_name varchar,
-                                     auuid uuid,
-                                     birth_year bigint,
-                                     created timestamp,
-                                     valid boolean,
-                                     emails set<text>,
-                                     tags list<bigint>,
-                                     amap map<varchar, bigint>,
-                                     PRIMARY KEY (user_name));")
-  (alia/execute "INSERT INTO users
-                 (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid,valid)
-                 VALUES('frodo', 'Frodo', 'Baggins',
-                 {'f@baggins.com', 'baggins@gmail.com'}, 1,
-                 {'foo': 1, 'bar': 2}, [4, 5, 6],
-                 1f84b56b-5481-4ee4-8236-8a3831ee5892, true);")
+   (alia/execute session "USE alia;")
+   (alia/execute session "CREATE TABLE users (user_name varchar,
+                                              first_name varchar,
+                                              last_name varchar,
+                                              auuid uuid,
+                                              birth_year bigint,
+                                              created timestamp,
+                                              valid boolean,
+                                              emails set<text>,
+                                              tags list<bigint>,
+                                              amap map<varchar, bigint>,
+                                              PRIMARY KEY (user_name));")
+  (alia/execute session "INSERT INTO users
+                         (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid,valid)
+                         VALUES('frodo', 'Frodo', 'Baggins',
+                         {'f@baggins.com', 'baggins@gmail.com'}, 1,
+                         {'foo': 1, 'bar': 2}, [4, 5, 6],
+                         1f84b56b-5481-4ee4-8236-8a3831ee5892, true);")
 
-  (def prepared-statement (alia/prepare "select * from users where user_name=?;"))
+  (def prepared-statement (alia/prepare session "select * from users where user_name=?;"))
 
-  (alia/execute prepared-statement :values ["frodo"])
+  (alia/execute session prepared-statement {:values ["frodo"]})
 
   >> ({:created nil,
        :last_name "Baggins",
@@ -143,7 +140,7 @@ the return value is a
 an equivalent of a clojure.core/promise).
 
 ```clojure
-(def result (alia/execute-async "select * from users;"))
+(def result (alia/execute-async session "select * from users;"))
 
 ```
 
@@ -158,10 +155,9 @@ Or we can use `success`/`error` handlers (it still returns a
 `result-channel` just like before).
 
 ```clojure
-(alia/execute-async "select * from users;"
-                    :success (fn [rows] (do-something-with-result rows)
-                    :error (fn [err] (print "fail!"))))
-
+(alia/execute-async session "select * from users;"
+                    {:success (fn [rows] (do-something-with-result rows))
+                     :error (fn [err] (print "fail!"))})
 ```
 
 #### Async using clojure/core.async
@@ -178,7 +174,7 @@ Once you run it you have a couple of options to pull data from it.
 and a callback as second:
 
 ```clojure
-(take! (execute-chan  "select * from users;")
+(take! (execute-chan session "select * from users;")
        (fn [rows-or-exception]
          (do-something rows)))
 ```
@@ -187,7 +183,7 @@ and a callback as second:
   from the channel.
 
 ```clojure
-(def rows-or-exception (<!! (execute-chan "select * from users;")))
+(def rows-or-exception (<!! (execute-chan session "select * from users;")))
 ```
 
 + using `clojure.core.async/go` block, and potentially using
@@ -196,9 +192,9 @@ and a callback as second:
 ```clojure
 (go
  (loop [;;the list of queries remaining
-        queries [(alia/execute-chan (select :foo))
-                 (alia/execute-chan (select :bar))
-                 (alia/execute-chan (select :baz))]
+        queries [(alia/execute-chan session (select :foo))
+                 (alia/execute-chan session (select :bar))
+                 (alia/execute-chan session (select :baz))]
         ;; where we'll store our results
         query-results '()]
    ;; If we are done with our queries return them, it's the exit clause
@@ -277,7 +273,7 @@ query to `execute` or `execute-async`, it will be compiled and cached on a LU ca
 
 Ex:
 ```clojure
-(execute (select :users (where {:name :foo})))
+(execute session (select :users (where {:name :foo})))
 ```
 
 It covers everything that is possible with CQL3 (functions, handling
