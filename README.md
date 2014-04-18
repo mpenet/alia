@@ -61,9 +61,9 @@ if you are upgrading.
 Simple query execution using alia+hayt would look like this:
 
 ```clojure
-(execute (select :users
-                 (where {:name :foo})
-                 (columns :bar "baz")))
+(execute session (select :users
+                         (where {:name :foo})
+                         (columns :bar "baz")))
 ```
 
 
@@ -214,8 +214,6 @@ and a callback as second:
 ```
 
 And it can do a lot more! Head to the
-[docs](https://github.com/mpenet/alia/blob/master/docs/guide.md) or
-the
 [codox generated documentation](http://mpenet.github.com/alia/#docs).
 
 ## Hayt (Query DSL)

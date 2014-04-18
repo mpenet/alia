@@ -32,50 +32,48 @@ you can create sessions from it and interact with multiple keyspaces.
 
 ex:
 ```clojure
-(def cluster (alia/cluster "localhost" :port 9042))
-
-```
-
-It can also take a sequence of nodes to connect to.
-ex:
-```clojure
-(def cluster (alia/cluster ["192.168.1.30" "192.168.1.31" "192.168.1.32"]
-                           :port 9042))
+(def cluster (alia/cluster {:contact-points ["192.168.1.30" "192.168.1.31" "192.168.1.32"]
+                            :port 9042}))
 
 ```
 
 The following options are supported:
 
-* `:contact-points`: a list of nodes ip addresses to connect to.
+* `:contact-points` : List of nodes ip addresses to connect to.
 
-* `:port`: port to connect to on the nodes (native transport must be
+* `:port` : port to connect to on the nodes (native transport must be
   active on the nodes: `start_native_transport: true` in
   cassandra.yaml). Defaults to 9042 if not supplied.
 
-* `:load-balancing-policy`: Configure the
+* `:load-balancing-policy` : Configure the
   [Load Balancing Policy](http://mpenet.github.io/alia/qbits.alia.policy.load-balancing.html)
   to use for the new cluster.
 
-* `:reconnection-policy`: Configure the
+* `:reconnection-policy` : Configure the
   [Reconnection Policy](http://mpenet.github.io/alia/qbits.alia.policy.reconnection.html)
   to use for the new cluster.
 
-* `:retry-policy`: Configure the
+* `:retry-policy` : Configure the
   [Retry Policy](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
   to use for the new cluster.
 
-* `:metrics?`: Toggles metrics collection for the created cluster
+* `:metrics?` : Toggles metrics collection for the created cluster
   (metrics are enabled by default otherwise).
 
-* `:jmx-reporting?`: Toggles JMX reporting of the metrics.
+* `:jmx-reporting?` : Toggles JMX reporting of the metrics.
 
-* `:credentials`: Takes a username and password for use with
+* `:credentials` : Takes a map of :username and :password for use with
   Cassandra's PasswordAuthenticator
 
-* `:compression`: Compression supported by the Cassandra binary
+* `:compression` : Compression supported by the Cassandra binary
   protocol. Can be `:none` or `:snappy`.
 
-* `:pooling-options`: The pooling options used by this builder.
+* `:ssl?`: enables/disables SSL
+
+* `:ssl-options` : advanced SSL setup using a
+  `com.datastax.driver.core.SSLOptions` instance
+
+* `:pooling-options` : The pooling options used by this builder.
   Options related to connection pooling.
 
   The driver uses connections in an asynchronous way. Meaning that
@@ -103,10 +101,28 @@ The following options are supported:
   :core-connections-per-host {:remote 10 :local 100}
   ```
 
-  + `:core-connections-per-host`
-  + `:max-connections-per-host`
-  + `:max-simultaneous-requests-per-connection`
-  + `:min-simultaneous-requests-per-connection`
+  + `:core-connections-per-host` Number
+  + `:max-connections-per-host` Number
+  + `:max-simultaneous-requests-per-connection` Number
+  + `:min-simultaneous-requests-per-connection` Number
+
+* `:socket-options`: a map of
+  + `:connect-timeout-millis` Number
+  + `:read-timeout-millis` Number
+  + `:receive-buffer-size` Number
+  + `:send-buffer-size` Number
+  + `:so-linger` Number
+  + `:tcp-no-delay?` Bool
+  + `:reuse-address?` Bool
+  + `:keep-alive?` Bool
+
+* `:query-options`: a map of
+  + `:fetch-size` Number
+  + `:consistency` (consistency Keyword)
+  + `:serial-consistency` (consistency Keyword)
+
+* `:jmx-reporting?` Bool, enables/disables JMX reporting of the metrics.
+
 
 The handling of these options is achieved with a multimethod that you
 could extend if you need to handle some special case or want to create
@@ -181,30 +197,6 @@ As you can see C* datatypes are translated to clojure friendly types
 when it's possible: in this example `:emails` is a C* native Set,
 `:tags` is a native list and `:amap` is a native map.
 
-`alia/execute*` functions have 2 distinct arity, you can
-skip the session parameter if you have set it using `with-session` or
-`set-session!`:
-
-ex:
-
-```clojure
-(alia/set-session! session)
-(alia/execute "SELECT * FROM foo;")
-;; ... more queries
-```
-
-or
-
-```clojure
-(alia/with-session session
-  (alia/execute "SELECT * FROM foo;")
-  ;; ... more queries)
-
-```
-
-For the next examples we will assume that the session has been set
-using `set-session!` to be more succint.
-
 ### Asynchronous queries
 
 The previous examples will block until a response is received from
@@ -225,7 +217,7 @@ one way to do it, more about this later). If an error happened, when
 you deref the query it will throw the exception.
 
 ```clojure
-(def query (alia/execute-async "SELECT * FROM foo;"))
+(def query (alia/execute-async session "SELECT * FROM foo;"))
 ;; ... more queries
 
 ;; and later to get its value
@@ -239,7 +231,7 @@ A better way to run queries asynchronously is to provide callbacks to
 the `execute-async` call:
 
 ```clojure
-(alia/execute-async "SELECT * FROM foo;" :success (fn [rs] (do-something rs)))
+(alia/execute-async session "SELECT * FROM foo;" :success (fn [rs] (do-something rs)))
 ```
 Again it will return immediately (as a `result-channel`) and will
 trigger the `:success` callback passing it the resultset once the
@@ -247,9 +239,10 @@ result is available. You can also provide an `:error` callback.
 
 
 ```clojure
-(alia/execute-async "SELECT * FROM foo;"
-                    :success (fn [rs] (do-something rs))
-                    :error (fn [ex] (deal-with-the-error ex)))
+(alia/execute-async session
+                    "SELECT * FROM foo;"
+                    {:success (fn [rs] (do-something rs))
+                     :error (fn [ex] (deal-with-the-error ex))})
 ```
 
 [Lamina](https://github.com/ztellman/lamina) makes it easy to work in
@@ -271,7 +264,7 @@ Once you run it you have a couple of options to pull data from it.
 and a callback as second:
 
 ```clojure
-(take! (execute-chan  "select * from users;")
+(take! (execute-chan session "select * from users;")
        (fn [rows-or-exception]
          (do-something rows)))
 ```
@@ -280,7 +273,7 @@ and a callback as second:
   from the channel.
 
 ```clojure
-(def rows-or-exception (<!! (execute-chan "select * from users;")))
+(def rows-or-exception (<!! (execute-chan session "select * from users;")))
 ```
 
 + using `clojure.core.async/go` block potentially using
@@ -292,7 +285,7 @@ and a callback as second:
     (if (= 3 i)
       ret
       (recur (inc i)
-             (conj ret (<! (execute-chan "select * from users limit 1")))))))
+             (conj ret (<! (execute-chan session "select * from users limit 1")))))))
 ```
 
 Some interesting examples are in the
@@ -308,16 +301,12 @@ but require 1 (optionally 2) more steps.
 In order to prepare a statement you need to use `alia/prepare`
 
 ```clojure
-(def statement (alia/prepare "SELECT * FROM foo WHERE foo=? AND bar=?;"))
+(def statement (alia/prepare session "SELECT * FROM foo WHERE foo=? AND bar=?;"))
 ```
 
-`prepare` expects a session as first parameter if you havent set
-it globally or wrapped the call with `with-session`.
-
-Then execute the query
 
 ```clojure
-(alia/execute statement :values ["value-of-foo" "value-of-bar"])
+(alia/execute session statement {:values ["value-of-foo" "value-of-bar"]})
 ```
 
 Alternatively you can bind values prior to execution (in case the
@@ -326,7 +315,7 @@ query time for every call to `execute` or `execute-async`).
 
 ```clojure
 (def bst (alia/bind statement ["value-of-foo" "value-of-bar"]))
-(alia/execute bst)
+(alia/execute session bst)
 ```
 
 You don't have to deal with translations of data types, this is
@@ -339,15 +328,15 @@ There are a few other that can be useful though.
 
 The complete signature of execute looks like this
 
-
 `execute` and `execute-async` support a number of options I didn't
 mention earlier, you can specify
 * `:consistency` [Consistency](#consistency)
 * `:retry-policy` [Retry Policy](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
 * `:routing-key` [RoutingKey](#routing-key)
 * `:tracing?` (boolean) triggers tracing (defaults to false)
-* `:keywordize?` (boolean, defaults true) rows use clojure keywords
-   as keys instead of strings, settable globally with `set-keywordize!`
+* `:string-keys?` (boolean, defaults false) stringify keys (they are
+   keywords by default, can be handy to prevent filling PermGen when
+   dealing with compact storage "wide rows").
 * `:fetch-size` (int) sets max number of rows returned from server at a time.
 
 Additionally `execute-async` accepts
@@ -357,32 +346,17 @@ an `:executor` option that will set the java.util.concurrent
 
 #### Consistency
 
-Here are the supported consistency levels:
+Here are the supported consistency and serial-consistency levels:
 
 `:all` `:any` `:each-quorum` `:local-quorum` `:one` `:quorum` `:three` `:two`
 
 
 ```clojure
-(alia/execute bst :consistency :all)
+(alia/execute session bst {:consistency :all})
 ```
 
-This is one way of setting consistency, per query, but you can also
-set its default or using a binding similar to what we showed earlier
-with sessions.
-
-```clojure
-(set-consistency! :three)
-```
-
-or
-
-
-```clojure
-(with-consistency :quorum
-  .. execute a bunch of queries
-)
-```
-
+You can also set the consistency globaly at the cluster level via
+`qbits.alia/cluster` options.
 
 #### Executors
 
@@ -393,29 +367,14 @@ binding:
 
 
 ```clojure
-(alia/execute-async bst :executor executor-instance)
+(alia/execute-async session bst {:executor executor-instance})
 ```
-
-
-```clojure
-(set-executor! executor-instance)
-```
-
-or
-
-
-```clojure
-(with-executor executor-instance
-  .. execute a bunch of queries
-)
-```
-
 Alia comes with a thin wrapper for j.u.c Executors, [mpenet/knit](https://github.com/mpenet/knit).
 
 Ex:
 ```clojure
 (require '[qbits.knit :as knit])
-(alia/set-executor! (knit/executor :fixed :num-threads 50))
+(alia/execute-async session bst {:executor (knit/executor :fixed :num-threads 50)})
 ```
 
 #### Routing key
@@ -474,51 +433,8 @@ Alia comes with the latest version of [Hayt](https://github.com/mpenet/hayt).
 This is a query DSL, that is composable, very easy to use, performant
 and provides complete support for CQL3 features.
 
-Some examples:
-
-```clojure
-
-(use 'qbits.hayt)
-
-(select :foo
-        (where {:bar 2}))
-
-;; this generates a map
->> {:select :foo :where {:bar 2}}
-
-(update :some-table
-         (set-columns {:bar 1
-                       :baz [+ 2]})
-         (where {:foo :bar
-                 :moo [> 3]
-                 :meh [:> 4]
-                 :baz [:in [5 6 7]]})
-         (order-by [:foo :asc]))
-```
-
-Queries are composable using any function that can operate on maps:
-
-```clojure
-(def base (select :foo (where {:foo 1})))
-
-(merge base
-       (columns :bar :baz)
-       (where {:bar 2})
-       (order-by [:bar :asc])
-       (using :ttl 10000))
-
-```
-
-To compile the queries just use `->raw` or `->prepared`
-
-```clojure
-(->raw (select :foo))
-> "SELECT * FROM foo;"
-
-(->prepared (select :foo (where {:bar 1})))
-> ["SELECT * FROM foo WHERE bar=?;" [1]]
-
-```
+See [codox documentation](http://mpenet.github.com/hayt/codox/qbits.hayt.html) or
+[Hayt's tests](https://github.com/mpenet/hayt/blob/master/test/qbits/hayt/core_test.clj).
 
 Alia supports Hayt query direct execution, if you pass a non-compiled
 query, it will be compiled and cached.
@@ -527,18 +443,16 @@ The same is true with `prepare`, the query gets prepared (ignoring the
 values, it's for convenience really, it compiles the query under the
 hood and only passes the parameterized string with ? placeholders).
 ```clojure
-(prepare (select :user (where {:foo :bar})))
+(prepare session (select :user (where {:foo "bar"})))
+(prepare session (select :user (where {:bar ?})))
 ```
 
 Ex:
 ```clojure
-(execute (select :users (where {:name :foo})))
+(execute session (select :users (where {:name :foo})))
 ```
 You can have control over the query caching using
-`set-hayt-query-fn!` or via a binding on
-`*hayt-query-fn*` and provide your own memoize implementation or you
+`set-hayt-query-fn!` and provide your own memoize implementation or you
 can set its value to `qbits.hayt/->raw` if you prefer not to use query caching.
 The default uses `clojure.core.memoize` with a LU cache with a `:threshold`
 of 100.
-
-If you are curious about what else it can do head to the [codox API reference](http://mpenet.github.com/hayt/codox/qbits.hayt.html) or the [tests](https://github.com/mpenet/hayt/blob/master/test/qbits/hayt/core_test.clj).
