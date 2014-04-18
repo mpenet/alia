@@ -2,13 +2,14 @@
 
 ## 2.0.0-beta11
 
-API cleanup **Breaking changes**
+**Breaking changes** -> API cleanup, performance, better composability
 
 * We got rid of all the dynamic vars and related functions/macros
   (`set-*`, `with-*`)
-* All `execute*` functions, as well as `prepare`, now require an explicit
-  session argument (it was optional before)
-* `cluster` now takes an map instead of hosts + kwargs
+* All `execute*` functions, as well as `prepare`, now require an
+  explicit session argument (it was optional before), options are now
+  a map instead of kwargs
+* `cluster` now takes a map instead of hosts + kwargs
 * Performance improvement (as a result of the previous changes)
 * No longer leaks the default-executor for async, it will be
   initialized lazily the first time it's needed (if at all)
