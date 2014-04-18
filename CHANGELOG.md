@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0-beta11
+## 2.0.0-rc1
 
 **Breaking changes** -> API cleanup, performance, better composability
 
