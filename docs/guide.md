@@ -26,7 +26,7 @@ you can create sessions from it and interact with multiple keyspaces.
 
 (require '[qbits.alia :as alia] )
 
-(def cluster (alia/cluster "localhost"))
+(def cluster (alia/cluster))
 ```
 `alia/cluster` can take a number of optional parameters:
 
