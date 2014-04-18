@@ -38,9 +38,100 @@
 (defn cluster
   "Takes an option map and returns a new
 com.datastax.driver.core/Cluster instance.
-The map can contain any value supported by
-qbits.alia.cluster-options/set-cluster-options!.
-:contact-points defaults to localhost if not provided."
+
+The following options are supported:
+
+* `:contact-points`: a list of nodes ip addresses to connect to.
+
+* `:port`: port to connect to on the nodes (native transport must be
+  active on the nodes: `start_native_transport: true` in
+  cassandra.yaml). Defaults to 9042 if not supplied.
+
+* `:load-balancing-policy`: Configure the
+  [Load Balancing Policy](http://mpenet.github.io/alia/qbits.alia.policy.load-balancing.html)
+  to use for the new cluster.
+
+* `:reconnection-policy`: Configure the
+  [Reconnection Policy](http://mpenet.github.io/alia/qbits.alia.policy.reconnection.html)
+  to use for the new cluster.
+
+* `:retry-policy`: Configure the
+  [Retry Policy](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
+  to use for the new cluster.
+
+* `:metrics?`: Toggles metrics collection for the created cluster
+  (metrics are enabled by default otherwise).
+
+* `:jmx-reporting?`: Toggles JMX reporting of the metrics.
+
+* `:credentials`: Takes a map of :username and :password for use with
+  Cassandra's PasswordAuthenticator
+
+* `:compression`: Compression supported by the Cassandra binary
+  protocol. Can be `:none` or `:snappy`.
+
+* `:ssl?`: enables/disables SSL
+
+* `:ssl-options`: advanced SSL setup using a
+  `com.datastax.driver.core.SSLOptions` instance
+
+* `:pooling-options`: The pooling options used by this builder.
+  Options related to connection pooling.
+
+  The driver uses connections in an asynchronous way. Meaning that
+  multiple requests can be submitted on the same connection at the
+  same time. This means that the driver only needs to maintain a
+  relatively small number of connections to each Cassandra host. These
+  options allow to control how many connections are kept exactly.
+
+  For each host, the driver keeps a core amount of connections open at
+  all time. If the utilisation of those connections reaches a
+  configurable threshold ,more connections are created up to a
+  configurable maximum number of connections.
+
+  Once more than core connections have been created, connections in
+  excess are reclaimed if the utilisation of opened connections drops
+  below the configured threshold.
+
+  Each of these parameters can be separately set for `:local` and `:remote`
+  hosts (HostDistance). For `:ignored` hosts, the default for all those
+  settings is 0 and cannot be changed.
+
+  Each of the following configuration keys, take a map of {distance value}  :
+  ex:
+  ```clojure
+  :core-connections-per-host {:remote 10 :local 100}
+  ```
+
+  + `:core-connections-per-host`
+  + `:max-connections-per-host`
+  + `:max-simultaneous-requests-per-connection`
+  + `:min-simultaneous-requests-per-connection`
+
+* `:socket-options`: a map of
+  + connect-timeout-millis (number)
+  + read-timeout-millis (number)
+  + receive-buffer-size (number)
+  + send-buffer-size (number)
+  + so-linger (number)
+  + tcp-no-delay? (bool)
+  + reuse-address? (bool)
+  + keep-alive? (bool)
+
+* `:query-options`: a map of
+  + fetch-size (number)
+  + consistency (consistency keyword)
+  + serial-consistency (consistency keyword)
+
+* `:jmx-reporting?`: enables/disables JMX reporting of the metrics.
+
+
+
+The handling of these options is achieved with a multimethod that you
+could extend if you need to handle some special case or want to create
+your own options templates.
+See `qbits.alia.cluster-options/set-cluster-option!` [[source]](../src/qbits/alia/cluster_options.clj#L19)
+"
   ([options]
      (-> (Cluster/builder)
          (copt/set-cluster-options! (merge {:contact-points ["localhost"]}
