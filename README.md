@@ -15,7 +15,7 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 * Provides a **versatile CQL3+ DSL**, [Hayt](#hayt-query-dsl)
 * Support for **Raw queries**, **Prepared Statements** or **[Hayt](#hayt-query-dsl) queries**
 * Can do both **Synchronous and Asynchronous** query execution, using
-  **Lamina** or an experimental **clojure/core.async** interface.
+  **Lamina** or **clojure/core.async** interface for async.
 * Support for **all of
   [datastax/java-driver](https://github.com/datastax/java-driver)
   advanced options**: jmx, auth, SSL, compression, consistency, custom
