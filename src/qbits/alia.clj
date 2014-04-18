@@ -37,11 +37,12 @@
 
 (defn cluster
   "Returns a new com.datastax.driver.core/Cluster instance"
-  [options]
-  (-> (Cluster/builder)
-      (copt/set-cluster-options! (merge {:contact-points ["localhost"]}
-                                        options))
-      .build))
+  ([options]
+     (-> (Cluster/builder)
+         (copt/set-cluster-options! (merge {:contact-points ["localhost"]}
+                                           options))
+         .build))
+  ([] (cluster {})))
 
 (defn ^Session connect
   "Returns a new com.datastax.driver.core/Session instance. We need to
