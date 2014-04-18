@@ -36,7 +36,11 @@
   (utils/var-root-setter hayt-query-fn))
 
 (defn cluster
-  "Returns a new com.datastax.driver.core/Cluster instance"
+  "Takes an option map and returns a new
+com.datastax.driver.core/Cluster instance.
+The map can contain any value supported by
+qbits.alia.cluster-options/set-cluster-options!.
+:contact-points defaults to localhost if not provided."
   ([options]
      (-> (Cluster/builder)
          (copt/set-cluster-options! (merge {:contact-points ["localhost"]}
@@ -70,10 +74,11 @@ pools/connections"
      (ex->ex-info ex data "Query execution failed")))
 
 (defn prepare
-  "Returns a com.datastax.driver.core.PreparedStatement instance to be
-used in `execute` after it's been bound with `bind`. Can take a string query or
-a Hayt query, in that case they will be compiled with ->raw internaly.
-ex: (prepare (select :foo (where {:bar ?})))"
+  "Takes a session and a query (raw string or hayt) and returns a
+  com.datastax.driver.core.PreparedStatement instance to be used in
+  `execute` after it's been bound with `bind`. Hayt query parameter
+  will be compiled with qbits.hayt/->raw internaly
+  ex: (prepare session (select :foo (where {:bar ?})))"
   [^Session session query]
   (let [^String q (if (map? query)
                     (hayt/->raw query)
@@ -87,8 +92,9 @@ ex: (prepare (select :foo (where {:bar ?})))"
                             "Query prepare failed"))))))
 
 (defn bind
-  "Returns a com.datastax.driver.core.BoundStatement instance to be
-  used with `execute`"
+  "Takes a statement and a collection of values and returns a
+  com.datastax.driver.core.BoundStatement instance to be used with
+  `execute` (or one of its variants)"
   [^PreparedStatement statement values]
   (try
     (.bind statement (to-array (map codec/encode values)))
@@ -138,13 +144,9 @@ ex: (prepare (select :foo (where {:bar ?})))"
 
 (defn execute
   "Executes a query against a session. Returns a collection of rows.
-The first argument can be either a Session instance or the query
-directly.
-
 The query can be a raw string, a PreparedStatement (returned by
-`prepare`) with values passed as `:values` that will be bound by
-`execute`, BoundStatement (returned by `bind`), or a Hayt query.
-"
+`prepare`) with values passed via the `:values` option key will be bound by
+`execute`, BoundStatement (returned by `qbits.alia/bind`), or a Hayt query."
   ([^Session session query {:keys [consistency serial-consistency
                                    routing-key retry-policy tracing? string-keys?
                                    fetch-size values]}]
@@ -161,7 +163,7 @@ The query can be a raw string, a PreparedStatement (returned by
 
 (defn execute-async
   "Same as execute, but returns a promise and accepts :success and :error
-  handlers, you can also pass :executor for the ResultFuture, it
+  handlers via options, you can also pass :executor for the ResultFuture, it
   defaults to a cachedThreadPool if you don't"
   ([^Session session query {:keys [success error executor consistency
                                    serial-consistency routing-key
@@ -227,21 +229,20 @@ The query can be a raw string, a PreparedStatement (returned by
                 (lazy-query- session (pred query coll) pred coll opts)))))
 
 (defn lazy-query
-  "Takes a query (hayt, raw or prepared) and a query modifier fn (that
+  "Takes a session, a query (hayt, raw or prepared) and a query modifier fn (that
 receives the last query and last chunk and returns a new query or nil).
 The first chunk will be the original query result, then for each
 subsequent chunk the query will be the result of last query
 modified by the modifier fn unless the fn returns nil,
 which would causes the iteration to stop.
 
-You must pass the session as first argument or
-use a binding.  It also accepts any `execute` options as trailing
-arguments.
+It also accepts `execute` options.
 
-ex: (lazy-query (select :items (limit 2) (where {:x (int 1)}))
-                  (fn [q coll]
-                    (merge q (where {:si (-> coll last :x inc)})))
-                  :consistency :quorum :tracing? true)"
+ex: (lazy-query session
+                (select :items (limit 2) (where {:x (int 1)}))
+                        (fn [q coll]
+                          (merge q (where {:si (-> coll last :x inc)})))
+                {:consistency :quorum :tracing? true})"
   ([session query pred opts]
      (lazy-query- session query pred [] opts))
   ([session query pred]
