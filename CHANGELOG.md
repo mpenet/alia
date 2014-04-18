@@ -13,7 +13,8 @@ API cleanup **Breaking changes**
 * No longer leaks the default-executor for async, it will be
   initialized lazily the first time it's needed (if at all)
 
-The next release will likely be 2.0 final, and the API be stable from now on.
+The next release will likely be 2.0 final, and the API will be stable
+from now on.
 
 ## 2.0.0-beta11
 
