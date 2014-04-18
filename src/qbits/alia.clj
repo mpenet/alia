@@ -26,8 +26,8 @@
     FutureCallback)
    (java.nio ByteBuffer)))
 
-(def default-executor (delay (knit/executor :cached)))
-(def hayt-query-fn (memo/lu hayt/->raw :lu/threshold 100))
+(def ^:no-doc default-executor (delay (knit/executor :cached)))
+(def ^:no-doc hayt-query-fn (memo/lu hayt/->raw :lu/threshold 100))
 
 (def set-hayt-query-fn!
   "Sets root value of hayt-query-fn, allowing to control how hayt
@@ -41,41 +41,41 @@ com.datastax.driver.core/Cluster instance.
 
 The following options are supported:
 
-* `:contact-points`: a list of nodes ip addresses to connect to.
+* `:contact-points` : List of nodes ip addresses to connect to.
 
-* `:port`: port to connect to on the nodes (native transport must be
+* `:port` : port to connect to on the nodes (native transport must be
   active on the nodes: `start_native_transport: true` in
   cassandra.yaml). Defaults to 9042 if not supplied.
 
-* `:load-balancing-policy`: Configure the
+* `:load-balancing-policy` : Configure the
   [Load Balancing Policy](http://mpenet.github.io/alia/qbits.alia.policy.load-balancing.html)
   to use for the new cluster.
 
-* `:reconnection-policy`: Configure the
+* `:reconnection-policy` : Configure the
   [Reconnection Policy](http://mpenet.github.io/alia/qbits.alia.policy.reconnection.html)
   to use for the new cluster.
 
-* `:retry-policy`: Configure the
+* `:retry-policy` : Configure the
   [Retry Policy](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
   to use for the new cluster.
 
-* `:metrics?`: Toggles metrics collection for the created cluster
+* `:metrics?` : Toggles metrics collection for the created cluster
   (metrics are enabled by default otherwise).
 
-* `:jmx-reporting?`: Toggles JMX reporting of the metrics.
+* `:jmx-reporting?` : Toggles JMX reporting of the metrics.
 
-* `:credentials`: Takes a map of :username and :password for use with
+* `:credentials` : Takes a map of :username and :password for use with
   Cassandra's PasswordAuthenticator
 
-* `:compression`: Compression supported by the Cassandra binary
+* `:compression` : Compression supported by the Cassandra binary
   protocol. Can be `:none` or `:snappy`.
 
 * `:ssl?`: enables/disables SSL
 
-* `:ssl-options`: advanced SSL setup using a
+* `:ssl-options` : advanced SSL setup using a
   `com.datastax.driver.core.SSLOptions` instance
 
-* `:pooling-options`: The pooling options used by this builder.
+* `:pooling-options` : The pooling options used by this builder.
   Options related to connection pooling.
 
   The driver uses connections in an asynchronous way. Meaning that
@@ -123,8 +123,7 @@ The following options are supported:
   + `:consistency` (consistency Keyword)
   + `:serial-consistency` (consistency Keyword)
 
-* `:jmx-reporting?`: Bool, enables/disables JMX reporting of the metrics.
-
+* `:jmx-reporting?` Bool, enables/disables JMX reporting of the metrics.
 
 
 The handling of these options is achieved with a multimethod that you
@@ -234,7 +233,9 @@ pools/connections"
     (.setConsistencyLevel statement (enum/consistency-levels consistency))))
 
 (defn execute
-  "Executes a query against a session. Returns a collection of rows.
+  "Executes a query against a session.
+Returns a collection of rows.
+
 The query can be a raw string, a PreparedStatement (returned by
 `prepare`) with values passed via the `:values` option key will be bound by
 `execute`, BoundStatement (returned by `qbits.alia/bind`), or a Hayt query."
@@ -287,9 +288,9 @@ The query can be a raw string, a PreparedStatement (returned by
 (defn execute-chan
   "Same as execute, but returns a clojure.core.async/chan that is
   wired to the underlying ResultSetFuture. This means this is usable
-  with `go` blocks or `take!`. Exceptions are sent to the
-  channel as a value, it's your responsability to handle these how you
-  deem appropriate."
+  with `go` blocks or `take!`. Exceptions are sent to the channel as a
+  value, it's your responsability to handle these how you deem
+  appropriate."
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key retry-policy tracing?
                                    string-keys? fetch-size values]}]
