@@ -103,27 +103,27 @@ The following options are supported:
   :core-connections-per-host {:remote 10 :local 100}
   ```
 
-  + `:core-connections-per-host`
-  + `:max-connections-per-host`
-  + `:max-simultaneous-requests-per-connection`
-  + `:min-simultaneous-requests-per-connection`
+  + `:core-connections-per-host` Number
+  + `:max-connections-per-host` Number
+  + `:max-simultaneous-requests-per-connection` Number
+  + `:min-simultaneous-requests-per-connection` Number
 
 * `:socket-options`: a map of
-  + connect-timeout-millis (number)
-  + read-timeout-millis (number)
-  + receive-buffer-size (number)
-  + send-buffer-size (number)
-  + so-linger (number)
-  + tcp-no-delay? (bool)
-  + reuse-address? (bool)
-  + keep-alive? (bool)
+  + `:connect-timeout-millis` Number
+  + `:read-timeout-millis` Number
+  + `:receive-buffer-size` Number
+  + `:send-buffer-size` Number
+  + `:so-linger` Number
+  + `:tcp-no-delay?` Bool
+  + `:reuse-address?` Bool
+  + `:keep-alive?` Bool
 
 * `:query-options`: a map of
-  + fetch-size (number)
-  + consistency (consistency keyword)
-  + serial-consistency (consistency keyword)
+  + `:fetch-size` Number
+  + `:consistency` (consistency Keyword)
+  + `:serial-consistency` (consistency Keyword)
 
-* `:jmx-reporting?`: enables/disables JMX reporting of the metrics.
+* `:jmx-reporting?`: Bool, enables/disables JMX reporting of the metrics.
 
 
 
