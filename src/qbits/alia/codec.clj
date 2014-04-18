@@ -70,8 +70,8 @@
   (encode [x] x))
 
 (defn result-set->maps
-  [^ResultSet result-set keywordize?]
-  (let [key-fn (if keywordize? keyword identity)]
+  [^ResultSet result-set string-keys?]
+  (let [key-fn (if string-keys? identity keyword)]
     (-> (map (fn [^Row row]
                (let [cdef (.getColumnDefinitions row)
                      len (.size cdef)]
