@@ -253,9 +253,9 @@ The following options are supported:
 * `:serial-consistency` : Keyword, consistency
 * `:routing-key` : ByteBuffer
 * `:retry-policy` : one of qbits.alia.policy.retry/*
-* `:tracing?` : Book, toggles query tracing (available on query result metadata)
+* `:tracing?` : Bool, toggles query tracing (available via query result metadata)
 * `:string-keys?` : Bool, stringify keys (they are keyword by default)
-* `:fetch-size` : Number, Sets query fetching size
+* `:fetch-size` : Number, sets query fetching size
 
 Values for consistency:
 
