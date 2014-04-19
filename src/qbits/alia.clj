@@ -200,7 +200,7 @@ pools/connections"
                               :values values}
                           "Query binding failed")))))
 
-(defprotocol PStatement
+(defprotocol ^:no-doc PStatement
   (^:no-doc query->statement
     [q values] "Encodes input into a Statement instance"))
 
