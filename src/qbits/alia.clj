@@ -130,6 +130,12 @@ The handling of these options is achieved with a multimethod that you
 could extend if you need to handle some special case or want to create
 your own options templates.
 See `qbits.alia.cluster-options/set-cluster-option!` [[source]](../src/qbits/alia/cluster_options.clj#L19)
+
+
+Values for consistency:
+
+:all :any :each-quorum :local-one :local-quorum :local-serial :one :quorum
+:serial :three :two
 "
   ([options]
      (-> (Cluster/builder)
@@ -238,7 +244,23 @@ Returns a collection of rows.
 
 The query can be a raw string, a PreparedStatement (returned by
 `prepare`) with values passed via the `:values` option key will be bound by
-`execute`, BoundStatement (returned by `qbits.alia/bind`), or a Hayt query."
+`execute`, BoundStatement (returned by `qbits.alia/bind`), or a Hayt query.
+
+The following options are supported:
+
+* `:values` : values to be bound to a prepared query
+* `:consistency` : Keyword, consistency
+* `:serial-consistency` : Keyword, consistency
+* `:routing-key` : ByteBuffer
+* `:retry-policy` : one of qbits.alia.policy.retry/*
+* `:tracing?` : Book, toggles query tracing (available on query result metadata)
+* `:string-keys?` : Bool, stringify keys (they are keyword by default)
+* `:fetch-size` : Number, Sets query fetching size
+
+Values for consistency:
+
+:all :any :each-quorum :local-one :local-quorum :local-serial :one :quorum
+:serial :three :two"
   ([^Session session query {:keys [consistency serial-consistency
                                    routing-key retry-policy tracing? string-keys?
                                    fetch-size values]}]
@@ -254,9 +276,12 @@ The query can be a raw string, a PreparedStatement (returned by
      (execute session query {})))
 
 (defn execute-async
-  "Same as execute, but returns a promise and accepts :success and :error
-  handlers via options, you can also pass :executor for the ResultFuture, it
-  defaults to a cachedThreadPool if you don't"
+  "Same as execute, but returns a promise and accepts :success
+  and :error handlers via options, you can also pass :executor via the
+  option map for the ResultFuture, it defaults to a cachedThreadPool
+  if you don't.
+
+  For other options refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [success error executor consistency
                                    serial-consistency routing-key
                                    retry-policy tracing? string-keys? fetch-size
@@ -290,7 +315,9 @@ The query can be a raw string, a PreparedStatement (returned by
   wired to the underlying ResultSetFuture. This means this is usable
   with `go` blocks or `take!`. Exceptions are sent to the channel as a
   value, it's your responsability to handle these how you deem
-  appropriate."
+  appropriate.
+
+  For options refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key retry-policy tracing?
                                    string-keys? fetch-size values]}]
@@ -328,7 +355,7 @@ subsequent chunk the query will be the result of last query
 modified by the modifier fn unless the fn returns nil,
 which would causes the iteration to stop.
 
-It also accepts `execute` options.
+It also accepts any of `execute` options.
 
 ex: (lazy-query session
                 (select :items (limit 2) (where {:x (int 1)}))
