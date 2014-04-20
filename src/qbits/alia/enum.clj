@@ -19,7 +19,7 @@
    {}
    enum-values))
 
-(def write-types (enum-values->map (WriteType/values)))
-(def consistency-levels (enum-values->map (ConsistencyLevel/values)))
+(def write-type (enum-values->map (WriteType/values)))
+(def consistency-level (enum-values->map (ConsistencyLevel/values)))
 (def host-distance (enum-values->map (HostDistance/values)))
 (def compression (enum-values->map (ProtocolOptions$Compression/values)))

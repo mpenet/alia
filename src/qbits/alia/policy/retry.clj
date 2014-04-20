@@ -110,7 +110,7 @@ http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/L
    data-retrieved? nb-retry]
   (doto policy
     (.onReadTimeout query
-                    (enum/consistency-levels consistency)
+                    (enum/consistency-level consistency)
                     (int required-responses)
                     (int received-responses)
                     (boolean data-retrieved?)
@@ -123,7 +123,7 @@ exception."
    alive-responses nb-retry]
   (doto policy
     (.onUnavailable query
-                    (enum/consistency-levels consistency)
+                    (enum/consistency-level consistency)
                     (int required-replica)
                     (int alive-responses)
                     (int nb-retry))))
@@ -134,8 +134,8 @@ exception."
    nb-retry]
   (doto policy
     (.onWriteTimeout query
-                     (enum/consistency-levels consistency)
-                     (enum/write-types write-type)
+                     (enum/consistency-level consistency)
+                     (enum/write-type write-type)
                      (int required-acks)
                      (int received-acks)
                      (int nb-retry))))

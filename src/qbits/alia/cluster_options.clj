@@ -97,9 +97,9 @@
     (when fetch-size
       (.setFetchSize qo (int fetch-size)))
     (when consistency
-      (.setConsistencyLevel qo (enum/consistency-levels consistency)))
+      (.setConsistencyLevel qo (enum/consistency-level consistency)))
     (when serial-consistency
-      (.setSerialConsistencyLevel qo (enum/consistency-levels serial-consistency)))
+      (.setSerialConsistencyLevel qo (enum/consistency-level serial-consistency)))
     (.withQueryOptions builder qo)))
 
 (defmethod set-cluster-option! :metrics?

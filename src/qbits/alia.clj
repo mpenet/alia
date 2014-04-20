@@ -156,8 +156,8 @@ keyspaces from a single cluster instance"
 (defn shutdown
   "Shutdowns Session or Cluster instance, clearing the underlying
 pools/connections"
-  [^java.io.Closeable c]
-  (.closeAsync c))
+  [x]
+  (.closeAsync x))
 
 (defn ^:private ex->ex-info
   ([^Exception ex data msg]
@@ -234,9 +234,9 @@ pools/connections"
     (.setFetchSize statement fetch-size))
   (when serial-consistency
     (.setSerialConsistencyLevel statement
-                                (enum/consistency-levels serial-consistency)))
+                                (enum/consistency-level serial-consistency)))
   (when consistency
-    (.setConsistencyLevel statement (enum/consistency-levels consistency))))
+    (.setConsistencyLevel statement (enum/consistency-level consistency))))
 
 (defn execute
   "Executes a query against a session.
