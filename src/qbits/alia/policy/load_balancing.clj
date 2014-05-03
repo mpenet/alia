@@ -4,7 +4,8 @@
    (com.datastax.driver.core.policies
     DCAwareRoundRobinPolicy
     RoundRobinPolicy
-    TokenAwarePolicy)))
+    TokenAwarePolicy
+    WhiteListPolicy)))
 
 (defn round-robin-policy
 "A Round-robin load balancing policy.
@@ -66,3 +67,24 @@ http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/D
      (DCAwareRoundRobinPolicy. dc (int used-hosts-per-remote-dc)))
   ([dc]
      (DCAwareRoundRobinPolicy. dc)))
+
+(defn whitelist-policy
+  "A load balancing policy wrapper that ensure that only hosts from a
+  provided white list will ever be returned.
+
+  This policy wraps another load balancing policy and will delegate
+  the choice of hosts to the wrapped policy with the exception that
+  only hosts contained in the white list provided when constructing
+  this policy will ever be returned. Any host not in the while list
+  will be considered {@code IGNORED} and thus will not be connected
+  to.
+
+  This policy can be useful to ensure that the driver only connects to
+  a predefined set of hosts. Keep in mind however that this policy
+  defeats somewhat the host auto-detection of the driver. As such,
+  this policy is only useful in a few special cases or for testing,
+  but is not optimal in general.  If all you want to do is limiting
+  connections to hosts of the local data-center then you should use
+  DCAwareRoundRobinPolicy and not this policy in particular."
+  [child whitelist-coll]
+  (WhiteListPolicy. child whitelist-coll))
