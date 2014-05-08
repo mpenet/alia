@@ -67,7 +67,7 @@ function persistScrollPosition(element) {
 }
 
 function sidebarContentWidth(element) {
-    var widths = $(element).find('span').map(function() { return $(this).width() })
+    var widths = $(element).find('.inner').map(function() { return $(this).innerWidth() })
     return Math.max.apply(Math, widths)
 }
 
@@ -79,9 +79,10 @@ function resizeSidebars() {
         varWidth = sidebarContentWidth('#vars') + 30
     }
 
-    if ((Math.abs(nsWidth - varWidth) <= 30)) {
-        nsWidth = varWidth = Math.max(nsWidth, varWidth)
-    }
+    // snap to grid
+    var snap = 30;
+    nsWidth  = Math.ceil(nsWidth / snap) * snap;
+    varWidth = Math.ceil(varWidth / snap) * snap;
 
     $('#namespaces').css('width', nsWidth)
     $('#vars').css('width', varWidth)
