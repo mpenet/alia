@@ -109,19 +109,19 @@ The following options are supported:
   + `:min-simultaneous-requests-per-connection` Number
 
 * `:socket-options`: a map of
-  + `:connect-timeout-millis` Number
-  + `:read-timeout-millis` Number
-  + `:receive-buffer-size` Number
-  + `:send-buffer-size` Number
-  + `:so-linger` Number
-  + `:tcp-no-delay?` Bool
-  + `:reuse-address?` Bool
-  + `:keep-alive?` Bool
+    - `:connect-timeout-millis` Number
+    - `:read-timeout-millis` Number
+    - `:receive-buffer-size` Number
+    - `:send-buffer-size` Number
+    - `:so-linger` Number
+    - `:tcp-no-delay?` Bool
+    - `:reuse-address?` Bool
+    - `:keep-alive?` Bool
 
 * `:query-options`: a map of
-  + `:fetch-size` Number
-  + `:consistency` (consistency Keyword)
-  + `:serial-consistency` (consistency Keyword)
+    - `:fetch-size` Number
+    - `:consistency` (consistency Keyword)
+    - `:serial-consistency` (consistency Keyword)
 
 * `:jmx-reporting?` Bool, enables/disables JMX reporting of the metrics.
 
