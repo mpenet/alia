@@ -360,7 +360,11 @@ Values for consistency:
        (set-statement-options! statement routing-key retry-policy tracing?
                                consistency serial-consistency fetch-size)
        (let [^ResultSetFuture rs-future (.executeAsync session statement)
-             ch (or channel (async/chan (or fetch-size 1)))]
+             ch (or channel (async/chan (or fetch-size (-> session
+                                                           .getCluster
+                                                           .getConfiguration
+                                                           .getQueryOptions
+                                                           .getFetchSize))))]
          (Futures/addCallback
           rs-future
           (reify FutureCallback
