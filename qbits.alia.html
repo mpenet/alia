@@ -21,19 +21,23 @@
   <li><code>:max-connections-per-host</code> Number</li>
   <li><code>:max-simultaneous-requests-per-connection</code> Number</li>
   <li><code>:min-simultaneous-requests-per-connection</code> Number</li>
-  <li><p><code>:socket-options</code>: a map of</p></li>
-  <li><code>:connect-timeout-millis</code> Number</li>
-  <li><code>:read-timeout-millis</code> Number</li>
-  <li><code>:receive-buffer-size</code> Number</li>
-  <li><code>:send-buffer-size</code> Number</li>
-  <li><code>:so-linger</code> Number</li>
-  <li><code>:tcp-no-delay?</code> Bool</li>
-  <li><code>:reuse-address?</code> Bool</li>
-  <li><code>:keep-alive?</code> Bool</li>
-  <li><p><code>:query-options</code>: a map of</p></li>
-  <li><code>:fetch-size</code> Number</li>
-  <li><code>:consistency</code> (consistency Keyword)</li>
-  <li><code>:serial-consistency</code> (consistency Keyword)</li>
+  <li><p><code>:socket-options</code>: a map of</p>
+  <ul>
+    <li><code>:connect-timeout-millis</code> Number</li>
+    <li><code>:read-timeout-millis</code> Number</li>
+    <li><code>:receive-buffer-size</code> Number</li>
+    <li><code>:send-buffer-size</code> Number</li>
+    <li><code>:so-linger</code> Number</li>
+    <li><code>:tcp-no-delay?</code> Bool</li>
+    <li><code>:reuse-address?</code> Bool</li>
+    <li><code>:keep-alive?</code> Bool</li>
+  </ul></li>
+  <li><p><code>:query-options</code>: a map of</p>
+  <ul>
+    <li><code>:fetch-size</code> Number</li>
+    <li><code>:consistency</code> (consistency Keyword)</li>
+    <li><code>:serial-consistency</code> (consistency Keyword)</li>
+  </ul></li>
   <li><p><code>:jmx-reporting?</code> Bool, enables/disables JMX reporting of the metrics.</p></li>
 </ul><p>The handling of these options is achieved with a multimethod that you could extend if you need to handle some special case or want to create your own options templates. See <code>qbits.alia.cluster-options/set-cluster-option!</code> <a href="../src/qbits/alia/cluster_options.clj#L19">[source]</a></p><p>Values for consistency:</p><p>:all :any :each-quorum :local-one :local-quorum :local-serial :one :quorum :serial :three :two</p></div></div><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L38">view source</a></div></div><div class="public anchor" id="var-connect"><h3>connect</h3><div class="usage"><code>(connect cluster keyspace)</code><code>(connect cluster)</code></div><div class="doc"><div class="markdown"><p>Returns a new com.datastax.driver.core/Session instance. We need to have this separate in order to allow users to connect to multiple keyspaces from a single cluster instance</p></div></div><div class="src-link"><a href="https://github.com/mpenet/alia/blob/master/src/qbits/alia.clj#L147">view source</a></div></div><div class="public anchor" id="var-execute"><h3>execute</h3><div class="usage"><code>(execute session query {:keys [consistency serial-consistency routing-key retry-policy tracing? string-keys? fetch-size values]})</code><code>(execute session query)</code></div><div class="doc"><div class="markdown"><p>Executes a query against a session. Returns a collection of rows.</p><p>The query can be a raw string, a PreparedStatement (returned by <code>prepare</code>) with values passed via the <code>:values</code> option key will be bound by <code>execute</code>, BoundStatement (returned by <code>qbits.alia/bind</code>), or a Hayt query.</p><p>The following options are supported:</p>
 <ul>
