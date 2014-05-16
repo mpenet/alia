@@ -340,6 +340,42 @@ Values for consistency:
   ([^Session session query]
      (execute-chan session query {})))
 
+(defn execute-chan-buffered
+  "Same as execute, but returns a clojure.core.async/chan that is
+  wired to the underlying ResultSetFuture. This means this is usable
+  with `go` blocks or `take!`. Exceptions are sent to the channel as a
+  value, it's your responsability to handle these how you deem
+  appropriate. While execute-chan returns the whole resultset as a
+  single value, this channel is buffered, meaning every row is a
+  single value in the channel, and the channel closes after the
+  resultset has been completely exhausted.  `:fetch-size` can control
+  the initial size of the buffer, by default the buffer is of size
+  1. You can also pass your own :channel via options.
+  For options refer to `qbits.alia/execute` doc"
+  ([^Session session query {:keys [executor consistency serial-consistency
+                                   routing-key retry-policy tracing?
+                                   string-keys? fetch-size values
+                                   channel]}]
+     (let [^Statement statement (query->statement query values)]
+       (set-statement-options! statement routing-key retry-policy tracing?
+                               consistency serial-consistency fetch-size)
+       (let [^ResultSetFuture rs-future (.executeAsync session statement)
+             ch (or channel (async/chan (or fetch-size 1)))]
+         (Futures/addCallback
+          rs-future
+          (reify FutureCallback
+            (onSuccess [_ result]
+              (doseq [row (codec/result-set->maps (.get rs-future) string-keys?)]
+                (async/put! ch row))
+              (async/close! ch))
+            (onFailure [_ ex]
+              (async/put! ch (ex->ex-info ex {:query statement :values values}))
+              (async/close! ch)))
+          (or executor @default-executor))
+         ch)))
+  ([^Session session query]
+     (execute-chan-buffered session query {})))
+
 (defn ^:private lazy-query-
   [session query pred coll opts]
   (lazy-cat coll
