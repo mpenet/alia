@@ -23,6 +23,7 @@
                      :jvm-opts     ["-javaagent:lib/jamm-0.2.5.jar"]}}
 :codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master/"
         :src-linenum-anchor-prefix "L"
+        :defaults {:doc/format :markdown}
         :exclude [qbits.alia.enum
                   qbits.alia.utils
                   qbits.alia.codec
