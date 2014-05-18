@@ -370,7 +370,7 @@ Values for consistency:
           (reify FutureCallback
             (onSuccess [_ result]
               (doseq [row (codec/result-set->maps (.get rs-future) string-keys?)]
-                (async/put! ch row))
+                (async/>!! ch row))
               (async/close! ch))
             (onFailure [_ ex]
               (async/put! ch (ex->ex-info ex {:query statement :values values}))
