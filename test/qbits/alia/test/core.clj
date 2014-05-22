@@ -9,8 +9,8 @@
         qbits.tardis
         qbits.hayt
         qbits.alia.test.embedded)
-  (:require [ clojure.core.async :as async]
-            [ lamina.core :as lamina]))
+  (:require [clojure.core.async :as async]
+            [lamina.core :as lamina]))
 
 (def ^:dynamic *cluster*)
 (def ^:dynamic *session*)
@@ -237,5 +237,27 @@
           result-set (async/<!! result-channel)
           ^Statement statement (get-private-field result-set "statement")]
       (is (= 5 (.getFetchSize statement))))))
+
+(deftest test-execute-chan-buffered
+  (let [ch (execute-chan-buffered *session* "select * from items;" {:fetch-size 5})]
+    (is (= 10 (count (loop [coll []]
+                       (if-let [row (async/<!! ch)]
+                         (recur (cons row coll))
+                         coll))))))
+  (let [ch (execute-chan-buffered *session* "select * from items;")]
+    (is (= 10 (count (loop [coll []]
+                       (if-let [row (async/<!! ch)]
+                         (recur (cons row coll))
+                         coll))))))
+
+  (let [ch (execute-chan-buffered *session* "select * from items;" {:channel (async/chan 5)})]
+    (is (= 10 (count (loop [coll []]
+                       (if-let [row (async/<!! ch)]
+                         (recur (cons row coll))
+                         coll)))))))
+
+
+
+
 
 ;; (run-tests)
