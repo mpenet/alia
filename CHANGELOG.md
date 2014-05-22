@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.0.0-rc3
+
+* Add `execute-chan-buffered`:
+Allows to execute a query and have rows
+returned in a `clojure.core.async/chan`. Every value in the chan is
+a single row. By default the query `:fetch-size` inherits from the
+cluster setting, unless you specify a different `:fetch-size` at
+query level and the channel is a regular `clojure.core.async/chan`,
+unless you pass your own `:channel` with its own sizing caracteristics.
+`:fetch-size` dicts the "chunking" of the rows returned, allowing to
+"stream" rows into the channel in a controlled manner.
+
+The name could be subject to change in future versions.
+
 ## 2.0.0-rc2
 
 * Use java-driver 2.0.2
