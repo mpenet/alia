@@ -12,7 +12,7 @@ unless you pass your own `:channel` with its own sizing caracteristics.
 `:fetch-size` dicts the "chunking" of the rows returned, allowing to
 "stream" rows into the channel in a controlled manner.
 
-The name could be subject to change in future versions.
+The name of this fn could be subject to change in future versions.
 
 ## 2.0.0-rc2
 

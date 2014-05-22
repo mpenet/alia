@@ -341,16 +341,16 @@ Values for consistency:
      (execute-chan session query {})))
 
 (defn execute-chan-buffered
-  "Same as execute, but returns a clojure.core.async/chan that is
-  wired to the underlying ResultSetFuture. This means this is usable
-  with `go` blocks or `take!`. Exceptions are sent to the channel as a
-  value, it's your responsability to handle these how you deem
-  appropriate. While execute-chan returns the whole resultset as a
-  single value, this channel is buffered, meaning every row is a
-  single value in the channel, and the channel closes after the
-  resultset has been completely exhausted.  `:fetch-size` can control
-  the initial size of the buffer, by default the buffer is of size
-  1. You can also pass your own :channel via options.
+  "Allows to execute a query and have rows returned in a
+  `clojure.core.async/chan`. Every value in the chan is a single row. By
+  default the query `:fetch-size` inherits from the cluster setting,
+  unless you specify a different `:fetch-size` at query level and the
+  channel is a regular `clojure.core.async/chan`, unless you pass your
+  own `:channel` with its own sizing caracteristics. `:fetch-size`
+  dicts the chunking of the rows returned, allowing to stream rows into
+  the channel in a controlled manner.
+  Exceptions are sent to the channel as a value, it's your responsability to
+  handle these how you deem appropriate.
   For options refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key retry-policy tracing?
