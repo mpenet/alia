@@ -21,11 +21,11 @@
              :test  {:resource-paths ["test/resources"]
                      :dependencies [[org.apache.cassandra/cassandra-all "2.0.2"]]
                      :jvm-opts     ["-javaagent:lib/jamm-0.2.5.jar"]}}
-:codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master/"
-        :src-linenum-anchor-prefix "L"
-        :defaults {:doc/format :markdown}
-        :exclude [qbits.alia.enum
-                  qbits.alia.utils
-                  qbits.alia.codec
-                  qbits.alia.cluster-options]}
-:global-vars {*warn-on-reflection* true})
+  :codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master/"
+          :src-linenum-anchor-prefix "L"
+          :defaults {:doc/format :markdown}
+          :exclude [qbits.alia.enum
+                    qbits.alia.utils
+                    qbits.alia.codec
+                    qbits.alia.cluster-options]}
+  :global-vars {*warn-on-reflection* true})
