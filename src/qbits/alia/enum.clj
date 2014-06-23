@@ -7,8 +7,8 @@
     ProtocolOptions$Compression
     WriteType)))
 
-(defn enum-values->map
-  [enum-values]
+(defn enum->map
+  [enum]
   (reduce
    (fn [m hd]
      (assoc m (-> (.name ^Enum hd)
@@ -17,9 +17,9 @@
                   keyword)
             hd))
    {}
-   enum-values))
+   (java.util.EnumSet/allOf enum)))
 
-(def write-type (enum-values->map (WriteType/values)))
-(def consistency-level (enum-values->map (ConsistencyLevel/values)))
-(def host-distance (enum-values->map (HostDistance/values)))
-(def compression (enum-values->map (ProtocolOptions$Compression/values)))
+(def write-type (enum->map WriteType))
+(def consistency-level (enum->map ConsistencyLevel))
+(def host-distance (enum->map HostDistance))
+(def compression (enum->map ProtocolOptions$Compression))
