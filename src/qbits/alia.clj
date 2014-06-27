@@ -64,7 +64,7 @@ The following options are supported:
 
 * `:jmx-reporting?` : Toggles JMX reporting of the metrics.
 
-* `:credentials` : Takes a map of :username and :password for use with
+* `:credentials` : Takes a map of :user and :password for use with
   Cassandra's PasswordAuthenticator
 
 * `:compression` : Compression supported by the Cassandra binary
