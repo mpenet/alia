@@ -16,7 +16,8 @@
              ;; :1.7  {:dependencies [[org.clojure/clojure "1.7.0-SNAPSHOT"]]}
              :dev  {:dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
                                    [clj-time "0.6.0"]
-                                   [cc.qbits/tardis "1.0.0"]]
+                                   [cc.qbits/tardis "1.0.0"]
+                                   [codox "0.8.9"]]
                     :jvm-opts     ["-javaagent:lib/jamm-0.2.5.jar"]}
              :test  {:resource-paths ["test/resources"]
                      :dependencies [[org.apache.cassandra/cassandra-all "2.0.2"]]
