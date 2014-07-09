@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0
+
+* Use java-driver 2.0.3
+  [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/2.0/driver-core/CHANGELOG.rst)
+
+* Use latest core.async
+
 ## 2.0.0-rc3
 
 * Add `execute-chan-buffered`:
