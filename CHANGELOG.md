@@ -3,7 +3,7 @@
 ## 2.1.0-rc1
 
 * Use java-driver 2.1.0-rc1
-  [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/2.0/driver-core/CHANGELOG.rst)
+  [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/2.1/driver-core/CHANGELOG.rst)
 
 ## 2.0.0-rc4
 
