@@ -41,7 +41,7 @@
    DataType$Name/UUID      (.getUUID row idx)
    DataType$Name/VARCHAR   (.getString row idx)
    DataType$Name/VARINT    (.getVarint row idx)
-   DataType$Name/LIST      (seq (.getList row idx (types-args->type (.getTypeArguments col-type) first)))
+   DataType$Name/LIST      (into [] (.getList row idx (types-args->type (.getTypeArguments col-type) first)))
    DataType$Name/SET       (into #{} (.getSet row idx (types-args->type (.getTypeArguments col-type) first)))
    DataType$Name/MAP       (let [t (.getTypeArguments col-type)]
                              (into {} (.getMap row idx
