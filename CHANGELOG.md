@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0-rc2
+
+* Empty List now returns [] instead of nil, to match Map and Set types
+* Update to latest Lamina (manifold support), core.async, core.cache, clj-time
+
 ## 2.1.0-rc1
 
 * Use java-driver 2.1.0-rc1
