@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.0-rc3
+
+* Update to latest core.async
+
 ## 2.1.0-rc2
 
 * Empty List now returns [] instead of nil, to match Map and Set types
