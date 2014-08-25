@@ -201,7 +201,7 @@ and a callback as second:
    (if (empty? queries)
      query-results
      ;; else wait for one query to complete (first completed first served)
-     (let [[result channel] (alts!! queries)]
+     (let [[result channel] (alts! queries)]
        (println "Received result: "  result " from channel: " channel)
        (recur
         ;; we remove the channel that just completed from our
