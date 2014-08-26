@@ -29,7 +29,7 @@
                      :birth_year 0,
                      :user_name "mpenet"
                      :tup ["a", "b"]
-                     :udt {"foo" "f" "bar" "b"}}
+                     :udt {"foo" "f" "bar" 100}}
                     {:created nil
                      :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
                      :last_name "Baggins",
@@ -42,7 +42,7 @@
                      :birth_year 1,
                      :user_name "frodo"
                      :tup ["a", "b"]
-                     :udt {"foo" "f" "bar" "b"}}])
+                     :udt {"foo" "f" "bar" 100}}])
 
 ;; helpers
 
@@ -59,7 +59,7 @@
         (execute *session* "USE alia;")
         (execute *session* "CREATE TYPE udt (
                                 foo text,
-                                bar text
+                                bar bigint
                            )")
         (execute *session* "CREATE TABLE users (
                 user_name varchar,
@@ -80,9 +80,9 @@
         (execute *session* "CREATE INDEX ON users (birth_year);")
 
         (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt)
-       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], 1f84b56b-5481-4ee4-8236-8a3831ee5892, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'),  {foo: 'f', bar: 'b'});")
+       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], 1f84b56b-5481-4ee4-8236-8a3831ee5892, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'),  {foo: 'f', bar: 100});")
         (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt)
-       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'), {foo: 'f', bar: 'b'});")
+       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'), {foo: 'f', bar: 100});")
 
 
         (execute *session* "CREATE TABLE items (
