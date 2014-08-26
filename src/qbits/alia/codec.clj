@@ -54,7 +54,7 @@
                                                (types-args->type t first)
                                                (types-args->type t second))))
 
-   ;; TODO: tons of optimisations are possible here
+   ;; TODO: optimisations are possible here
    DataType$Name/TUPLE     (let [tuple-value (.getTupleValue x idx)]
                              (into []
                                    (map-indexed (fn [idx x]
