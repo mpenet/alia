@@ -1,4 +1,4 @@
-(defproject cc.qbits/alia "2.1.0"
+(defproject cc.qbits/alia "2.1.1-SNAPSHOT"
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"
@@ -22,7 +22,7 @@
                                    [codox "0.8.10"]]
                     :jvm-opts     ["-javaagent:lib/jamm-0.2.5.jar"]}
              :test  {:resource-paths ["test/resources"]
-                     :dependencies [[org.apache.cassandra/cassandra-all "2.0.2"]]
+                     :dependencies [[org.apache.cassandra/cassandra-all "2.1.0-rc6"]]
                      :jvm-opts     ["-javaagent:lib/jamm-0.2.5.jar"]}}
   :codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master/"
           :src-linenum-anchor-prefix "L"

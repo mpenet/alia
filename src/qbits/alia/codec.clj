@@ -4,14 +4,15 @@
    (com.datastax.driver.core
     DataType
     DataType$Name
+    GettableByIndexData
     ResultSet
     Row)))
 
-(defmacro make-decoders [row idx col-type & specs]
+(defmacro make-decoders [x idx col-type & specs]
   (reduce (fn [m [decoder-type# form#]]
             (assoc m
               decoder-type#
-              `(fn [~(vary-meta row assoc :tag "com.datastax.driver.core.Row")
+              `(fn [~(vary-meta x assoc :tag "com.datastax.driver.core.GettableByIndexData")
                     ~(vary-meta idx assoc :tag "java.lang.Integer")
                     ~(vary-meta col-type assoc :tag "com.datastax.driver.core.DataType")]
                  ~form#)))
@@ -22,35 +23,42 @@
   [^"[Lcom.datastax.driver.core.DataType;" type-args pred]
   (.asJavaClass ^DataType (pred type-args)))
 
-(def decoders
-  (make-decoders row idx col-type
-   DataType$Name/ASCII     (.getString row idx)
-   DataType$Name/BIGINT    (.getLong row idx)
-   DataType$Name/BLOB      (.getBytes row idx)
-   DataType$Name/BOOLEAN   (.getBool row idx)
-   DataType$Name/COUNTER   (.getLong row idx)
-   DataType$Name/CUSTOM    (.getBytesUnsafe row idx)
-   DataType$Name/DECIMAL   (.getDecimal row idx)
-   DataType$Name/DOUBLE    (.getDouble row idx)
-   DataType$Name/FLOAT     (.getFloat row idx)
-   DataType$Name/INET      (.getInet row idx)
-   DataType$Name/INT       (.getInt row idx)
-   DataType$Name/TEXT      (.getString row idx)
-   DataType$Name/TIMESTAMP (.getDate row idx)
-   DataType$Name/TIMEUUID  (.getUUID row idx)
-   DataType$Name/UUID      (.getUUID row idx)
-   DataType$Name/VARCHAR   (.getString row idx)
-   DataType$Name/VARINT    (.getVarint row idx)
-   DataType$Name/LIST      (into [] (.getList row idx (types-args->type (.getTypeArguments col-type) first)))
-   DataType$Name/SET       (into #{} (.getSet row idx (types-args->type (.getTypeArguments col-type) first)))
-   DataType$Name/MAP       (let [t (.getTypeArguments col-type)]
-                             (into {} (.getMap row idx
-                                               (types-args->type t first)
-                                               (types-args->type t second))))))
-
+(declare decoders)
 (defn decode
-  [^Row row ^Integer idx ^DataType col-type]
-  ((decoders (.getName col-type)) row idx col-type))
+  [^GettableByIndexData x ^Integer idx ^DataType col-type]
+  ((decoders (.getName col-type)) x idx col-type))
+
+(def decoders
+  (make-decoders x idx col-type
+   DataType$Name/ASCII     (.getString x idx)
+   DataType$Name/BIGINT    (.getLong x idx)
+   DataType$Name/BLOB      (.getBytes x idx)
+   DataType$Name/BOOLEAN   (.getBool x idx)
+   DataType$Name/COUNTER   (.getLong x idx)
+   DataType$Name/CUSTOM    (.getBytesUnsafe x idx)
+   DataType$Name/DECIMAL   (.getDecimal x idx)
+   DataType$Name/DOUBLE    (.getDouble x idx)
+   DataType$Name/FLOAT     (.getFloat x idx)
+   DataType$Name/INET      (.getInet x idx)
+   DataType$Name/INT       (.getInt x idx)
+   DataType$Name/TEXT      (.getString x idx)
+   DataType$Name/TIMESTAMP (.getDate x idx)
+   DataType$Name/TIMEUUID  (.getUUID x idx)
+   DataType$Name/UUID      (.getUUID x idx)
+   DataType$Name/VARCHAR   (.getString x idx)
+   DataType$Name/VARINT    (.getVarint x idx)
+   DataType$Name/LIST      (into [] (.getList x idx (types-args->type (.getTypeArguments col-type) first)))
+   DataType$Name/SET       (into #{} (.getSet x idx (types-args->type (.getTypeArguments col-type) first)))
+   DataType$Name/MAP       (let [t (.getTypeArguments col-type)]
+                             (into {} (.getMap x idx
+                                               (types-args->type t first)
+                                               (types-args->type t second))))
+   DataType$Name/TUPLE     (let [tuple-value (.getTupleValue x idx)]
+                             (into []
+                                   (map-indexed
+                                    (fn [idx x]
+                                      (decode tuple-value idx x))
+                                    (.getComponentTypes (.getType tuple-value)))))))
 
 ;; only used for prepared statements
 (defprotocol PCodec

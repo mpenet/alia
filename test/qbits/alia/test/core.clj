@@ -8,7 +8,8 @@
         qbits.alia.codec.eaio-uuid
         qbits.tardis
         qbits.hayt
-        qbits.alia.test.embedded)
+        ;; qbits.alia.test.embedded
+        )
   (:require [clojure.core.async :as async]
             [lamina.core :as lamina]))
 
@@ -26,7 +27,8 @@
                      :auuid #uuid "42048d2d-c135-4c18-aa3a-e38a6d3be7f1",
                      :valid true,
                      :birth_year 0,
-                     :user_name "mpenet"}
+                     :user_name "mpenet"
+                     :tup ["a", "b"]}
                     {:created nil
                      :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
                      :last_name "Baggins",
@@ -37,7 +39,8 @@
                      :auuid #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892",
                      :valid true,
                      :birth_year 1,
-                     :user_name "frodo"}])
+                     :user_name "frodo"
+                     :tup ["a", "b"]}])
 
 ;; helpers
 
@@ -46,7 +49,7 @@
   (fn [test-runner]
     (flush)
     ;; prepare the thing
-    (binding [*cluster* (cluster {:contact-points ["127.0.0.1"] :port 19042})]
+    (binding [*cluster* (cluster {:contact-points ["127.0.0.1"] :port 9042})]
       (binding [*session* (connect *cluster*)]
         (try (execute *session* "DROP KEYSPACE alia;")
              (catch Exception _ nil))
@@ -64,14 +67,15 @@
                 emails set<text>,
                 tags list<bigint>,
                 amap map<varchar, bigint>,
+                tup tuple<varchar, varchar>,
                 PRIMARY KEY (user_name)
               );")
         (execute *session* "CREATE INDEX ON users (birth_year);")
 
-        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid)
-       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], 1f84b56b-5481-4ee4-8236-8a3831ee5892, e34288d0-7617-11e2-9243-0024d70cf6c4, true);")
-        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid)
-       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true);")
+        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup)
+       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], 1f84b56b-5481-4ee4-8236-8a3831ee5892, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'));")
+        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup)
+       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'));")
 
 
         (execute *session* "CREATE TABLE items (
@@ -94,12 +98,12 @@
         (shutdown *session*)
         (shutdown *cluster*)))))
 
-(deftest test-string-keys
-  (is (= (map (fn [user-map]
-                (into {} (map (juxt (comp name key) val)
-                              user-map)))
-              user-data-set)
-         (execute *session* "select * from users;" {:string-keys? true}))))
+;; (deftest test-string-keys
+;;   (is (= (map (fn [user-map]
+;;                 (into {} (map (juxt (comp name key) val)
+;;                               user-map)))
+;;               user-data-set)
+;;          (execute *session* "select * from users;" {:string-keys? true}))))
 
 (deftest test-sync-execute
   (is (= user-data-set
@@ -127,8 +131,8 @@
                  (fn [r] (deliver p r)))
     (is (= user-data-set @p)))
 
-  ;; Something smarter could be done with alt! (select) but this will
-  ;; do for a test
+;;   ;; Something smarter could be done with alt! (select) but this will
+;;   ;; do for a test
   (is (= 3 (count (async/<!! (async/go
                                (loop [i 0 ret []]
                                  (if (= 3 i)
@@ -140,7 +144,7 @@
   (let [s-simple (prepare *session* "select * from users;")
         s-parameterized-simple (prepare *session* (select :users (where {:user_name ?})))
         s-parameterized-in (prepare *session* (select :users (where [[:in :user_name ?]])))
-        s-prepare-types (prepare *session*  "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")
+        s-prepare-types (prepare *session*  "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap, tup) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);")
         ;; s-parameterized-set (prepare  "select * from users where emails=?;")
         ;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
         ]
@@ -159,7 +163,8 @@
                                                            false
                                                            [1 2 3 4]
                                                            #{"foo" "bar"}
-                                                           {"foo" 123}]})))
+                                                           {"foo" 123}
+                                                           ["a" "b"]]})))
     (execute *session*  "delete from users where user_name = 'foobar';") ;; cleanup
 
     ;; ;; index on collections not supp  orted yet
@@ -171,93 +176,93 @@
     ))
 
 
-(deftest test-error
-  (let [stmt "slect prout from 1;"]
-    (is (:query (try (execute *session* stmt)
-                     (catch Exception ex
-                       (ex-data ex)))))
+;; (deftest test-error
+;;   (let [stmt "slect prout from 1;"]
+;;     (is (:query (try (execute *session* stmt)
+;;                      (catch Exception ex
+;;                        (ex-data ex)))))
 
-    (is (:query (try @(execute-async *session* stmt)
-                     (catch Exception ex
-                       (ex-data ex)))))
+;;     (is (:query (try @(execute-async *session* stmt)
+;;                      (catch Exception ex
+;;                        (ex-data ex)))))
 
-    (is (:query (try @(prepare *session* stmt)
-                     (catch Exception ex
-                       (ex-data ex)))))
+;;     (is (:query (try @(prepare *session* stmt)
+;;                      (catch Exception ex
+;;                        (ex-data ex)))))
 
-    (let [stmt "select * from foo where bar = ?;" values [1 2]]
-      (is (:query (try @(bind (prepare *session* stmt) values)
-                       (catch Exception ex
-                         (ex-data ex))))))))
+;;     (let [stmt "select * from foo where bar = ?;" values [1 2]]
+;;       (is (:query (try @(bind (prepare *session* stmt) values)
+;;                        (catch Exception ex
+;;                          (ex-data ex))))))))
 
-(deftest test-lazy-query
-  (is (= 10 (count (take 10 (lazy-query *session*
-                                        (select :items
-                                                (limit 2)
-                                                (where {:si (int 0)}))
-                                        (fn [q coll]
-                                          (merge q (where {:si (-> coll last :si inc)}))))))))
+;; (deftest test-lazy-query
+;;   (is (= 10 (count (take 10 (lazy-query *session*
+;;                                         (select :items
+;;                                                 (limit 2)
+;;                                                 (where {:si (int 0)}))
+;;                                         (fn [q coll]
+;;                                           (merge q (where {:si (-> coll last :si inc)}))))))))
 
-  (is (= 4 (count (take 10 (lazy-query *session*
-                                       (select :items
-                                               (limit 2)
-                                               (where {:si (int 0)}))
-                                       (fn [q coll]
-                                         (when (< (-> coll last :si) 3)
-                                           (merge q (where {:si (-> coll last :si inc)}))))))))))
+;;   (is (= 4 (count (take 10 (lazy-query *session*
+;;                                        (select :items
+;;                                                (limit 2)
+;;                                                (where {:si (int 0)}))
+;;                                        (fn [q coll]
+;;                                          (when (< (-> coll last :si) 3)
+;;                                            (merge q (where {:si (-> coll last :si inc)}))))))))))
 
-(defn ^:private get-private-field [instance field-name]
-  (.get
-   (doto (.getDeclaredField (class instance) field-name)
-     (.setAccessible true))
-   instance))
+;; (defn ^:private get-private-field [instance field-name]
+;;   (.get
+;;    (doto (.getDeclaredField (class instance) field-name)
+;;      (.setAccessible true))
+;;    instance))
 
-(deftest test-fetch-size
-  (with-redefs [result-set->maps (fn [result-set string-keys?]
-                                   result-set)]
-    (let [query "select * from items;"
-          result-set (execute *session* query {:fetch-size 3})
-          ^Statement statement (get-private-field result-set "statement")]
-      (is (= 3 (.getFetchSize statement))))))
+;; (deftest test-fetch-size
+;;   (with-redefs [result-set->maps (fn [result-set string-keys?]
+;;                                    result-set)]
+;;     (let [query "select * from items;"
+;;           result-set (execute *session* query {:fetch-size 3})
+;;           ^Statement statement (get-private-field result-set "statement")]
+;;       (is (= 3 (.getFetchSize statement))))))
 
-(deftest test-fetch-size-async
-  (with-redefs [result-set->maps (fn [result-set string-keys?]
-                                   result-set)]
-    (let [query "select * from items;"
-          result-channel (execute-async *session* query {:fetch-size 4})
-          result-set (lamina/wait-for-result result-channel)
-          ^Statement statement (get-private-field result-set "statement")]
-      (is (= 4 (.getFetchSize statement))))))
+;; (deftest test-fetch-size-async
+;;   (with-redefs [result-set->maps (fn [result-set string-keys?]
+;;                                    result-set)]
+;;     (let [query "select * from items;"
+;;           result-channel (execute-async *session* query {:fetch-size 4})
+;;           result-set (lamina/wait-for-result result-channel)
+;;           ^Statement statement (get-private-field result-set "statement")]
+;;       (is (= 4 (.getFetchSize statement))))))
 
-(deftest test-fetch-size-chan
-  (with-redefs [result-set->maps (fn [result-set string-keys?]
-                                   result-set)]
-    (let [query "select * from items;"
-          result-channel (execute-chan *session* query {:fetch-size 5})
-          result-set (async/<!! result-channel)
-          ^Statement statement (get-private-field result-set "statement")]
-      (is (= 5 (.getFetchSize statement))))))
+;; (deftest test-fetch-size-chan
+;;   (with-redefs [result-set->maps (fn [result-set string-keys?]
+;;                                    result-set)]
+;;     (let [query "select * from items;"
+;;           result-channel (execute-chan *session* query {:fetch-size 5})
+;;           result-set (async/<!! result-channel)
+;;           ^Statement statement (get-private-field result-set "statement")]
+;;       (is (= 5 (.getFetchSize statement))))))
 
-(deftest test-execute-chan-buffered
-  (let [ch (execute-chan-buffered *session* "select * from items;" {:fetch-size 5})]
-    (is (= 10 (count (loop [coll []]
-                       (if-let [row (async/<!! ch)]
-                         (recur (cons row coll))
-                         coll))))))
-  (let [ch (execute-chan-buffered *session* "select * from items;")]
-    (is (= 10 (count (loop [coll []]
-                       (if-let [row (async/<!! ch)]
-                         (recur (cons row coll))
-                         coll))))))
+;; (deftest test-execute-chan-buffered
+;;   (let [ch (execute-chan-buffered *session* "select * from items;" {:fetch-size 5})]
+;;     (is (= 10 (count (loop [coll []]
+;;                        (if-let [row (async/<!! ch)]
+;;                          (recur (cons row coll))
+;;                          coll))))))
+;;   (let [ch (execute-chan-buffered *session* "select * from items;")]
+;;     (is (= 10 (count (loop [coll []]
+;;                        (if-let [row (async/<!! ch)]
+;;                          (recur (cons row coll))
+;;                          coll))))))
 
-  (let [ch (execute-chan-buffered *session* "select * from items;" {:channel (async/chan 5)})]
-    (is (= 10 (count (loop [coll []]
-                       (if-let [row (async/<!! ch)]
-                         (recur (cons row coll))
-                         coll)))))))
-
-
+;;   (let [ch (execute-chan-buffered *session* "select * from items;" {:channel (async/chan 5)})]
+;;     (is (= 10 (count (loop [coll []]
+;;                        (if-let [row (async/<!! ch)]
+;;                          (recur (cons row coll))
+;;                          coll)))))))
 
 
 
-;; (run-tests)
+
+
+;; ;; (run-tests)
