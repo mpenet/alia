@@ -28,7 +28,8 @@
                      :valid true,
                      :birth_year 0,
                      :user_name "mpenet"
-                     :tup ["a", "b"]}
+                     :tup ["a", "b"]
+                     :udt {"foo" "f" "bar" "b"}}
                     {:created nil
                      :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
                      :last_name "Baggins",
@@ -40,7 +41,8 @@
                      :valid true,
                      :birth_year 1,
                      :user_name "frodo"
-                     :tup ["a", "b"]}])
+                     :tup ["a", "b"]
+                     :udt {"foo" "f" "bar" "b"}}])
 
 ;; helpers
 
@@ -55,6 +57,10 @@
              (catch Exception _ nil))
         (execute *session* "CREATE KEYSPACE alia WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};")
         (execute *session* "USE alia;")
+        (execute *session* "CREATE TYPE udt (
+                                foo text,
+                                bar text
+                           )")
         (execute *session* "CREATE TABLE users (
                 user_name varchar,
                 first_name varchar,
@@ -68,14 +74,15 @@
                 tags list<bigint>,
                 amap map<varchar, bigint>,
                 tup tuple<varchar, varchar>,
+                udt udt,
                 PRIMARY KEY (user_name)
               );")
         (execute *session* "CREATE INDEX ON users (birth_year);")
 
-        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup)
-       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], 1f84b56b-5481-4ee4-8236-8a3831ee5892, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'));")
-        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup)
-       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'));")
+        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt)
+       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], 1f84b56b-5481-4ee4-8236-8a3831ee5892, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'),  {foo: 'f', bar: 'b'});")
+        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt)
+       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'), {foo: 'f', bar: 'b'});")
 
 
         (execute *session* "CREATE TABLE items (
@@ -175,24 +182,24 @@
     ))
 
 
-;; (deftest test-error
-;;   (let [stmt "slect prout from 1;"]
-;;     (is (:query (try (execute *session* stmt)
-;;                      (catch Exception ex
-;;                        (ex-data ex)))))
+(deftest test-error
+  (let [stmt "slect prout from 1;"]
+    (is (:query (try (execute *session* stmt)
+                     (catch Exception ex
+                       (ex-data ex)))))
 
-;;     (is (:query (try @(execute-async *session* stmt)
-;;                      (catch Exception ex
-;;                        (ex-data ex)))))
+    (is (:query (try @(execute-async *session* stmt)
+                     (catch Exception ex
+                       (ex-data ex)))))
 
-;;     (is (:query (try @(prepare *session* stmt)
-;;                      (catch Exception ex
-;;                        (ex-data ex)))))
+    (is (:query (try @(prepare *session* stmt)
+                     (catch Exception ex
+                       (ex-data ex)))))
 
-;;     (let [stmt "select * from foo where bar = ?;" values [1 2]]
-;;       (is (:query (try @(bind (prepare *session* stmt) values)
-;;                        (catch Exception ex
-;;                          (ex-data ex))))))))
+    (let [stmt "select * from foo where bar = ?;" values [1 2]]
+      (is (:query (try @(bind (prepare *session* stmt) values)
+                       (catch Exception ex
+                         (ex-data ex))))))))
 
 (deftest test-lazy-query
   (is (= 10 (count (take 10 (lazy-query *session*

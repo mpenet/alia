@@ -53,11 +53,20 @@
                              (into {} (.getMap x idx
                                                (types-args->type t first)
                                                (types-args->type t second))))
+
+   ;; TODO: tons of optimisations are possible here
    DataType$Name/TUPLE     (let [tuple-value (.getTupleValue x idx)]
                              (into []
                                    (map-indexed (fn [idx x]
                                                   (decode tuple-value idx x))
-                                                (.getComponentTypes (.getType tuple-value)))))))
+                                                (.getComponentTypes (.getType tuple-value)))))
+   DataType$Name/UDT       (let [udt-value (.getUDTValue x idx)
+                                 udt-type (.getType udt-value)
+                                 field-names (.getFieldNames udt-type)]
+                             (zipmap field-names
+                                     (map-indexed (fn [idx name]
+                                                    (decode udt-value idx (.getFieldType udt-type name)))
+                                                  field-names)))))
 
 ;; only used for prepared statements
 (defprotocol PCodec
