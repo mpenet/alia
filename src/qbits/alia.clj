@@ -406,8 +406,3 @@ ex: (lazy-query session
      (lazy-query- session query pred [] opts))
   ([session query pred]
      (lazy-query session query pred {})))
-
-
-(defn tuple [types xs]
-
-  )

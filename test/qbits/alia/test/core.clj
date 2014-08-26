@@ -144,7 +144,7 @@
   (let [s-simple (prepare *session* "select * from users;")
         s-parameterized-simple (prepare *session* (select :users (where {:user_name ?})))
         s-parameterized-in (prepare *session* (select :users (where [[:in :user_name ?]])))
-        s-prepare-types (prepare *session*  "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap, tup) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);")
+        s-prepare-types (prepare *session*  "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")
         ;; s-parameterized-set (prepare  "select * from users where emails=?;")
         ;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
         ]
@@ -163,8 +163,7 @@
                                                            false
                                                            [1 2 3 4]
                                                            #{"foo" "bar"}
-                                                           {"foo" 123}
-                                                           ["a" "b"]]})))
+                                                           {"foo" 123}]})))
     (execute *session*  "delete from users where user_name = 'foobar';") ;; cleanup
 
     ;; ;; index on collections not supp  orted yet
@@ -195,71 +194,71 @@
 ;;                        (catch Exception ex
 ;;                          (ex-data ex))))))))
 
-;; (deftest test-lazy-query
-;;   (is (= 10 (count (take 10 (lazy-query *session*
-;;                                         (select :items
-;;                                                 (limit 2)
-;;                                                 (where {:si (int 0)}))
-;;                                         (fn [q coll]
-;;                                           (merge q (where {:si (-> coll last :si inc)}))))))))
+(deftest test-lazy-query
+  (is (= 10 (count (take 10 (lazy-query *session*
+                                        (select :items
+                                                (limit 2)
+                                                (where {:si (int 0)}))
+                                        (fn [q coll]
+                                          (merge q (where {:si (-> coll last :si inc)}))))))))
 
-;;   (is (= 4 (count (take 10 (lazy-query *session*
-;;                                        (select :items
-;;                                                (limit 2)
-;;                                                (where {:si (int 0)}))
-;;                                        (fn [q coll]
-;;                                          (when (< (-> coll last :si) 3)
-;;                                            (merge q (where {:si (-> coll last :si inc)}))))))))))
+  (is (= 4 (count (take 10 (lazy-query *session*
+                                       (select :items
+                                               (limit 2)
+                                               (where {:si (int 0)}))
+                                       (fn [q coll]
+                                         (when (< (-> coll last :si) 3)
+                                           (merge q (where {:si (-> coll last :si inc)}))))))))))
 
-;; (defn ^:private get-private-field [instance field-name]
-;;   (.get
-;;    (doto (.getDeclaredField (class instance) field-name)
-;;      (.setAccessible true))
-;;    instance))
+(defn ^:private get-private-field [instance field-name]
+  (.get
+   (doto (.getDeclaredField (class instance) field-name)
+     (.setAccessible true))
+   instance))
 
-;; (deftest test-fetch-size
-;;   (with-redefs [result-set->maps (fn [result-set string-keys?]
-;;                                    result-set)]
-;;     (let [query "select * from items;"
-;;           result-set (execute *session* query {:fetch-size 3})
-;;           ^Statement statement (get-private-field result-set "statement")]
-;;       (is (= 3 (.getFetchSize statement))))))
+(deftest test-fetch-size
+  (with-redefs [result-set->maps (fn [result-set string-keys?]
+                                   result-set)]
+    (let [query "select * from items;"
+          result-set (execute *session* query {:fetch-size 3})
+          ^Statement statement (get-private-field result-set "statement")]
+      (is (= 3 (.getFetchSize statement))))))
 
-;; (deftest test-fetch-size-async
-;;   (with-redefs [result-set->maps (fn [result-set string-keys?]
-;;                                    result-set)]
-;;     (let [query "select * from items;"
-;;           result-channel (execute-async *session* query {:fetch-size 4})
-;;           result-set (lamina/wait-for-result result-channel)
-;;           ^Statement statement (get-private-field result-set "statement")]
-;;       (is (= 4 (.getFetchSize statement))))))
+(deftest test-fetch-size-async
+  (with-redefs [result-set->maps (fn [result-set string-keys?]
+                                   result-set)]
+    (let [query "select * from items;"
+          result-channel (execute-async *session* query {:fetch-size 4})
+          result-set (lamina/wait-for-result result-channel)
+          ^Statement statement (get-private-field result-set "statement")]
+      (is (= 4 (.getFetchSize statement))))))
 
-;; (deftest test-fetch-size-chan
-;;   (with-redefs [result-set->maps (fn [result-set string-keys?]
-;;                                    result-set)]
-;;     (let [query "select * from items;"
-;;           result-channel (execute-chan *session* query {:fetch-size 5})
-;;           result-set (async/<!! result-channel)
-;;           ^Statement statement (get-private-field result-set "statement")]
-;;       (is (= 5 (.getFetchSize statement))))))
+(deftest test-fetch-size-chan
+  (with-redefs [result-set->maps (fn [result-set string-keys?]
+                                   result-set)]
+    (let [query "select * from items;"
+          result-channel (execute-chan *session* query {:fetch-size 5})
+          result-set (async/<!! result-channel)
+          ^Statement statement (get-private-field result-set "statement")]
+      (is (= 5 (.getFetchSize statement))))))
 
-;; (deftest test-execute-chan-buffered
-;;   (let [ch (execute-chan-buffered *session* "select * from items;" {:fetch-size 5})]
-;;     (is (= 10 (count (loop [coll []]
-;;                        (if-let [row (async/<!! ch)]
-;;                          (recur (cons row coll))
-;;                          coll))))))
-;;   (let [ch (execute-chan-buffered *session* "select * from items;")]
-;;     (is (= 10 (count (loop [coll []]
-;;                        (if-let [row (async/<!! ch)]
-;;                          (recur (cons row coll))
-;;                          coll))))))
+(deftest test-execute-chan-buffered
+  (let [ch (execute-chan-buffered *session* "select * from items;" {:fetch-size 5})]
+    (is (= 10 (count (loop [coll []]
+                       (if-let [row (async/<!! ch)]
+                         (recur (cons row coll))
+                         coll))))))
+  (let [ch (execute-chan-buffered *session* "select * from items;")]
+    (is (= 10 (count (loop [coll []]
+                       (if-let [row (async/<!! ch)]
+                         (recur (cons row coll))
+                         coll))))))
 
-;;   (let [ch (execute-chan-buffered *session* "select * from items;" {:channel (async/chan 5)})]
-;;     (is (= 10 (count (loop [coll []]
-;;                        (if-let [row (async/<!! ch)]
-;;                          (recur (cons row coll))
-;;                          coll)))))))
+  (let [ch (execute-chan-buffered *session* "select * from items;" {:channel (async/chan 5)})]
+    (is (= 10 (count (loop [coll []]
+                       (if-let [row (async/<!! ch)]
+                         (recur (cons row coll))
+                         coll)))))))
 
 
 

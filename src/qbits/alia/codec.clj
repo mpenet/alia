@@ -55,10 +55,9 @@
                                                (types-args->type t second))))
    DataType$Name/TUPLE     (let [tuple-value (.getTupleValue x idx)]
                              (into []
-                                   (map-indexed
-                                    (fn [idx x]
-                                      (decode tuple-value idx x))
-                                    (.getComponentTypes (.getType tuple-value)))))))
+                                   (map-indexed (fn [idx x]
+                                                  (decode tuple-value idx x))
+                                                (.getComponentTypes (.getType tuple-value)))))))
 
 ;; only used for prepared statements
 (defprotocol PCodec
