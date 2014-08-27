@@ -53,13 +53,15 @@
                              (into {} (.getMap x idx
                                                (types-args->type t first)
                                                (types-args->type t second))))
-
-   ;; TODO: optimisations are possible here
-   DataType$Name/TUPLE     (let [tuple-value (.getTupleValue x idx)]
-                             (into []
-                                   (map-indexed (fn [idx x]
-                                                  (decode tuple-value idx x))
-                                                (.getComponentTypes (.getType tuple-value)))))
+   DataType$Name/TUPLE     (let [tuple-value (.getTupleValue x idx)
+                                 types (.getComponentTypes (.getType tuple-value))
+                                 len (.size types)]
+                             (loop [tuple []
+                                    idx' 0]
+                               (if (= idx' len)
+                                 tuple
+                                 (recur (conj tuple (decode tuple-value idx' (.get types idx')))
+                                        (unchecked-inc-int idx')))))
    DataType$Name/UDT       (let [udt-value (.getUDTValue x idx)
                                  udt-type (.getType udt-value)
                                  field-names (.getFieldNames udt-type)]
