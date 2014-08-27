@@ -275,7 +275,16 @@
     (is (= 10 (count (loop [coll []]
                        (if-let [row (async/<!! ch)]
                          (recur (cons row coll))
-                         coll)))))))
+                         coll))))))
+
+  (let [ch (execute-chan-buffered *session* "select * from items;" {:fetch-size 1})]
+    ;; 2 because the chan will fill between my take! and the close!
+    (is (= 2 (count (loop [coll []]
+                      (if-let [row (async/<!! ch)]
+                        (do
+                          (async/close! ch)
+                          (recur (cons row coll)))
+                        coll)))))))
 
 
 
