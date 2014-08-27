@@ -70,7 +70,7 @@
     ;; (start-service!)
     (flush)
     ;; prepare the thing
-    (binding [*cluster* (cluster {:contact-points ["127.0.0.1"] :port 9042})]
+    (binding [*cluster* (cluster {:contact-points ["127.0.0.1"] :port 19042})]
       (binding [*session* (connect *cluster*)]
         (try (execute *session* "DROP KEYSPACE alia;")
              (catch Exception _ nil))
