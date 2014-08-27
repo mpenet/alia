@@ -67,7 +67,7 @@
 (use-fixtures
   :once
   (fn [test-runner]
-    ;; (start-service!)
+    (start-service!)
     (flush)
     ;; prepare the thing
     (binding [*cluster* (cluster {:contact-points ["127.0.0.1"] :port 19042})]
