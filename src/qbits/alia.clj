@@ -342,16 +342,18 @@ Values for consistency:
 
 (defn execute-chan-buffered
   "Allows to execute a query and have rows returned in a
-  `clojure.core.async/chan`. Every value in the chan is a single row. By
-  default the query `:fetch-size` inherits from the cluster setting,
-  unless you specify a different `:fetch-size` at query level and the
-  channel is a regular `clojure.core.async/chan`, unless you pass your
-  own `:channel` with its own sizing caracteristics. `:fetch-size`
-  dicts the chunking of the rows returned, allowing to stream rows into
-  the channel in a controlled manner.
-  Exceptions are sent to the channel as a value, it's your responsability to
-  handle these how you deem appropriate.
-  For options refer to `qbits.alia/execute` doc"
+  `clojure.core.async/chan`. Every value in the chan is a single
+  row. By default the query `:fetch-size` inherits from the cluster
+  setting, unless you specify a different `:fetch-size` at query level
+  and the channel is a regular `clojure.core.async/chan`, unless you
+  pass your own `:channel` with its own sizing
+  caracteristics. `:fetch-size` dicts the chunking of the rows
+  returned, allowing to stream rows into the channel in a controlled
+  manner.
+  If you close the channel the streaming process ends.
+  Exceptions are sent to the channel as a value, it's your
+  responsability to handle these how you deem appropriate. For options
+  refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key retry-policy tracing?
                                    string-keys? fetch-size values
@@ -369,8 +371,10 @@ Values for consistency:
           rs-future
           (reify FutureCallback
             (onSuccess [_ result]
-              (doseq [row (codec/result-set->maps (.get rs-future) string-keys?)]
-                (async/>!! ch row))
+              (loop [rows (codec/result-set->maps (.get rs-future) string-keys?)]
+                (when-let [row (first rows)]
+                  (when (async/>!! ch row)
+                    (recur (rest rows)))))
               (async/close! ch))
             (onFailure [_ ex]
               (async/put! ch (ex->ex-info ex {:query statement :values values}))
