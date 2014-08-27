@@ -6,7 +6,8 @@
     DataType$Name
     GettableByIndexData
     ResultSet
-    Row)))
+    Row
+    UserType$Field)))
 
 (defmacro make-decoders [x idx col-type & specs]
   (reduce (fn [m [decoder-type# form#]]
@@ -60,15 +61,25 @@
                                     idx' 0]
                                (if (= idx' len)
                                  tuple
-                                 (recur (conj tuple (decode tuple-value idx' (.get types idx')))
+                                 (recur (conj tuple (decode tuple-value
+                                                            idx'
+                                                            (.get types idx')))
                                         (unchecked-inc-int idx')))))
    DataType$Name/UDT       (let [udt-value (.getUDTValue x idx)
                                  udt-type (.getType udt-value)
-                                 field-names (.getFieldNames udt-type)]
-                             (zipmap field-names
-                                     (map-indexed (fn [idx name]
-                                                    (decode udt-value idx (.getFieldType udt-type name)))
-                                                  field-names)))))
+                                 udt-type-iter (.iterator udt-type)
+                                 len (.size udt-type)]
+                             (loop [udt {}
+                                    idx' 0]
+                               (if (= idx' len)
+                                 udt
+                                 (let [^UserType$Field type (.next udt-type-iter)]
+                                   (recur (assoc udt
+                                            (.getName type)
+                                            (decode udt-value
+                                                    idx'
+                                                    (.getType type)))
+                                          (unchecked-inc-int idx'))))))))
 
 ;; only used for prepared statements
 (defprotocol PCodec
