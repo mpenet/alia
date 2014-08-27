@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.1
+
+* Full support for CQL UDT & TUPLE: Auto-decoding of CQL Tuple and
+  User Data Types. You can insert them using literals in both prepared
+  statements and raw queries.  See article about this
+  [here](http://www.datastax.com/dev/blog/datastax-java-driver-2-1)
+  and [there](http://www.datastax.com/dev/blog/cql-in-2-1).
+
 ## 2.1.0
 
 * Use java-driver 2.1.0

@@ -1,17 +1,35 @@
 (ns qbits.alia.test.core
-  (:import (com.datastax.driver.core Statement))
-  (:use clojure.test
-        clojure.data
-        qbits.alia
-        qbits.alia.codec
-        qbits.alia.codec.joda-time
-        qbits.alia.codec.eaio-uuid
-        qbits.tardis
-        qbits.hayt
-        ;; qbits.alia.test.embedded
-        )
-  (:require [clojure.core.async :as async]
-            [lamina.core :as lamina]))
+  (:require
+   [clojure.test :refer :all]
+   [clojure.data :refer :all]
+   [qbits.alia :refer :all]
+   [qbits.alia.codec :refer :all]
+   [qbits.alia.codec.joda-time :refer :all]
+   [qbits.alia.codec.eaio-uuid :refer :all]
+   [qbits.tardis :refer :all]
+   [qbits.hayt :refer :all]
+   [clojure.core.async :as async]
+   [lamina.core :as lamina]
+   [clojure.java.io :as io]
+   [clojure.java.shell :as shell])
+  (:import
+   (com.datastax.driver.core Statement)
+   (org.apache.cassandra.service EmbeddedCassandraService)))
+
+(System/setProperty "cassandra.config" (str (io/resource "cassandra.yaml")))
+(System/setProperty "cassandra-foreground" "yes")
+(System/setProperty "log4j.defaultInitOverride" "false")
+
+(defn start-service!
+  []
+  ;; cleanup previous runs data
+  (println "Clear previous run data")
+  (shell/sh "rm" "tmp -rf")
+  (println "Starting EmbeddedCassandraService")
+  (let [s (EmbeddedCassandraService.)]
+    (.start s)
+    (println "Service started")
+    s))
 
 (def ^:dynamic *cluster*)
 (def ^:dynamic *session*)
@@ -49,6 +67,7 @@
 (use-fixtures
   :once
   (fn [test-runner]
+    ;; (start-service!)
     (flush)
     ;; prepare the thing
     (binding [*cluster* (cluster {:contact-points ["127.0.0.1"] :port 9042})]
@@ -171,16 +190,7 @@
                                                            [1 2 3 4]
                                                            #{"foo" "bar"}
                                                            {"foo" 123}]})))
-    (execute *session*  "delete from users where user_name = 'foobar';") ;; cleanup
-
-    ;; ;; index on collections not supp  orted yet
-    ;; (is (= [(first user-data-set)]
-    ;;        (execute *session*  (bind s-parameterized-set #{"m@p.com" "ma@pe.com"}))))
-
-    ;; (is (= user-data-set (execute *session* (bind s-parameterized-nil nil))))
-    ;; 'null' parameters are not allowed since CQL3 does not (yet) supports them (see https://issues.apache.org/jira/browse/CASSANDRA-3783)
-    ))
-
+    (execute *session*  "delete from users where user_name = 'foobar';")))
 
 (deftest test-error
   (let [stmt "slect prout from 1;"]
