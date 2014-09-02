@@ -2,7 +2,13 @@
 
 ## 2.1.2
 
-* Allow execution of parameterized statements with their values in 1 roundtrip
+* Allow execution of parameterized statements with their values in 1 roundtrip.
+
+```clojure
+(execute "select * from foo where bar = ?;" {:values ["baz"]})
+(execute "(select :foo (where [[= :bar ?]])) {:values ["baz"]})
+...
+```
 
 ## 2.1.1
 
