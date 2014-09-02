@@ -213,12 +213,12 @@ pools/connections"
     (bind q values))
 
   String
-  (query->statement [q _]
-    (SimpleStatement. q))
+  (query->statement [q values]
+    (SimpleStatement. q (to-array values)))
 
   clojure.lang.IPersistentMap
-  (query->statement [q _]
-    (query->statement (hayt-query-fn q) nil)))
+  (query->statement [q values]
+    (query->statement (hayt-query-fn q) values)))
 
 (defn ^:private set-statement-options!
   [^Statement statement routing-key retry-policy tracing? consistency

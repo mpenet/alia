@@ -175,6 +175,8 @@
         ;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
         ]
     (is (= user-data-set (execute *session* s-simple)))
+    (is (= [(first user-data-set)] (execute *session* (select :users (where {:user_name ?}))
+                                            {:values ["mpenet"]})))
     (is (= user-data-set (execute *session* s-parameterized-in {:values [["mpenet" "frodo"]]})))
     (is (= [(first user-data-set)]
            (execute *session* s-parameterized-simple {:values ["mpenet"]})))
