@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.2
+
+* Allow execution of parameterized statements with their values in 1 roundtrip
+
 ## 2.1.1
 
 * Full support for CQL UDT & TUPLE: Auto-decoding of CQL Tuple and
