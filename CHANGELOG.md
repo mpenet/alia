@@ -6,7 +6,7 @@
 
 ```clojure
 (execute "select * from foo where bar = ?;" {:values ["baz"]})
-(execute "(select :foo (where [[= :bar ?]])) {:values ["baz"]})
+(execute (select :foo (where [[= :bar ?]])) {:values ["baz"]})
 ...
 ```
 
