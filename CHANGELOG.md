@@ -5,8 +5,8 @@
 * Allow execution of parameterized statements with their values in 1 roundtrip.
 
 ```clojure
-(execute "select * from foo where bar = ?;" {:values ["baz"]})
-(execute (select :foo (where [[= :bar ?]])) {:values ["baz"]})
+(execute session "select * from foo where bar = ?;" {:values ["baz"]})
+(execute session (select :foo (where [[= :bar ?]])) {:values ["baz"]})
 ...
 ```
 
