@@ -8,10 +8,10 @@
                   :exclusions [org.clojure/core.cache]]
                  [org.clojure/core.cache "0.6.4"]
                  [cc.qbits/knit "0.2.1"]
-                 [cc.qbits/hayt "2.0.0-beta4"]
+                 [cc.qbits/hayt "2.0.0-rc2"]
                  [lamina "0.5.4"]
                  [com.datastax.cassandra/cassandra-driver-core "2.1.0"]
-                 [org.clojure/core.async "0.1.338.0-5c5012-alpha"]]
+                 [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
              :1.5  {:dependencies [[org.clojure/clojure "1.5.1"]]}
              :1.6  {:dependencies [[org.clojure/clojure "1.6.0"]]}
