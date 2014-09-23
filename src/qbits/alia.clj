@@ -5,7 +5,6 @@
    [qbits.alia.utils :as utils]
    [qbits.alia.enum :as enum]
    [qbits.hayt :as hayt]
-   [lamina.core :as l]
    [clojure.core.memoize :as memo]
    [clojure.core.async :as async]
    [qbits.alia.cluster-options :as copt])
@@ -159,7 +158,7 @@ pools/connections"
   [x]
   (.closeAsync x))
 
-(defn ^:private ex->ex-info
+(defn ex->ex-info
   ([^Exception ex data msg]
      (ex-info msg
               (merge {:type ::execute
@@ -220,7 +219,7 @@ pools/connections"
   (query->statement [q values]
     (query->statement (hayt-query-fn q) values)))
 
-(defn ^:private set-statement-options!
+(defn set-statement-options!
   [^Statement statement routing-key retry-policy tracing? consistency
    serial-consistency fetch-size]
   (when routing-key
@@ -274,41 +273,6 @@ Values for consistency:
   ;; to support old syle api with unrolled args
   ([^Session session query]
      (execute session query {})))
-
-(defn execute-async
-  "Same as execute, but returns a promise and accepts :success
-  and :error handlers via options, you can also pass :executor via the
-  option map for the ResultFuture, it defaults to a cachedThreadPool
-  if you don't.
-
-  For other options refer to `qbits.alia/execute` doc"
-  ([^Session session query {:keys [success error executor consistency
-                                   serial-consistency routing-key
-                                   retry-policy tracing? string-keys? fetch-size
-                                   values]}]
-     (let [^Statement statement (query->statement query values)]
-       (set-statement-options! statement routing-key retry-policy tracing?
-                               consistency serial-consistency fetch-size)
-       (let [^ResultSetFuture rs-future
-             (try
-               (.executeAsync session statement)
-               (catch Exception ex
-                 (throw (ex->ex-info ex {:query statement :values values}))))
-             async-result (l/result-channel)]
-         (l/on-realized async-result success error)
-         (Futures/addCallback
-          rs-future
-          (reify FutureCallback
-            (onSuccess [_ result]
-              (l/success async-result
-                         (codec/result-set->maps (.get rs-future) string-keys?)))
-            (onFailure [_ ex]
-              (l/error async-result
-                       (ex->ex-info ex {:query statement :values values}))))
-          (or executor @default-executor))
-         async-result)))
-    ([^Session session query]
-       (execute-async session query {})))
 
 (defn execute-chan
   "Same as execute, but returns a clojure.core.async/chan that is

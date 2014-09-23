@@ -3,6 +3,7 @@
    [clojure.test :refer :all]
    [clojure.data :refer :all]
    [qbits.alia :refer :all]
+   [qbits.alia.lamina :refer [execute-async]]
    [qbits.alia.codec :refer :all]
    [qbits.alia.codec.joda-time :refer :all]
    [qbits.alia.codec.eaio-uuid :refer :all]
