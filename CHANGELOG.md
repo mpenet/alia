@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.0
+
+* Lamina async interface is deprecated and moved in a separate ns. If
+  you sill use it, you'll need to bring lamina as a dependency to your project.
+
 ## 2.1.2
 
 * Allow execution of parameterized statements with their values in 1 roundtrip.

@@ -1,10 +1,9 @@
 (ns qbits.alia.lamina
-  (:require [lamina.core      :as l]
-            [qbits.alia.codec :as codec]
-            [qbits.alia       :refer [ex->ex-info
-                                      query->statement
-                                      set-statement-options!
-                                      default-executor]])
+  (:require
+   [lamina.core :as l]
+   [qbits.alia.codec :as codec]
+   [qbits.alia :refer [ex->ex-info query->statement set-statement-options!
+                       default-executor]])
   (:import
    (com.datastax.driver.core
     Statement
