@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.1
+
+* Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+
 ## 2.2.0
 
 * Lamina async interface is deprecated and moved in a separate ns. If
