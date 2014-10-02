@@ -1,9 +1,13 @@
 # Changelog
 
+## 2.2.2
+
+* Use java-driver 2.1.1 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/2.1/driver-core/CHANGELOG.rst)
+
 ## 2.2.1
 
-* Use java-driver 2.1.1
-  [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/2.1/driver-core/CHANGELOG.rst)
+* Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+
 
 ## 2.2.0
 
