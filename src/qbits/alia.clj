@@ -158,7 +158,7 @@ pools/connections"
   [x]
   (.closeAsync x))
 
-(defn ex->ex-info
+(defn ^:no-doc ex->ex-info
   ([^Exception ex data msg]
      (ex-info msg
               (merge {:type ::execute
@@ -219,7 +219,7 @@ pools/connections"
   (query->statement [q values]
     (query->statement (hayt-query-fn q) values)))
 
-(defn set-statement-options!
+(defn ^:no-doc set-statement-options!
   [^Statement statement routing-key retry-policy tracing? consistency
    serial-consistency fetch-size]
   (when routing-key

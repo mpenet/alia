@@ -9,7 +9,7 @@
                  [org.clojure/core.cache "0.6.4"]
                  [cc.qbits/knit "0.2.1"]
                  [cc.qbits/hayt "2.0.0-rc2"]
-                 [com.datastax.cassandra/cassandra-driver-core "2.1.0"]
+                 [com.datastax.cassandra/cassandra-driver-core "2.1.1"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
              :1.5  {:dependencies [[org.clojure/clojure "1.5.1"]]}
