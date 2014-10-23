@@ -42,21 +42,88 @@
   [_ ^Cluster$Builder builder {:keys [core-connections-per-host
                                       max-connections-per-host
                                       max-simultaneous-requests-per-connection
-                                      min-simultaneous-requests-per-connection]}]
-  (let [^PoolingOptions po (PoolingOptions.)]
+                                      min-simultaneous-requests-per-connection]
+                               :as pooling-options}]
+  (doseq [[opt x] pooling-options]
+    (set-cluster-option! opt builder x)))
+
+(defn ^:no-doc pooling-options
+  [^Cluster$Builder builder]
+  (-> builder .getConfiguration .getPoolingOptions))
+
+
+(defmethod set-cluster-option! :core-connections-per-host
+  [_ ^Cluster$Builder builder core-connections-per-host]
+  (let [po (pooling-options builder)]
     (doseq [[dist value] core-connections-per-host]
       (.setCoreConnectionsPerHost po (enum/host-distance dist) (int value)))
+    builder))
+
+(defmethod set-cluster-option! :max-connections-per-host
+  [_ ^Cluster$Builder builder max-connections-per-host]
+  (let [po (pooling-options builder)]
     (doseq [[dist value] max-connections-per-host]
       (.setMaxConnectionsPerHost po (enum/host-distance dist) (int value)))
+    builder))
+
+(defmethod set-cluster-option! :max-simultaneous-requests-per-connection
+  [_ ^Cluster$Builder builder max-simultaneous-requests-per-connection]
+  (let [po (pooling-options builder)]
     (doseq [[dist value] max-simultaneous-requests-per-connection]
-      (.setMaxSimultaneousRequestsPerConnectionThreshold po
-                                                         (enum/host-distance dist)
+      (.setMaxSimultaneousRequestsPerConnectionThreshold po (enum/host-distance dist)
                                                          (int value)))
+    builder))
+
+(defmethod set-cluster-option! :min-simultaneous-requests-per-connection
+  [_ ^Cluster$Builder builder min-simultaneous-requests-per-connection]
+  (let [po (pooling-options builder)]
     (doseq [[dist value] min-simultaneous-requests-per-connection]
-      (.setMinSimultaneousRequestsPerConnectionThreshold po
-                                                         (enum/host-distance dist)
+      (.setMinSimultaneousRequestsPerConnectionThreshold po (enum/host-distance dist)
                                                          (int value)))
-    (.withPoolingOptions builder po))
+    builder))
+
+(defn ^:no-doc socket-options
+  [^Cluster$Builder builder]
+  (-> builder .getConfiguration .getSocketOptions))
+
+(defmethod set-cluster-option! :connect-timeout-millis
+  [_ ^Cluster$Builder builder connect-timeout-millis]
+  (-> builder socket-options (.setConnectTimeoutMillis (int connect-timeout-millis)))
+  builder)
+
+(defmethod set-cluster-option! :read-timeout-millis
+  [_ ^Cluster$Builder builder read-timeout-millis]
+  (-> builder socket-options (.setReadTimeoutMillis (int read-timeout-millis)))
+  builder)
+
+(defmethod set-cluster-option! :receive-buffer-size
+  [_ ^Cluster$Builder builder receive-buffer-size]
+  (-> builder socket-options (.setReceiveBufferSize (int receive-buffer-size)))
+  builder)
+
+(defmethod set-cluster-option! :send-buffer-size
+  [_ ^Cluster$Builder builder send-buffer-size]
+  (-> builder socket-options (.setSendBufferSize (int send-buffer-size)))
+  builder)
+
+(defmethod set-cluster-option! :so-linger
+  [_ ^Cluster$Builder builder so-linger]
+  (-> builder socket-options (.setSoLinger (int so-linger)))
+  builder)
+
+(defmethod set-cluster-option! :tcp-no-delay?
+  [_ ^Cluster$Builder builder tcp-no-delay?]
+  (-> builder socket-options (.setTcpNoDelay (boolean tcp-no-delay?)))
+  builder)
+
+(defmethod set-cluster-option! :reuse-address?
+  [_ ^Cluster$Builder builder reuse-address?]
+  (-> builder socket-options (.setReuseAddress (boolean reuse-address?)))
+  builder)
+
+(defmethod set-cluster-option! :keep-alive?
+  [_ ^Cluster$Builder builder keep-alive?]
+  (-> builder socket-options (.setKeepAlive (boolean keep-alive?)))
   builder)
 
 (defmethod set-cluster-option! :socket-options
@@ -67,40 +134,39 @@
                                       so-linger
                                       tcp-no-delay?
                                       reuse-address?
-                                      keep-alive?]}]
-  (let [so (SocketOptions.)]
-    (when connect-timeout-millis
-      (.setConnectTimeoutMillis so (int connect-timeout-millis)))
-    (when read-timeout-millis
-      (.setReadTimeoutMillis so (int read-timeout-millis)))
-    (when receive-buffer-size
-      (.setReceiveBufferSize so (int receive-buffer-size)))
-    (when send-buffer-size
-      (.setSendBufferSize so (int send-buffer-size)))
-    (when so-linger
-      (.setSoLinger so (int so-linger)))
-    (when tcp-no-delay?
-      (.setTcpNoDelay so (boolean tcp-no-delay?)))
-    (when reuse-address?
-      (.setReuseAddress so (boolean reuse-address?)))
-    (when keep-alive?
-      (.setKeepAlive so (boolean keep-alive?)))
+                                      keep-alive?]
+                               :as socket-options}]
+  (doseq [[opt x] socket-options]
+    (set-cluster-option! opt builder x)))
 
-    (.withSocketOptions builder so)))
+(defn ^:no-doc query-options
+  [^Cluster$Builder builder]
+  (-> builder .getConfiguration .getQueryOptions))
+
+(defmethod set-cluster-option! :fetch-size
+  [_ ^Cluster$Builder builder fetch-size]
+  (-> builder query-options (.setFetchSize (int fetch-size)))
+  builder)
+
+(defmethod set-cluster-option! :consistency
+  [_ ^Cluster$Builder builder consistency]
+  (-> builder query-options (.setConsistencyLevel (enum/consistency-level consistency)))
+  builder)
+
+(defmethod set-cluster-option! :serial-consistency
+  [_ ^Cluster$Builder builder serial-consistency]
+  (-> builder query-options (.setSerialConsistencyLevel (enum/consistency-level serial-consistency)))
+  builder)
 
 
 (defmethod set-cluster-option! :query-options
   [_ ^Cluster$Builder builder {:keys [fetch-size
                                       consistency
-                                      serial-consistency]}]
-  (let [qo (QueryOptions.)]
-    (when fetch-size
-      (.setFetchSize qo (int fetch-size)))
-    (when consistency
-      (.setConsistencyLevel qo (enum/consistency-level consistency)))
-    (when serial-consistency
-      (.setSerialConsistencyLevel qo (enum/consistency-level serial-consistency)))
-    (.withQueryOptions builder qo)))
+                                      serial-consistency]
+                               :as query-options}]
+  (doseq [[opt x] query-options]
+    (set-cluster-option! opt builder x))
+  builder)
 
 (defmethod set-cluster-option! :metrics?
   [_ ^Cluster$Builder builder metrics?]
