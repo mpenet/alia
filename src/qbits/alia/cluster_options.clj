@@ -48,7 +48,7 @@
     (set-cluster-option! opt builder x))
   builder)
 
-(defn ^:no-doc pooling-options
+(defn ^PoolingOptions ^:no-doc pooling-options
   [^Cluster$Builder builder]
   (-> builder .getConfiguration .getPoolingOptions))
 
@@ -82,7 +82,7 @@
                                                          (int value)))
     builder))
 
-(defn ^:no-doc socket-options
+(defn ^SocketOptions ^:no-doc socket-options
   [^Cluster$Builder builder]
   (-> builder .getConfiguration .getSocketOptions))
 
@@ -140,7 +140,7 @@
     (set-cluster-option! opt builder x))
   builder)
 
-(defn ^:no-doc query-options
+(defn ^QueryOptions ^:no-doc query-options
   [^Cluster$Builder builder]
   (-> builder .getConfiguration .getQueryOptions))
 
