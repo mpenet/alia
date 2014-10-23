@@ -45,12 +45,12 @@
                                       min-simultaneous-requests-per-connection]
                                :as pooling-options}]
   (doseq [[opt x] pooling-options]
-    (set-cluster-option! opt builder x)))
+    (set-cluster-option! opt builder x))
+  builder)
 
 (defn ^:no-doc pooling-options
   [^Cluster$Builder builder]
   (-> builder .getConfiguration .getPoolingOptions))
-
 
 (defmethod set-cluster-option! :core-connections-per-host
   [_ ^Cluster$Builder builder core-connections-per-host]
@@ -137,7 +137,8 @@
                                       keep-alive?]
                                :as socket-options}]
   (doseq [[opt x] socket-options]
-    (set-cluster-option! opt builder x)))
+    (set-cluster-option! opt builder x))
+  builder)
 
 (defn ^:no-doc query-options
   [^Cluster$Builder builder]
