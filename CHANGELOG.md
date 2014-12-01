@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.3.0-rc1
+
+* Use java-driver 2.1.3
+[driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/2.1/driver-core/CHANGELOG.rst)
+
 ## 2.2.3
 
 * Use java-driver 2.1.2 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/2.1/driver-core/CHANGELOG.rst)
