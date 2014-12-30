@@ -194,7 +194,7 @@
   (.withCredentials builder user password))
 
 (defmethod set-cluster-option! :kerberos?
-  [_ ^Cluster$Builder builder {:keys [user password]}]
+  [_ ^Cluster$Builder builder kerberos?]
   (when kerberos?
     (.withAuthProvider builder (DseAuthProvider.)))
   builder)
