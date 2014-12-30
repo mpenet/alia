@@ -72,7 +72,17 @@ The following options are supported:
 * `:ssl?`: enables/disables SSL
 
 * `:ssl-options` : advanced SSL setup using a
-  `com.datastax.driver.core.SSLOptions` instance
+  `com.datastax.driver.core.SSLOptions` instance or a map of
+  `:keystore-path`, `:keystore-password` and optional
+  `:cipher-suites`.  This provides a path/pwd to a
+  [KeyStore](http://docs.oracle.com/javase/7/docs/api/java/security/KeyStore.html)
+  that can ben generated
+  with [keytool](http://docs.oracle.com/javase/7/docs/technotes/tools/solaris/keytool.html)
+  Overriding default cipher suites is supported via `:cipher-suites`,
+  which accepts a sequence of Strings.
+
+* `:kerberos?` : activate Kerberos via DseAuthProvider, see
+  http://www.datastax.com/dev/blog/accessing-secure-dse-clusters-with-cql-native-protocol
 
 * `:pooling-options` : The pooling options used by this builder.
   Options related to connection pooling.

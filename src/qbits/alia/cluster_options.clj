@@ -1,5 +1,7 @@
 (ns qbits.alia.cluster-options
-  (:require [qbits.alia.enum :as enum])
+  (:require
+   [qbits.alia.enum :as enum]
+   [clojure.java.io :as io])
   (:import
    (com.datastax.driver.core
     Cluster$Builder
@@ -12,7 +14,13 @@
    (com.datastax.driver.core.policies
     LoadBalancingPolicy
     ReconnectionPolicy
-    RetryPolicy)))
+    RetryPolicy)
+   (com.datastax.driver.auth DseAuthProvider)
+   (javax.net.ssl
+    TrustManagerFactory
+    KeyManagerFactory
+    SSLContext)
+   (java.security KeyStore)))
 
 (defmulti set-cluster-option! (fn [k ^Cluster$Builder builder option] k))
 
@@ -185,6 +193,12 @@
   [_ ^Cluster$Builder builder {:keys [user password]}]
   (.withCredentials builder user password))
 
+(defmethod set-cluster-option! :kerberos?
+  [_ ^Cluster$Builder builder {:keys [user password]}]
+  (when kerberos?
+    (.withAuthProvider builder (DseAuthProvider.)))
+  builder)
+
 (defmethod set-cluster-option! :compression
   [_ ^Cluster$Builder builder option]
   (.withCompression builder (enum/compression option)))
@@ -195,9 +209,29 @@
 
 (defmethod set-cluster-option! :ssl-options
   [_ ^Cluster$Builder builder ssl-options]
-  (assert (instance? ssl-options SSLOptions)
-          "Expects a com.datastax.driver.core.SSLOptions instance")
-  (.withSSL builder ssl-options))
+  (.withSSL builder
+            (if (instance? ssl-options SSLOptions)
+              ssl-options
+              ;; Following part is inspired by
+              ;; http://www.datastax.com/dev/blog/accessing-secure-dse-clusters-with-cql-native-protocolker
+              ;; and
+              ;; https://github.com/clojurewerkz/cassaforte/pull/60
+              (let [{:keys [keystore-path keystore-password cipher-suites]} ssl-options
+                    keystore (KeyStore/getInstance "JKS")
+                    ssl-context (SSLContext/getInstance "SSL")
+                    keymanager (KeyManagerFactory/getInstance (KeyManagerFactory/getDefaultAlgorithm))
+                    trustmanager (TrustManagerFactory/getInstance (TrustManagerFactory/getDefaultAlgorithm))
+                    password (char-array keystore-password)]
+                (.load keystore (io/input-stream keystore-path) password)
+                (.init keymanager keystore password)
+                (.init trustmanager keystore)
+                (.init ssl-context
+                       (.getKeyManagers keymanager)
+                       (.getTrustManagers trustmanager) nil)
+                (SSLOptions. ssl-context
+                             (if cipher-suites
+                               (into-array String cipher-suites)
+                               SSLOptions/DEFAULT_SSL_CIPHER_SUITES))))))
 
 (defn set-cluster-options!
   ^Cluster$Builder

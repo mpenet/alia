@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.0
+
+* add support for Kerberos & TLS by adding :ssl-options map argument
+  support, it now accepts an SSLOption insteace (as before) or a map
+  of :keystore-path :keystore-password :cipher-suites.
+
 ## 2.3.0-rc2
 
 * Use java-driver 2.1.4
