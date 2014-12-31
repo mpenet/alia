@@ -9,6 +9,5 @@ jdk:
 branches:
   only:
     - travis
-
 services:
   - cassandra
