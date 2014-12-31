@@ -75,7 +75,7 @@
                 emails set<text>,
                 tags list<bigint>,
                 amap map<varchar, bigint>,
-                tup tuple<varchar, varchar>,
+                tup frozen<tuple<varchar, varchar>>,
                 udt frozen<udt>,
                 PRIMARY KEY (user_name)
               );")
