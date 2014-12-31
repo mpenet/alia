@@ -14,7 +14,7 @@
     Futures
     FutureCallback)))
 
-(defn execute-async
+(defn execute
   "Same as execute, but returns a promise and accepts :success
   and :error handlers via options, you can also pass :executor via the
   option map for the ResultFuture, it defaults to a cachedThreadPool
@@ -48,3 +48,6 @@
          async-result)))
     ([^Session session query]
        (execute-async session query {})))
+
+;; just for backward compat's sake
+(def execute-async execute)

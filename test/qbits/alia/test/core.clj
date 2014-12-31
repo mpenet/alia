@@ -3,7 +3,8 @@
    [clojure.test :refer :all]
    [clojure.data :refer :all]
    [qbits.alia :refer :all]
-   [qbits.alia.lamina :refer [execute-async]]
+   [qbits.alia.lamina la]
+   [qbits.alia.manifold :as m]
    [qbits.alia.codec :refer :all]
    [qbits.alia.codec.joda-time :refer :all]
    [qbits.alia.codec.eaio-uuid :refer :all]
@@ -121,19 +122,30 @@
   (is (= user-data-set
          (execute *session* (select :users)))))
 
-(deftest test-async-execute
+(deftest test-lamina-execute
   ;; promise
   (is (= user-data-set
-         @(execute-async *session* "select * from users;")))
+         @(la/execute *session* "select * from users;")))
   ;; callback
   (let [p (promise)]
-    (execute-async *session* "select * from users;"
+    (la/execute *session* "select * from users;"
                    {:success (fn [r] (deliver p r))})
+    (is (= user-data-set @p))))
+
+(deftest test-manifold-execute
+  ;; promise
+  (is (= user-data-set
+         @(ma/execute *session* "select * from users;")))
+  ;; callback
+  (let [p (promise)]
+    (la/execute *session* "select * from users;"
+                {:success (fn [r] (deliver p r))})
     (is (= user-data-set @p))))
 
 (deftest test-core-async-execute
   (is (= user-data-set
          (async/<!! (execute-chan *session* "select * from users;"))))
+
 
   (let [p (promise)]
     (async/take! (execute-chan *session* "select * from users;")
@@ -183,7 +195,7 @@
                      (catch Exception ex
                        (ex-data ex)))))
 
-    (is (:query (try @(execute-async *session* stmt)
+    (is (:query (try @(la/execute *session* stmt)
                      (catch Exception ex
                        (ex-data ex)))))
 
@@ -230,7 +242,7 @@
   (with-redefs [result-set->maps (fn [result-set string-keys?]
                                    result-set)]
     (let [query "select * from items;"
-          result-channel (execute-async *session* query {:fetch-size 4})
+          result-channel (la/execute *session* query {:fetch-size 4})
           result-set (lamina/wait-for-result result-channel)
           ^Statement statement (get-private-field result-set "statement")]
       (is (= 4 (.getFetchSize statement))))))
