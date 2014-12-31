@@ -17,21 +17,6 @@
    (com.datastax.driver.core Statement)
    (org.apache.cassandra.service EmbeddedCassandraService)))
 
-(System/setProperty "cassandra.config" (str (io/resource "cassandra.yaml")))
-(System/setProperty "cassandra-foreground" "yes")
-(System/setProperty "log4j.defaultInitOverride" "false")
-
-(defn start-service!
-  []
-  ;; cleanup previous runs data
-  (println "Clear previous run data")
-  (shell/sh "rm" "tmp -rf")
-  (println "Starting EmbeddedCassandraService")
-  (let [s (EmbeddedCassandraService.)]
-    (.start s)
-    (println "Service started")
-    s))
-
 (def ^:dynamic *cluster*)
 (def ^:dynamic *session*)
 
@@ -68,10 +53,8 @@
 (use-fixtures
   :once
   (fn [test-runner]
-    (start-service!)
-    (flush)
     ;; prepare the thing
-    (binding [*cluster* (cluster {:contact-points ["127.0.0.1"] :port 19042})]
+    (binding [*cluster* (cluster {:contact-points ["127.0.0.1"]})]
       (binding [*session* (connect *cluster*)]
         (try (execute *session* "DROP KEYSPACE alia;")
              (catch Exception _ nil))
@@ -287,9 +270,3 @@
                           (async/close! ch)
                           (recur (cons row coll)))
                         coll)))))))
-
-
-
-
-
-;; ;; (run-tests)
