@@ -4,7 +4,7 @@
    [clojure.data :refer :all]
    [qbits.alia :refer :all]
    [qbits.alia.lamina :as la]
-   [qbits.alia.manifold :as m]
+   [qbits.alia.manifold :as ma]
    [qbits.alia.codec :refer :all]
    [qbits.alia.codec.joda-time :refer :all]
    [qbits.alia.codec.eaio-uuid :refer :all]
