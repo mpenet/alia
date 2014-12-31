@@ -14,23 +14,7 @@
    [clojure.java.io :as io]
    [clojure.java.shell :as shell])
   (:import
-   (com.datastax.driver.core Statement)
-   (org.apache.cassandra.service EmbeddedCassandraService)))
-
-(System/setProperty "cassandra.config" (str (io/resource "cassandra.yaml")))
-(System/setProperty "cassandra-foreground" "yes")
-(System/setProperty "log4j.defaultInitOverride" "false")
-
-(defn start-service!
-  []
-  ;; cleanup previous runs data
-  (println "Clear previous run data")
-  (shell/sh "rm" "tmp -rf")
-  (println "Starting EmbeddedCassandraService")
-  (let [s (EmbeddedCassandraService.)]
-    (.start s)
-    (println "Service started")
-    s))
+   (com.datastax.driver.core Statement)))
 
 (def ^:dynamic *cluster*)
 (def ^:dynamic *session*)
@@ -68,10 +52,8 @@
 (use-fixtures
   :once
   (fn [test-runner]
-    (start-service!)
-    (flush)
     ;; prepare the thing
-    (binding [*cluster* (cluster {:contact-points ["127.0.0.1"] :port 19042})]
+    (binding [*cluster* (cluster {:contact-points ["127.0.0.1"]})]
       (binding [*session* (connect *cluster*)]
         (try (execute *session* "DROP KEYSPACE alia;")
              (catch Exception _ nil))
@@ -93,8 +75,8 @@
                 emails set<text>,
                 tags list<bigint>,
                 amap map<varchar, bigint>,
-                tup tuple<varchar, varchar>,
-                udt udt,
+                tup frozen<tuple<varchar, varchar>>,
+                udt frozen<udt>,
                 PRIMARY KEY (user_name)
               );")
         (execute *session* "CREATE INDEX ON users (birth_year);")
@@ -287,9 +269,3 @@
                           (async/close! ch)
                           (recur (cons row coll)))
                         coll)))))))
-
-
-
-
-
-;; ;; (run-tests)
