@@ -8,4 +8,7 @@ jdk:
 
 branches:
   only:
-    - master
+    - travis
+
+services:
+  - cassandra
