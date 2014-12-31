@@ -14,8 +14,7 @@
    [clojure.java.io :as io]
    [clojure.java.shell :as shell])
   (:import
-   (com.datastax.driver.core Statement)
-   (org.apache.cassandra.service EmbeddedCassandraService)))
+   (com.datastax.driver.core Statement)))
 
 (def ^:dynamic *cluster*)
 (def ^:dynamic *session*)
