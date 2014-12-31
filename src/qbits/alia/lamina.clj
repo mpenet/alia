@@ -47,7 +47,7 @@
           (or executor @default-executor))
          async-result)))
     ([^Session session query]
-       (execute-async session query {})))
+       (execute session query {})))
 
 ;; just for backward compat's sake
 (def execute-async execute)
