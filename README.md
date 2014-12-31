@@ -15,7 +15,7 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 * Provides a **versatile CQL3+ DSL**, [Hayt](#hayt-query-dsl)
 * Support for **Raw queries**, **Prepared Statements** or **[Hayt](#hayt-query-dsl) queries**
 * Can do both **Synchronous and Asynchronous** query execution, using
-  **Lamina** or **clojure/core.async** interface for async.
+  **clojure/core.async** interface for async
 * Support for **all of
   [datastax/java-driver](https://github.com/datastax/java-driver)
   advanced options**: jmx, auth, SSL, compression, consistency, custom
@@ -129,38 +129,9 @@ keyspaces from the same cluster definition.
 
 ### Asynchronous interfaces:
 
-There are currently 2 ways to use the asynchronous methods of the
-underlying driver, using a **Lamina** based api or the newly released
-**clojure/core.async**
-
-#### Async using the Lamina based api
-
-Using `execute-async` which is used the same way as execute,
-the return value is a
-[result-channel](https://github.com/ztellman/lamina/wiki/Result-Channels) from
-[Lamina](https://github.com/ztellman/lamina) (you can think of it as
-an equivalent of a clojure.core/promise).
-
-```clojure
-(def result (alia/execute-async session "select * from users;"))
-
-```
-
-To get the result once and wait for its realization we can dereference
-it, a blocking operation.
-
-```clojure
-@result
-```
-
-Or we can use `success`/`error` handlers (it still returns a
-`result-channel` just like before).
-
-```clojure
-(alia/execute-async session "select * from users;"
-                    {:success (fn [rows] (do-something-with-result rows))
-                     :error (fn [err] (print "fail!"))})
-```
+There are currently 3 interfacese to use the asynchronous methods of
+the underlying driver, the main one being **core.async**, but optional
+**manifold** and legacy **Lamina** interfaces are also available.
 
 #### Async using clojure/core.async
 
