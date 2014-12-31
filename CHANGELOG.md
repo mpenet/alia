@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.1
+
+* bump hayt dependency (c* 2.1+ udt support)
+
 ## 2.3.0
 
 * add support for Kerberos (via `:kerberos?` option) & TLS by adding `:ssl-options` map argument
