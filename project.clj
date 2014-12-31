@@ -8,7 +8,7 @@
                   :exclusions [org.clojure/core.cache]]
                  [org.clojure/core.cache "0.6.4"]
                  [cc.qbits/knit "0.2.1"]
-                 [cc.qbits/hayt "2.0.0"]
+                 [cc.qbits/hayt "2.1.0"]
                  [com.datastax.cassandra/cassandra-driver-core "2.1.4"]
                  [com.datastax.cassandra/cassandra-driver-dse "2.1.4"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
