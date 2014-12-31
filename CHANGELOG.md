@@ -3,6 +3,8 @@
 ## 2.3.1
 
 * bump hayt dependency (c* 2.1+ udt support)
+* add optional [manifold](https://github.com/ztellman/manifold)
+  interface, see `qbits.alia/manifold`
 
 ## 2.3.0
 
