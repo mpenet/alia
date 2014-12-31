@@ -76,7 +76,7 @@
                 tags list<bigint>,
                 amap map<varchar, bigint>,
                 tup tuple<varchar, varchar>,
-                udt udt,
+                udt frozen<udt>,
                 PRIMARY KEY (user_name)
               );")
         (execute *session* "CREATE INDEX ON users (birth_year);")
