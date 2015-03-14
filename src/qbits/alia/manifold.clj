@@ -4,7 +4,7 @@
    [manifold.stream :as s]
    [qbits.alia.codec :as codec]
    [qbits.alia :refer [ex->ex-info query->statement set-statement-options!
-                       default-executor]])
+                       get-executor]])
   (:import
    (com.datastax.driver.core
     Statement
@@ -45,7 +45,7 @@
             (onFailure [_ ex]
               (d/error! deferred
                         (ex->ex-info ex {:query statement :values values}))))
-          (or executor @default-executor))
+          (get-executor executor))
          deferred)))
   ([^Session session query]
      (execute session query {})))
@@ -87,7 +87,7 @@
             (onFailure [_ ex]
               (s/put! stream (ex->ex-info ex {:query statement :values values}))
               (s/close! stream)))
-          (or executor @default-executor))
+          (get-executor executor))
          stream)))
   ([^Session session query]
      (execute-buffered session query {})))

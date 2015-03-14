@@ -1,6 +1,5 @@
 (ns qbits.alia
   (:require
-   [qbits.knit :as knit]
    [qbits.alia.codec :as codec]
    [qbits.alia.utils :as utils]
    [qbits.alia.enum :as enum]
@@ -21,11 +20,15 @@
     SimpleStatement
     Statement)
    (com.google.common.util.concurrent
+    MoreExecutors
     Futures
     FutureCallback)
    (java.nio ByteBuffer)))
 
-(def ^:no-doc default-executor (delay (knit/executor :cached)))
+(defn get-executor
+  [x]
+  (or x (MoreExecutors/sameThreadExecutor)))
+
 (def ^:no-doc hayt-query-fn (memo/lu hayt/->raw :lu/threshold 100))
 
 (def set-hayt-query-fn!
@@ -309,7 +312,7 @@ Values for consistency:
             (onFailure [_ ex]
               (async/put! ch (ex->ex-info ex {:query statement :values values}))
               (async/close! ch)))
-          (or executor @default-executor))
+          (get-executor executor))
          ch)))
   ([^Session session query]
      (execute-chan session query {})))
@@ -345,15 +348,16 @@ Values for consistency:
           rs-future
           (reify FutureCallback
             (onSuccess [_ result]
-              (loop [rows (codec/result-set->maps (.get rs-future) string-keys?)]
-                (when-let [row (first rows)]
-                  (when (async/>!! ch row)
-                    (recur (rest rows)))))
-              (async/close! ch))
+              (async/go
+                (loop [rows (codec/result-set->maps (.get rs-future) string-keys?)]
+                 (when-let [row (first rows)]
+                   (when (async/>! ch row)
+                     (recur (rest rows)))))
+                (async/close! ch)))
             (onFailure [_ ex]
               (async/put! ch (ex->ex-info ex {:query statement :values values}))
               (async/close! ch)))
-          (or executor @default-executor))
+          (get-executor executor))
          ch)))
   ([^Session session query]
      (execute-chan-buffered session query {})))

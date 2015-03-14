@@ -3,7 +3,7 @@
    [lamina.core :as l]
    [qbits.alia.codec :as codec]
    [qbits.alia :refer [ex->ex-info query->statement set-statement-options!
-                       default-executor]])
+                       get-executor]])
   (:import
    (com.datastax.driver.core
     Statement
@@ -44,7 +44,7 @@
             (onFailure [_ ex]
               (l/error async-result
                        (ex->ex-info ex {:query statement :values values}))))
-          (or executor @default-executor))
+          (get-executor executor))
          async-result)))
     ([^Session session query]
        (execute session query {})))
