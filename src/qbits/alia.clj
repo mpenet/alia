@@ -349,7 +349,8 @@ Values for consistency:
           (reify FutureCallback
             (onSuccess [_ result]
               (async/go
-                (loop [rows (codec/result-set->maps (.get rs-future) string-keys?)]
+                (loop [rows (codec/result-set->maps
+                             (.get ^ResultSetFuture rs-future) string-keys?)]
                  (when-let [row (first rows)]
                    (when (async/>! ch row)
                      (recur (rest rows)))))
