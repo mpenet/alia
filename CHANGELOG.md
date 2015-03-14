@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.3.2
+
+* improve resource use and performance in async mode by running the
+  put! in the io thread (since it's async anyway), not using an
+  external thread pool. You can still pass :executor to the execute-*
+  call and override this behavior.
+
+* remove now useless qbits.knit dependency
+
+
 ## 2.3.1
 
 * bump hayt dependency (c* 2.1+ udt support)
