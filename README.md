@@ -27,7 +27,8 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
   integration
 * **Lazy and potentialy chunked sequences over queries**
 * Controled rows **streaming** via core.async channels
-* First class support for **custom data types**
+* First class support for cassandra **collections**, **User defined
+  types**, that includes **nesting**
 
 ## Installation
 
