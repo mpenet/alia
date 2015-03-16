@@ -2,6 +2,11 @@
 
 ## 2.3.2
 
+* Use java-driver 2.1.5
+[driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/2.1/driver-core/CHANGELOG.rst)
+
+## 2.3.2
+
 * improve resource use and performance in async mode by running the
   put! in the io thread (since it's async anyway), not using an
   external thread pool. You can still pass :executor to the execute-*
