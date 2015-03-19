@@ -1,4 +1,6 @@
 # alia
+
+[![Join the chat at https://gitter.im/mpenet/alia](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/mpenet/alia?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://secure.travis-ci.org/mpenet/alia.png?branch=master)](http://travis-ci.org/mpenet/alia)
 
 > Coan-Teen, the female death spirit who walks without feet.
