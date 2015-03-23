@@ -1,6 +1,10 @@
 # Changelog
 
-## 2.3.2
+## 2.3.4
+
+* remove log4j properties file used for debugging locally that sneaked in!
+
+## 2.3.3
 
 * Use java-driver 2.1.5
 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/2.1/driver-core/CHANGELOG.rst)
