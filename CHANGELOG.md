@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.5
+
+* fix encoding error in joda-time codec
+
 ## 2.3.4
 
 * remove log4j properties file used for debugging locally that sneaked in!
