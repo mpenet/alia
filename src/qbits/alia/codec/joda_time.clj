@@ -7,4 +7,4 @@
 (extend-protocol codec/PCodec
   org.joda.time.DateTime
   (encode [x]
-    (ct/to-long x)))
+    (.toDate x)))
