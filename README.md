@@ -187,6 +187,11 @@ and a callback as second:
         (conj query-results result))))))
 ```
 
+It also include `execute-chan-buffered`, which allows to run a single
+query in a non-blocking way, returning a channel and streams the rows
+in a controlled manner (respecting fetch-size and/or core async buffer
+size) to it.
+
 And it can do a lot more! Head to the
 [codox generated documentation](http://mpenet.github.com/alia/#docs).
 
