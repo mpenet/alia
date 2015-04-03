@@ -10,24 +10,25 @@
     UserType$Field)))
 
 (defmacro make-decoders [x idx col-type & specs]
-  (let [hm (java.util.HashMap.)]
-    (doseq [[decoder-type form] (partition 2 specs)]
-      (.put hm
-            decoder-type
-            `(fn [~(vary-meta x assoc :tag "com.datastax.driver.core.GettableByIndexData")
-                  ~(vary-meta idx assoc :tag "java.lang.Integer")
-                  ~(vary-meta col-type assoc :tag "com.datastax.driver.core.DataType")]
-               ~form)))
-    hm))
+  (let [hm (gensym)]
+    `(let [~hm (java.util.HashMap. ~(count specs))]
+       ~@(for [[decoder-type form] (partition 2 specs)]
+           `(.put ~hm
+                  ~decoder-type
+                  (fn [~(vary-meta x assoc :tag "com.datastax.driver.core.GettableByIndexData")
+                       ~(vary-meta idx assoc :tag "java.lang.Integer")
+                       ~(vary-meta col-type assoc :tag "com.datastax.driver.core.DataType")]
+                    ~form)))
+       ~hm)))
 
 (defn ^Class types-args->type
   [^"[Lcom.datastax.driver.core.DataType;" type-args pred]
   (.asJavaClass ^DataType (pred type-args)))
 
-(declare ^java.util.HashMap decoders)
+(declare decoders)
 (defn decode
   [^GettableByIndexData x ^Integer idx ^DataType col-type]
-  ((.get decoders (.getName col-type)) x idx col-type))
+  ((.get ^java.util.HashMap decoders (.getName col-type)) x idx col-type))
 
 (def decoders
   (make-decoders x idx col-type
