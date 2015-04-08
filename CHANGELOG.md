@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.6
+
+* allow to specifiy timestamp via query options
+
 ## 2.3.5
 
 * fix encoding error in joda-time codec

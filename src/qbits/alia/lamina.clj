@@ -24,10 +24,11 @@
   ([^Session session query {:keys [success error executor consistency
                                    serial-consistency routing-key
                                    retry-policy tracing? string-keys? fetch-size
-                                   values]}]
+                                   values timestamp]}]
      (let [^Statement statement (query->statement query values)]
        (set-statement-options! statement routing-key retry-policy tracing?
-                               consistency serial-consistency fetch-size)
+                               consistency serial-consistency fetch-size
+                               timestamp)
        (let [^ResultSetFuture rs-future
              (try
                (.executeAsync session statement)

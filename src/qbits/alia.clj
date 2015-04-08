@@ -234,7 +234,7 @@ pools/connections"
 
 (defn ^:no-doc set-statement-options!
   [^Statement statement routing-key retry-policy tracing? consistency
-   serial-consistency fetch-size]
+   serial-consistency fetch-size timestamp]
   (when routing-key
     (.setRoutingKey ^SimpleStatement statement
                     ^ByteBuffer routing-key))
@@ -244,6 +244,8 @@ pools/connections"
     (.enableTracing statement))
   (when fetch-size
     (.setFetchSize statement fetch-size))
+  (when timestamp
+    (.setDefaultTimestamp statement timestamp))
   (when serial-consistency
     (.setSerialConsistencyLevel statement
                                 (enum/consistency-level serial-consistency)))
@@ -268,6 +270,7 @@ The following options are supported:
 * `:tracing?` : Bool, toggles query tracing (available via query result metadata)
 * `:string-keys?` : Bool, stringify keys (they are keyword by default)
 * `:fetch-size` : Number, sets query fetching size
+* `:timestamp` : Number, sets the timestamp for query (if not specified in CQL)
 
 Values for consistency:
 
@@ -275,10 +278,11 @@ Values for consistency:
 :serial :three :two"
   ([^Session session query {:keys [consistency serial-consistency
                                    routing-key retry-policy tracing? string-keys?
-                                   fetch-size values]}]
+                                   fetch-size values timestamp]}]
      (let [^Statement statement (query->statement query values)]
        (set-statement-options! statement routing-key retry-policy tracing?
-                               consistency serial-consistency fetch-size)
+                               consistency serial-consistency fetch-size
+                               timestamp)
        (try
          (codec/result-set->maps (.execute session statement) string-keys?)
          (catch Exception err
@@ -297,10 +301,11 @@ Values for consistency:
   For options refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key retry-policy tracing?
-                                   string-keys? fetch-size values]}]
+                                   string-keys? fetch-size values timestamp]}]
      (let [^Statement statement (query->statement query values)]
        (set-statement-options! statement routing-key retry-policy tracing?
-                               consistency serial-consistency fetch-size)
+                               consistency serial-consistency fetch-size
+                               timestamp)
        (let [^ResultSetFuture rs-future (.executeAsync session statement)
              ch (async/chan 1)]
          (Futures/addCallback
@@ -333,11 +338,12 @@ Values for consistency:
   refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key retry-policy tracing?
-                                   string-keys? fetch-size values
+                                   string-keys? fetch-size values timestamp
                                    channel]}]
      (let [^Statement statement (query->statement query values)]
        (set-statement-options! statement routing-key retry-policy tracing?
-                               consistency serial-consistency fetch-size)
+                               consistency serial-consistency fetch-size
+                               timestamp)
        (let [^ResultSetFuture rs-future (.executeAsync session statement)
              ch (or channel (async/chan (or fetch-size (-> session
                                                            .getCluster
