@@ -93,21 +93,24 @@
 (extend-protocol PCodec
 
   (Class/forName "[B")
-  (decode [x] x)
   (encode [x] (ByteBuffer/wrap x))
+  (decode [x] x)
 
   java.util.Map
+  (encode [x] x)
   (decode [x] (into {} x))
 
   java.util.Set
+  (encode [x] x)
   (decode [x] (into #{} x))
 
   java.util.List
+  (encode [x] x)
   (decode [x] (into [] x))
 
   Object
-  (decode [x] x)
   (encode [x] x)
+  (decode [x] x)
 
   nil
   (decode [x] x)
