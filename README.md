@@ -268,6 +268,6 @@ Do not hesitate to ask your questions there.
 
 ## License
 
-Copyright © 2013-2014 [Max Penet](https://twitter.com/mpenet)
+Copyright © 2013-2015 [Max Penet](https://twitter.com/mpenet)
 
 Distributed under the Eclipse Public License, the same as Clojure.
