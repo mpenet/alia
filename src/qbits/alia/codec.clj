@@ -9,7 +9,15 @@
     Row
     UserType$Field)))
 
-(defmacro make-decoders [x idx col-type & specs]
+(defprotocol PCodec
+  (decode [x]
+    "Decodes raw deserialzed values returned by java-driver into clj
+  friendly types")
+  (encode [x]
+    "Encodes clj value into a valid cassandra value for prepared
+    statements (usefull for external libs such as joda time)"))
+
+(defmacro make-deserializers [x idx col-type & specs]
   (let [hm (gensym)]
     `(let [~hm (java.util.HashMap. ~(count specs))]
        ~@(for [[decoder-type form] (partition 2 specs)]
@@ -25,78 +33,84 @@
   [^"[Lcom.datastax.driver.core.DataType;" type-args pred]
   (.asJavaClass ^DataType (pred type-args)))
 
-(declare decoders)
-(defn decode
+(declare deserializers)
+(defn deserialize
   [^GettableByIndexData x ^Integer idx ^DataType col-type]
-  ((.get ^java.util.HashMap decoders (.getName col-type)) x idx col-type))
+  ((.get ^java.util.HashMap deserializers (.getName col-type)) x idx col-type))
 
-(def decoders
-  (make-decoders x idx col-type
-   DataType$Name/ASCII     (.getString x idx)
-   DataType$Name/BIGINT    (.getLong x idx)
-   DataType$Name/BLOB      (.getBytes x idx)
-   DataType$Name/BOOLEAN   (.getBool x idx)
-   DataType$Name/COUNTER   (.getLong x idx)
-   DataType$Name/CUSTOM    (.getBytesUnsafe x idx)
-   DataType$Name/DECIMAL   (.getDecimal x idx)
-   DataType$Name/DOUBLE    (.getDouble x idx)
-   DataType$Name/FLOAT     (.getFloat x idx)
-   DataType$Name/INET      (.getInet x idx)
-   DataType$Name/INT       (.getInt x idx)
-   DataType$Name/TEXT      (.getString x idx)
-   DataType$Name/TIMESTAMP (.getDate x idx)
-   DataType$Name/TIMEUUID  (.getUUID x idx)
-   DataType$Name/UUID      (.getUUID x idx)
-   DataType$Name/VARCHAR   (.getString x idx)
-   DataType$Name/VARINT    (.getVarint x idx)
-   DataType$Name/LIST      (into [] (.getList x idx (types-args->type (.getTypeArguments col-type) first)))
-   DataType$Name/SET       (into #{} (.getSet x idx (types-args->type (.getTypeArguments col-type) first)))
-   DataType$Name/MAP       (let [t (.getTypeArguments col-type)]
-                             (into {} (.getMap x idx
-                                               (types-args->type t first)
-                                               (types-args->type t second))))
-   DataType$Name/TUPLE     (let [tuple-value (.getTupleValue x idx)
-                                 types (.getComponentTypes (.getType tuple-value))
-                                 len (.size types)]
-                             (loop [tuple []
-                                    idx' 0]
-                               (if (= idx' len)
-                                 tuple
-                                 (recur (conj tuple (decode tuple-value
-                                                            idx'
-                                                            (.get types idx')))
-                                        (unchecked-inc-int idx')))))
-   DataType$Name/UDT       (let [udt-value (.getUDTValue x idx)
-                                 udt-type (.getType udt-value)
-                                 udt-type-iter (.iterator udt-type)
-                                 len (.size udt-type)]
-                             (loop [udt {}
-                                    idx' 0]
-                               (if (= idx' len)
-                                 udt
-                                 (let [^UserType$Field type (.next udt-type-iter)]
-                                   (recur (assoc udt
-                                            (.getName type)
-                                            (decode udt-value
-                                                    idx'
-                                                    (.getType type)))
-                                          (unchecked-inc-int idx'))))))))
-
-;; only used for prepared statements
-(defprotocol PCodec
-  (encode [x]
-    "Encodes clj value into a valid cassandra value for prepared
-    statements (usefull for external libs such as joda time)"))
+(def deserializers
+  (make-deserializers x idx col-type
+                      DataType$Name/ASCII     (decode (.getString x idx))
+                      DataType$Name/BIGINT    (decode (.getLong x idx))
+                      DataType$Name/BLOB      (decode (.getBytes x idx))
+                      DataType$Name/BOOLEAN   (decode (.getBool x idx))
+                      DataType$Name/COUNTER   (decode (.getLong x idx))
+                      DataType$Name/CUSTOM    (decode (.getBytesUnsafe x idx))
+                      DataType$Name/DECIMAL   (decode (.getDecimal x idx))
+                      DataType$Name/DOUBLE    (decode (.getDouble x idx))
+                      DataType$Name/FLOAT     (decode (.getFloat x idx))
+                      DataType$Name/INET      (decode (.getInet x idx))
+                      DataType$Name/INT       (decode (.getInt x idx))
+                      DataType$Name/TEXT      (decode (.getString x idx))
+                      DataType$Name/TIMESTAMP (decode (.getDate x idx))
+                      DataType$Name/TIMEUUID  (decode (.getUUID x idx))
+                      DataType$Name/UUID      (decode (.getUUID x idx))
+                      DataType$Name/VARCHAR   (decode (.getString x idx))
+                      DataType$Name/VARINT    (decode (.getVarint x idx))
+                      DataType$Name/LIST      (decode (.getList x idx (types-args->type (.getTypeArguments col-type) first)))
+                      DataType$Name/SET       (decode (.getSet x idx (types-args->type (.getTypeArguments col-type) first)))
+                      DataType$Name/MAP       (let [t (.getTypeArguments col-type)]
+                                                (decode (.getMap x idx
+                                                                 (types-args->type t first)
+                                                                 (types-args->type t second))))
+                      DataType$Name/TUPLE     (let [tuple-value (.getTupleValue x idx)
+                                                    types (.getComponentTypes (.getType tuple-value))
+                                                    len (.size types)]
+                                                (loop [tuple []
+                                                       idx' 0]
+                                                  (if (= idx' len)
+                                                    tuple
+                                                    (recur (conj tuple (decode (deserialize tuple-value
+                                                                                            idx'
+                                                                                            (.get types idx'))))
+                                                           (unchecked-inc-int idx')))))
+                      DataType$Name/UDT       (let [udt-value (.getUDTValue x idx)
+                                                    udt-type (.getType udt-value)
+                                                    udt-type-iter (.iterator udt-type)
+                                                    len (.size udt-type)]
+                                                (loop [udt {}
+                                                       idx' 0]
+                                                  (if (= idx' len)
+                                                    udt
+                                                    (let [^UserType$Field type (.next udt-type-iter)]
+                                                      (recur (assoc udt
+                                                                    (.getName type)
+                                                                    (decode (deserialize udt-value
+                                                                                         idx'
+                                                                                         (.getType type))))
+                                                             (unchecked-inc-int idx'))))))))
 
 (extend-protocol PCodec
 
   (Class/forName "[B")
+  (decode [x] x)
   (encode [x] (ByteBuffer/wrap x))
 
+  java.util.Map
+  (decode [x] (into {} x))
+
+  java.util.Set
+  (decode [x] (into #{} x))
+
+  java.util.List
+  (decode [x] (into [] x))
+
   Object
+  (decode [x] x)
   (encode [x] x)
 
   nil
+  (decode [x] x)
   (encode [x] x))
 
 (defn result-set->maps
@@ -112,6 +126,6 @@
                      (recur (unchecked-inc-int idx)
                             (assoc! row-map
                                     (key-fn (.getName cdef idx))
-                                    (decode row idx (.getType cdef idx))))))))
+                                    (deserialize row idx (.getType cdef idx))))))))
              result-set)
         (vary-meta assoc :execution-info (.getExecutionInfo result-set)))))

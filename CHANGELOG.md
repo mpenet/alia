@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.7
+
+* Add decode function to PCodec protocol to allow custom decoding (ex joda)
+
 ## 2.3.6
 
 * allow to specifiy timestamp via query options
