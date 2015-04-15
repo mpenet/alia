@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.3.8
+
+* Improve joda-time codec for java.util.Date decoding from data
+returned by cassandra
+
+* Adds experimental nippy codec with various modes:
++ by calling (set-nippy-collection-encoder! nippy-opts) and
+  (set-nippy-collection-decoder! nippy-opts) all collections passed to
+  alia will be stored as ByteBuffer and decoded back to clj
+  collections when queried. This is fast, but breaks cassandra native
+  collections encoding in prepared statements. If you need to handle
+  both the other mode is for you.
++ the other mode requires you to call
+  qbits.alia.codec.nippy/serializable! on the data you want to have
+  serialized, it has to be a type that supports metadata (ex: not
+  nil). All bytebuffers returned by cassandra will be considered as
+  nippy data.
+
+If you need more fine grained control you are be better off calling
+thaw/freeze manually on a per column basis in your app.
+
 ## 2.3.7
 
 * Add decode function to PCodec protocol to allow custom decoding (ex joda)
