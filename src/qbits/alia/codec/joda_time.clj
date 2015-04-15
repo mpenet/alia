@@ -11,5 +11,6 @@
 
 (extend-protocol codec/PCodec
   java.util.Date
+  (encode [x] x)
   (decode [x]
     (ct/to-date-time x)))
