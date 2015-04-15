@@ -8,3 +8,8 @@
   org.joda.time.DateTime
   (encode [x]
     (.toDate x)))
+
+(extend-protocol codec/PCodec
+  java.util.Date
+  (decode [x]
+    (ct/to-date-time x)))
