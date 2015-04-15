@@ -53,7 +53,3 @@ calling serializable! on them. Takes a map or nippy options to be passed
   "Mark value as nippy serializable"
   [coll]
   (NippySerializable. coll))
-
-;; (set-nippy-serializable-encoder! {})
-
-;; (codec/encode (NippySerializable. {}))

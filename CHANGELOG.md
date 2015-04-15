@@ -14,8 +14,7 @@ returned by cassandra
   both the other mode is for you.
 + the other mode requires you to call
   qbits.alia.codec.nippy/serializable! on the data you want to have
-  serialized, it has to be a type that supports metadata (ex: not
-  nil). All bytebuffers returned by cassandra will be considered as
+  serialized. All bytebuffers returned by cassandra will be considered as
   nippy data.
 
 If you need more fine grained control you are be better off calling
