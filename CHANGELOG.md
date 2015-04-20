@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.9
+
+* Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md
+
 ## 2.3.8
 
 * Improve joda-time codec for java.util.Date decoding from data
