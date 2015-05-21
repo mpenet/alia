@@ -9,7 +9,7 @@
   address-translater, cluster-name, netty-options,
   timestamp-generator, max-schema-agreement-wait-seconds
 
-* new execute* options for `:paging-state` and `indepotent?`
+* new execute* options for `:paging-state` and `idempotent?`
 
 ## 2.3.9
 
