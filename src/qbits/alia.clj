@@ -12,6 +12,7 @@
     BoundStatement
     Cluster
     Cluster$Builder
+    LatencyTracker
     PreparedStatement
     Statement
     ResultSet
@@ -436,3 +437,14 @@ ex: (lazy-query session
      (lazy-query- session query pred [] opts))
   ([session query pred]
      (lazy-query session query pred {})))
+
+
+(defn register!
+  "Register querylogger/latency tracker to cluster"
+  [^Cluster cluster ^LatencyTracker latency-tracker]
+  (.register cluster latency-tracker))
+
+(defn unregister!
+  "Unregister querylogger/latency tracker from cluster"
+  [^Cluster cluster ^LatencyTracker latency-tracker]
+  (.unregister cluster latency-tracker))
