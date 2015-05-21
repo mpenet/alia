@@ -24,12 +24,13 @@
   For other options refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [success error executor consistency
                                    serial-consistency routing-key
-                                   retry-policy tracing? string-keys? fetch-size
-                                   timestamp values]}]
+                                   retry-policy tracing? string-keys? indepotent?
+                                   fetch-size timestamp values paging-state]}]
      (let [^Statement statement (query->statement query values)]
-       (set-statement-options! statement routing-key retry-policy tracing?
+       (set-statement-options! statement routing-key retry-policy
+                               tracing? indepotent?
                                consistency serial-consistency fetch-size
-                               timestamp)
+                               timestamp paging-state)
        (let [^ResultSetFuture rs-future
              (try
                (.executeAsync session statement)
@@ -65,12 +66,13 @@
   refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key retry-policy tracing?
-                                   string-keys? fetch-size values
-                                   stream timestamp]}]
+                                   string-keys? indepotent? fetch-size values
+                                   stream timestamp paging-state]}]
      (let [^Statement statement (query->statement query values)]
-       (set-statement-options! statement routing-key retry-policy tracing?
+       (set-statement-options! statement routing-key retry-policy
+                               tracing? indepotent?
                                consistency serial-consistency fetch-size
-                               timestamp)
+                               timestamp paging-state)
        (let [^ResultSetFuture rs-future (.executeAsync session statement)
              stream (or stream
                         (s/stream (or fetch-size (-> session .getCluster

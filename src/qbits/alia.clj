@@ -61,6 +61,11 @@ The following options are supported:
   [Retry Policy](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
   to use for the new cluster.
 
+* `:speculative-execution` The policy that decides if the driver will
+  send speculative queries to the next hosts when the current host
+  takes too long to respond. [Speculative Execution
+  Policy](http://mpenet.github.io/alia/qbits.alia.policy.speculative-execution.html)
+
 * `:metrics?` : Toggles metrics collection for the created cluster
   (metrics are enabled by default otherwise).
 
@@ -71,6 +76,26 @@ The following options are supported:
 
 * `:compression` : Compression supported by the Cassandra binary
   protocol. Can be `:none` or `:snappy`.
+
+* `:cluster-name` : Optional name for create cluster
+
+* `max-schema-aggreement-wait-seconds` Sets the maximum time to wait
+  for schema agreement before returning from a DDL query.
+
+* `:netty-options`: (advanced) see
+  http://docs.datastax.com/en/drivers/java/2.1/com/datastax/driver/core/NettyOptions.html
+
+* `:address-translater`: Configures the address translater to use for
+  the new cluster. Expects
+  a [AddressTranslater](http://mpenet.github.io/alia/qbits.alia.policy.address-translater.html)
+  or you can pass :ec2-multi-region which would translate in the
+  underlying implementations.
+
+* `:timestamp-generator`: Configures the timestamp generator to use
+  with the new cluster. Expects
+  a [timestamp-generator](http://mpenet.github.io/alia/qbits.alia.timestamp-generator.html)
+  instance, or `:atomic-monotonic` , `:server-side` or `:thread-local`
+  which would translate in the underlying implementations.
 
 * `:ssl?`: enables/disables SSL
 
@@ -233,8 +258,8 @@ pools/connections"
     (query->statement (hayt-query-fn q) values)))
 
 (defn ^:no-doc set-statement-options!
-  [^Statement statement routing-key retry-policy tracing? consistency
-   serial-consistency fetch-size timestamp]
+  [^Statement statement routing-key retry-policy tracing? indepotent?
+   consistency serial-consistency fetch-size timestamp paging-state]
   (when routing-key
     (.setRoutingKey ^SimpleStatement statement
                     ^ByteBuffer routing-key))
@@ -242,10 +267,14 @@ pools/connections"
     (.setRetryPolicy statement retry-policy))
   (when tracing?
     (.enableTracing statement))
+  (when indepotent?
+    (.setIndepotent statement indepotent?))
   (when fetch-size
     (.setFetchSize statement fetch-size))
   (when timestamp
     (.setDefaultTimestamp statement timestamp))
+  (when paging-state
+    (.setPagingState statement paging-state))
   (when serial-consistency
     (.setSerialConsistencyLevel statement
                                 (enum/consistency-level serial-consistency)))
@@ -271,6 +300,13 @@ The following options are supported:
 * `:string-keys?` : Bool, stringify keys (they are keyword by default)
 * `:fetch-size` : Number, sets query fetching size
 * `:timestamp` : Number, sets the timestamp for query (if not specified in CQL)
+* `:indepotent?` : Whether this statement is idempotent, i.e. whether
+  it can be applied multiple times without changing the result beyond
+  the initial application.
+* `:paging-state` : Expects a com.datastax.driver.core.PagingState
+  instance. This will cause the next execution of this statement to
+  fetch results from a given page, rather than restarting from the
+  beginning
 
 Values for consistency:
 
@@ -278,11 +314,13 @@ Values for consistency:
 :serial :three :two"
   ([^Session session query {:keys [consistency serial-consistency
                                    routing-key retry-policy tracing? string-keys?
+                                   indepotent? paging-state
                                    fetch-size values timestamp]}]
      (let [^Statement statement (query->statement query values)]
-       (set-statement-options! statement routing-key retry-policy tracing?
+       (set-statement-options! statement routing-key retry-policy
+                               tracing? indepotent?
                                consistency serial-consistency fetch-size
-                               timestamp)
+                               timestamp paging-state)
        (try
          (codec/result-set->maps (.execute session statement) string-keys?)
          (catch Exception err
@@ -300,12 +338,14 @@ Values for consistency:
 
   For options refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy tracing?
-                                   string-keys? fetch-size values timestamp]}]
+                                   routing-key retry-policy tracing? indepotent?
+                                   string-keys? fetch-size values timestamp
+                                   paging-state]}]
      (let [^Statement statement (query->statement query values)]
-       (set-statement-options! statement routing-key retry-policy tracing?
+       (set-statement-options! statement routing-key retry-policy
+                               tracing? indepotent?
                                consistency serial-consistency fetch-size
-                               timestamp)
+                               timestamp paging-state)
        (let [^ResultSetFuture rs-future (.executeAsync session statement)
              ch (async/chan 1)]
          (Futures/addCallback
@@ -337,13 +377,14 @@ Values for consistency:
   responsability to handle these how you deem appropriate. For options
   refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy tracing?
+                                   routing-key retry-policy tracing? indepotent?
                                    string-keys? fetch-size values timestamp
-                                   channel]}]
+                                   channel paging-state]}]
      (let [^Statement statement (query->statement query values)]
-       (set-statement-options! statement routing-key retry-policy tracing?
+       (set-statement-options! statement routing-key retry-policy
+                               tracing? indepotent?
                                consistency serial-consistency fetch-size
-                               timestamp)
+                               timestamp paging-state)
        (let [^ResultSetFuture rs-future (.executeAsync session statement)
              ch (or channel (async/chan (or fetch-size (-> session
                                                            .getCluster

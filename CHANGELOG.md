@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.4.0
+
+* Use java-driver 2.1.6
+[driver-core/CHANGELOG](https://github.com/datastax/java-driver/blob/2.1/driver-core/CHANGELOG.rst)
+
+* adds cluster options and related utils for: speculative execution,
+  address-translater, cluster-name, netty-options,
+  timestamp-generator, max-schema-agreement-wait-seconds
+
+* new execute* options for `:paging-state` and `indepotent?`
+
 ## 2.3.9
 
 * Use latest Hayt https://github.com/mpenet/hayt/blob/master/CHANGELOG.md

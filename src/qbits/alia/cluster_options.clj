@@ -1,7 +1,9 @@
 (ns qbits.alia.cluster-options
   (:require
    [qbits.alia.enum :as enum]
-   [clojure.java.io :as io])
+   [clojure.java.io :as io]
+   [qbits.alia.timestamp-generator :as tsg]
+   [qbits.alia.policy.address-translater :as at])
   (:import
    (com.datastax.driver.core
     Cluster$Builder
@@ -10,11 +12,14 @@
     ProtocolOptions$Compression
     QueryOptions
     SocketOptions
-    SSLOptions)
+    SSLOptions
+    TimestampGenerator)
    (com.datastax.driver.core.policies
+    AddressTranslater
     LoadBalancingPolicy
     ReconnectionPolicy
-    RetryPolicy)
+    RetryPolicy
+    SpeculativeExecutionPolicy)
    (com.datastax.driver.auth DseAuthProvider)
    (javax.net.ssl
     TrustManagerFactory
@@ -45,6 +50,10 @@
 (defmethod set-cluster-option! :retry-policy
   [_ ^Cluster$Builder builder ^RetryPolicy policy]
   (.withRetryPolicy builder policy))
+
+(defmethod set-cluster-option! :speculative-execution-policy
+  [_ ^Cluster$Builder builder ^SpeculativeExecutionPolicy policy]
+  (.withSpeculativeExecutionPolicy builder policy))
 
 (defmethod set-cluster-option! :pooling-options
   [_ ^Cluster$Builder builder {:keys [core-connections-per-host
@@ -232,6 +241,42 @@
                              (if cipher-suites
                                (into-array String cipher-suites)
                                SSLOptions/DEFAULT_SSL_CIPHER_SUITES))))))
+
+(defmethod set-cluster-option! :timestamp-generator
+  [_ ^Cluster$Builder builder ts-generator]
+  (.withTimestampGenerator builder
+                           (if (instance? TimestampGenerator)
+                             ts-generator
+                             (case ts-generator
+                               :atomic-monotonic (tsg/atomic-monotonic)
+                               :server-side (tsg/server-side)
+                               :thread-local (tsg/thread-local))))
+  builder)
+
+(defmethod set-cluster-option! :address-translater
+  [_ ^Cluster$Builder builder at]
+  (.withAddressTranslater builder
+                          (if (instance? AddressTranslater)
+                            at
+                            (case at
+                              :ec2-multi-region (at/ec2-multi-region-address-translater))))
+  builder)
+
+(defmethod set-cluster-option! :netty-options
+  [_ ^Cluster$Builder builder netty-options]
+  (.withNettyOptions builder netty-options)
+  builder)
+
+(defmethod set-cluster-option! :max-schema-agreement-wait-seconds
+  [_ ^Cluster$Builder builder max-schema-agreement-wait-seconds]
+  (.withMaxSchemaAgreementWaitSeconds builder
+                                      (int max-schema-agreement-wait-seconds))
+  builder)
+
+(defmethod set-cluster-option! :cluster-name
+  [_ ^Cluster$Builder builder cluster-name]
+  (.withClusterName builder (name cluster-name))
+  builder)
 
 (defn set-cluster-options!
   ^Cluster$Builder
