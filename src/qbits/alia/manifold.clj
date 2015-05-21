@@ -24,11 +24,11 @@
   For other options refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [success error executor consistency
                                    serial-consistency routing-key
-                                   retry-policy tracing? string-keys? indepotent?
+                                   retry-policy tracing? string-keys? idempotent?
                                    fetch-size timestamp values paging-state]}]
      (let [^Statement statement (query->statement query values)]
        (set-statement-options! statement routing-key retry-policy
-                               tracing? indepotent?
+                               tracing? idempotent?
                                consistency serial-consistency fetch-size
                                timestamp paging-state)
        (let [^ResultSetFuture rs-future
@@ -66,11 +66,11 @@
   refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key retry-policy tracing?
-                                   string-keys? indepotent? fetch-size values
+                                   string-keys? idempotent? fetch-size values
                                    stream timestamp paging-state]}]
      (let [^Statement statement (query->statement query values)]
        (set-statement-options! statement routing-key retry-policy
-                               tracing? indepotent?
+                               tracing? idempotent?
                                consistency serial-consistency fetch-size
                                timestamp paging-state)
        (let [^ResultSetFuture rs-future (.executeAsync session statement)

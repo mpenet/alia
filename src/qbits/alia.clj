@@ -259,7 +259,7 @@ pools/connections"
     (query->statement (hayt-query-fn q) values)))
 
 (defn ^:no-doc set-statement-options!
-  [^Statement statement routing-key retry-policy tracing? indepotent?
+  [^Statement statement routing-key retry-policy tracing? idempotent?
    consistency serial-consistency fetch-size timestamp paging-state]
   (when routing-key
     (.setRoutingKey ^SimpleStatement statement
@@ -268,8 +268,8 @@ pools/connections"
     (.setRetryPolicy statement retry-policy))
   (when tracing?
     (.enableTracing statement))
-  (when indepotent?
-    (.setIndepotent statement indepotent?))
+  (when idempotent?
+    (.setIdempotent statement idempotent?))
   (when fetch-size
     (.setFetchSize statement fetch-size))
   (when timestamp
@@ -301,7 +301,7 @@ The following options are supported:
 * `:string-keys?` : Bool, stringify keys (they are keyword by default)
 * `:fetch-size` : Number, sets query fetching size
 * `:timestamp` : Number, sets the timestamp for query (if not specified in CQL)
-* `:indepotent?` : Whether this statement is idempotent, i.e. whether
+* `:idempotent?` : Whether this statement is idempotent, i.e. whether
   it can be applied multiple times without changing the result beyond
   the initial application.
 * `:paging-state` : Expects a com.datastax.driver.core.PagingState
@@ -315,11 +315,11 @@ Values for consistency:
 :serial :three :two"
   ([^Session session query {:keys [consistency serial-consistency
                                    routing-key retry-policy tracing? string-keys?
-                                   indepotent? paging-state
+                                   idempotent? paging-state
                                    fetch-size values timestamp]}]
      (let [^Statement statement (query->statement query values)]
        (set-statement-options! statement routing-key retry-policy
-                               tracing? indepotent?
+                               tracing? idempotent?
                                consistency serial-consistency fetch-size
                                timestamp paging-state)
        (try
@@ -339,12 +339,12 @@ Values for consistency:
 
   For options refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy tracing? indepotent?
+                                   routing-key retry-policy tracing? idempotent?
                                    string-keys? fetch-size values timestamp
                                    paging-state]}]
      (let [^Statement statement (query->statement query values)]
        (set-statement-options! statement routing-key retry-policy
-                               tracing? indepotent?
+                               tracing? idempotent?
                                consistency serial-consistency fetch-size
                                timestamp paging-state)
        (let [^ResultSetFuture rs-future (.executeAsync session statement)
@@ -378,12 +378,12 @@ Values for consistency:
   responsability to handle these how you deem appropriate. For options
   refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy tracing? indepotent?
+                                   routing-key retry-policy tracing? idempotent?
                                    string-keys? fetch-size values timestamp
                                    channel paging-state]}]
      (let [^Statement statement (query->statement query values)]
        (set-statement-options! statement routing-key retry-policy
-                               tracing? indepotent?
+                               tracing? idempotent?
                                consistency serial-consistency fetch-size
                                timestamp paging-state)
        (let [^ResultSetFuture rs-future (.executeAsync session statement)
