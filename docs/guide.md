@@ -66,7 +66,7 @@ The following options are supported:
   Cassandra's PasswordAuthenticator
 
 * `:compression` : Compression supported by the Cassandra binary
-  protocol. Can be `:none` or `:snappy`.
+  protocol. Can be `:none`, `:snappy` or `:lz4`.
 
 * `:ssl?`: enables/disables SSL
 
