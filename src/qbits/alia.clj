@@ -26,7 +26,7 @@
     FutureCallback)
    (java.nio ByteBuffer)))
 
-(defn get-executor
+(defn ^:no-doc get-executor
   [x]
   (or x (MoreExecutors/sameThreadExecutor)))
 
@@ -440,7 +440,7 @@ Values for consistency:
   ([^Session session query]
      (execute-chan-buffered session query {})))
 
-(defn ^:private lazy-query-
+(defn ^:no-doc lazy-query-
   [session query pred coll opts]
   (lazy-cat coll
             (when query
