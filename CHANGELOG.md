@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.5.0
+## 2.5.1
 
 * Add simple callback based alia/execute-async (takes :success and/or
   :error functions via option map)
