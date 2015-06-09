@@ -328,7 +328,36 @@ Values for consistency:
            (throw (ex->ex-info err {:query statement :values values}))))))
   ;; to support old syle api with unrolled args
   ([^Session session query]
-     (execute session query {})))
+   (execute session query {})))
+
+(defn execute-async
+  "Same execute but async and takes optional :success and :error
+  callback functions via options. For options refer to
+  `qbits.alia/execute` doc"
+  ([^Session session query {:keys [executor consistency serial-consistency
+                                   routing-key retry-policy tracing? idempotent?
+                                   string-keys? fetch-size values timestamp
+                                   paging-state success error]}]
+   (let [^Statement statement (query->statement query values)]
+     (set-statement-options! statement routing-key retry-policy
+                             tracing? idempotent?
+                             consistency serial-consistency fetch-size
+                             timestamp paging-state)
+     (let [^ResultSetFuture rs-future (.executeAsync session statement)
+           ch (async/chan 1)]
+       (Futures/addCallback
+        rs-future
+        (reify FutureCallback
+          (onSuccess [_ result]
+            (when success
+              (success (codec/result-set->maps (.get rs-future) string-keys?))))
+          (onFailure [_ ex]
+            (when error
+              (error ex))))
+        (get-executor executor))
+       ch)))
+  ([^Session session query]
+   (execute-async session query {})))
 
 (defn execute-chan
   "Same as execute, but returns a clojure.core.async/chan that is

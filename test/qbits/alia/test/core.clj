@@ -147,6 +147,10 @@
   (is (= user-data-set
          (async/<!! (execute-chan *session* "select * from users;"))))
 
+  (let [p (promise)]
+    (execute-async *session* "select * from users;"
+                   {:success (fn [r] (deliver p r))})
+    (is (= user-data-set @p)))
 
   (let [p (promise)]
     (async/take! (execute-chan *session* "select * from users;")

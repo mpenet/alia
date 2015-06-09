@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.5.0
+
+* Add simple callback based alia/execute-async (takes :success and/or
+  :error functions via option map)
+
 ## 2.4.0
 
 * Use java-driver 2.1.6
