@@ -252,7 +252,7 @@ pools/connections"
 
   String
   (query->statement [q values]
-    (SimpleStatement. q (to-array values)))
+    (SimpleStatement. q (to-array (map codec/encode values))))
 
   clojure.lang.IPersistentMap
   (query->statement [q values]
