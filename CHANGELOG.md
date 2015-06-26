@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.5.2
+
+* fix some bugs in the nippy encoder
+
 ## 2.5.1
 
 * Add simple callback based alia/execute-async (takes :success and/or
