@@ -14,7 +14,7 @@
   nippy, this might break prepared statements with cassandra
   collections. For more fine grained control you can use serializable!
   and it's encoder"
-  ([] (set-nippy-collection-encoder! {}))
+  ([] (set-nippy-collection-encoder! nil))
   ([opts]
    (extend-protocol codec/PCodec
      clojure.lang.IPersistentCollection
@@ -40,7 +40,7 @@
 Encoding is manual, and only applied to values that are marked by
 calling serializable! on them. Takes a map or nippy options to be passed
   to thaw/freeze."
-  ([] (set-nippy-serializable-encoder! {}))
+  ([] (set-nippy-serializable-encoder! nil))
   ([opts]
    (extend-protocol codec/PCodec
      java.nio.ByteBuffer
@@ -48,7 +48,7 @@ calling serializable! on them. Takes a map or nippy options to be passed
      (decode [bb]
        (nippy/thaw (Bytes/getArray bb) opts))
 
-     qbits.alia.codec.nippy.NippySerializable
+     NippySerializable
      (encode [x]
        (ByteBuffer/wrap (nippy/freeze (.data x) opts))))))
 
