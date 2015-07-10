@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.5.3
+
+* Fix possible chan leaks/flow break in async error handling (thanks to @d-t-w).
+See issue #29 for details.
+
 ## 2.5.2
 
 * fix some bugs in the nippy encoder
