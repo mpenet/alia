@@ -17,3 +17,5 @@ pom.xml
 /.lein-env
 /.lein-repl-history
 /.nrepl-port
+*.iml
+.idea
