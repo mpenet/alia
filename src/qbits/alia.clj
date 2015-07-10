@@ -350,7 +350,10 @@ Values for consistency:
         (reify FutureCallback
           (onSuccess [_ result]
             (when success
-              (success (codec/result-set->maps (.get rs-future) string-keys?))))
+              (try
+                (success (codec/result-set->maps (.get rs-future) string-keys?))
+                (catch Exception err
+                  (error (ex->ex-info err {:query statement :values values}))))))
           (onFailure [_ ex]
             (when error
               (error ex))))
@@ -382,7 +385,10 @@ Values for consistency:
           rs-future
           (reify FutureCallback
             (onSuccess [_ result]
-              (async/put! ch (codec/result-set->maps (.get rs-future) string-keys?))
+              (try
+                (async/put! ch (codec/result-set->maps (.get rs-future) string-keys?))
+                (catch Exception err
+                  (async/put! ch (ex->ex-info err {:query statement :values values}))))
               (async/close! ch))
             (onFailure [_ ex]
               (async/put! ch (ex->ex-info ex {:query statement :values values}))
@@ -426,11 +432,14 @@ Values for consistency:
           (reify FutureCallback
             (onSuccess [_ result]
               (async/go
-                (loop [rows (codec/result-set->maps
-                             (.get ^ResultSetFuture rs-future) string-keys?)]
-                 (when-let [row (first rows)]
-                   (when (async/>! ch row)
-                     (recur (rest rows)))))
+                (try
+                  (loop [rows (codec/result-set->maps
+                                (.get ^ResultSetFuture rs-future) string-keys?)]
+                    (when-let [row (first rows)]
+                      (when (async/>! ch row)
+                        (recur (rest rows)))))
+                  (catch Exception err
+                    (async/put! ch (ex->ex-info err {:query statement :values values}))))
                 (async/close! ch)))
             (onFailure [_ ex]
               (async/put! ch (ex->ex-info ex {:query statement :values values}))
