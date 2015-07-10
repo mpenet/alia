@@ -41,8 +41,12 @@
           rs-future
           (reify FutureCallback
             (onSuccess [_ result]
-              (l/success async-result
-                         (codec/result-set->maps (.get rs-future) string-keys?)))
+              (try
+                (l/success async-result
+                           (codec/result-set->maps (.get rs-future) string-keys?))
+                (catch Exception err
+                  (l/error async-result
+                           (ex->ex-info err {:query statement :values values})))))
             (onFailure [_ ex]
               (l/error async-result
                        (ex->ex-info ex {:query statement :values values}))))
