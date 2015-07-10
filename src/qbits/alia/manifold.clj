@@ -42,8 +42,12 @@
           rs-future
           (reify FutureCallback
             (onSuccess [_ result]
-              (d/success! deferred
-                          (codec/result-set->maps (.get rs-future) string-keys?)))
+              (try
+                (d/success! deferred
+                            (codec/result-set->maps (.get rs-future) string-keys?))
+                (catch Exception err
+                  (d/error! deferred
+                            (ex->ex-info err {:query statement :values values})))))
             (onFailure [_ ex]
               (d/error! deferred
                         (ex->ex-info ex {:query statement :values values}))))
@@ -83,10 +87,13 @@
           rs-future
           (reify FutureCallback
             (onSuccess [_ result]
-              (loop [rows (codec/result-set->maps (.get rs-future) string-keys?)]
-                (when-let [row (first rows)]
-                  (when (s/put! stream row)
-                    (recur (rest rows)))))
+              (try
+                (loop [rows (codec/result-set->maps (.get rs-future) string-keys?)]
+                  (when-let [row (first rows)]
+                    (when (s/put! stream row)
+                      (recur (rest rows)))))
+                (catch Exception err
+                  (s/put! stream (ex->ex-info err {:query statement :values values}))))
               (s/close! stream))
             (onFailure [_ ex]
               (s/put! stream (ex->ex-info ex {:query statement :values values}))
