@@ -239,48 +239,71 @@ pools/connections"
                           "Query binding failed")))))
 
 (defprotocol ^:no-doc PStatement
-  (^:no-doc query->statement
+  (^:no-doc -query->statement
     [q values] "Encodes input into a Statement instance"))
 
 (extend-protocol PStatement
   Statement
-  (query->statement [q _] q)
+  (-query->statement [q _] q)
 
   PreparedStatement
-  (query->statement [q values]
+  (-query->statement [q values]
     (bind q values))
 
   String
-  (query->statement [q values]
+  (-query->statement [q values]
     (SimpleStatement. q (to-array (map codec/encode values))))
 
   clojure.lang.IPersistentMap
-  (query->statement [q values]
-    (query->statement (hayt-query-fn q) values)))
+  (-query->statement [q values]
+    (-query->statement (hayt-query-fn q) values)))
+
+(defn query->statement
+  [q v]
+  (try (-query->statement q v)
+       (catch Exception ex
+         (throw (ex->ex-info ex {:query q
+                                 :type ::statement-error
+                                 :values v}
+                             "Statement creation failed")))))
 
 (defn ^:no-doc set-statement-options!
   [^Statement statement routing-key retry-policy tracing? idempotent?
    consistency serial-consistency fetch-size timestamp paging-state]
-  (when routing-key
-    (.setRoutingKey ^SimpleStatement statement
-                    ^ByteBuffer routing-key))
-  (when retry-policy
-    (.setRetryPolicy statement retry-policy))
-  (when tracing?
-    (.enableTracing statement))
-  (when idempotent?
-    (.setIdempotent statement idempotent?))
-  (when fetch-size
-    (.setFetchSize statement fetch-size))
-  (when timestamp
-    (.setDefaultTimestamp statement timestamp))
-  (when paging-state
-    (.setPagingState statement paging-state))
-  (when serial-consistency
-    (.setSerialConsistencyLevel statement
-                                (enum/consistency-level serial-consistency)))
-  (when consistency
-    (.setConsistencyLevel statement (enum/consistency-level consistency))))
+  (try
+    (when routing-key
+      (.setRoutingKey ^SimpleStatement statement
+                      ^ByteBuffer routing-key))
+    (when retry-policy
+      (.setRetryPolicy statement retry-policy))
+    (when tracing?
+      (.enableTracing statement))
+    (when idempotent?
+      (.setIdempotent statement idempotent?))
+    (when fetch-size
+      (.setFetchSize statement fetch-size))
+    (when timestamp
+      (.setDefaultTimestamp statement timestamp))
+    (when paging-state
+      (.setPagingState statement paging-state))
+    (when serial-consistency
+      (.setSerialConsistencyLevel statement
+                                  (enum/consistency-level serial-consistency)))
+    (when consistency
+      (.setConsistencyLevel statement (enum/consistency-level consistency)))
+    (catch Exception ex
+      (throw (ex->ex-info ex {:query statement
+                              :type ::statement-options-error
+                              :options {:routing-key routing-key
+                                        :retry-policy retry-policy
+                                        :tracing? tracing?
+                                        :idempotent? idempotent?
+                                        :consistency consistency
+                                        :serial-consistency serial-consistency
+                                        :fetch-size fetch-size
+                                        :timestamp timestamp
+                                        :paging-state paging-state}}
+                          "Statement options error")))))
 
 (defn execute
   "Executes a query against a session.
@@ -374,27 +397,31 @@ Values for consistency:
                                    routing-key retry-policy tracing? idempotent?
                                    string-keys? fetch-size values timestamp
                                    paging-state]}]
-     (let [^Statement statement (query->statement query values)]
-       (set-statement-options! statement routing-key retry-policy
-                               tracing? idempotent?
-                               consistency serial-consistency fetch-size
-                               timestamp paging-state)
-       (let [^ResultSetFuture rs-future (.executeAsync session statement)
-             ch (async/chan 1)]
-         (Futures/addCallback
-          rs-future
-          (reify FutureCallback
-            (onSuccess [_ result]
-              (try
-                (async/put! ch (codec/result-set->maps (.get rs-future) string-keys?))
-                (catch Exception err
-                  (async/put! ch (ex->ex-info err {:query statement :values values}))))
-              (async/close! ch))
-            (onFailure [_ ex]
-              (async/put! ch (ex->ex-info ex {:query statement :values values}))
-              (async/close! ch)))
-          (get-executor executor))
-         ch)))
+   (let [ch (async/chan 1)]
+     (try
+       (let [^Statement statement (query->statement query values)]
+         (set-statement-options! statement routing-key retry-policy
+                                 tracing? idempotent?
+                                 consistency serial-consistency fetch-size
+                                 timestamp paging-state)
+         (let [^ResultSetFuture rs-future (.executeAsync session statement)]
+           (Futures/addCallback
+            rs-future
+            (reify FutureCallback
+              (onSuccess [_ result]
+                (try
+                  (async/put! ch (codec/result-set->maps (.get rs-future) string-keys?))
+                  (catch Exception err
+                    (async/put! ch (ex->ex-info err {:query statement :values values}))))
+                (async/close! ch))
+              (onFailure [_ ex]
+                (async/put! ch (ex->ex-info ex {:query statement :values values}))
+                (async/close! ch)))
+            (get-executor executor))))
+       (catch Throwable t
+         (async/put! ch t)
+         (async/close! ch)))
+     ch))
   ([^Session session query]
      (execute-chan session query {})))
 
@@ -416,36 +443,40 @@ Values for consistency:
                                    routing-key retry-policy tracing? idempotent?
                                    string-keys? fetch-size values timestamp
                                    channel paging-state]}]
-     (let [^Statement statement (query->statement query values)]
-       (set-statement-options! statement routing-key retry-policy
-                               tracing? idempotent?
-                               consistency serial-consistency fetch-size
-                               timestamp paging-state)
-       (let [^ResultSetFuture rs-future (.executeAsync session statement)
-             ch (or channel (async/chan (or fetch-size (-> session
-                                                           .getCluster
-                                                           .getConfiguration
-                                                           .getQueryOptions
-                                                           .getFetchSize))))]
-         (Futures/addCallback
-          rs-future
-          (reify FutureCallback
-            (onSuccess [_ result]
-              (async/go
-                (try
-                  (loop [rows (codec/result-set->maps
-                                (.get ^ResultSetFuture rs-future) string-keys?)]
-                    (when-let [row (first rows)]
-                      (when (async/>! ch row)
-                        (recur (rest rows)))))
-                  (catch Exception err
-                    (async/put! ch (ex->ex-info err {:query statement :values values}))))
+   (let [ch (or channel (async/chan (or fetch-size (-> session
+                                                       .getCluster
+                                                       .getConfiguration
+                                                       .getQueryOptions
+                                                       .getFetchSize))))]
+     (try
+       (let [^Statement statement (query->statement query values)]
+         (set-statement-options! statement routing-key retry-policy
+                                 tracing? idempotent?
+                                 consistency serial-consistency fetch-size
+                                 timestamp paging-state)
+         (let [^ResultSetFuture rs-future (.executeAsync session statement)]
+           (Futures/addCallback
+            rs-future
+            (reify FutureCallback
+              (onSuccess [_ result]
+                (async/go
+                  (try
+                    (loop [rows (codec/result-set->maps
+                                 (.get ^ResultSetFuture rs-future) string-keys?)]
+                      (when-let [row (first rows)]
+                        (when (async/>! ch row)
+                          (recur (rest rows)))))
+                    (catch Exception err
+                      (async/put! ch (ex->ex-info err {:query statement :values values}))))
+                  (async/close! ch)))
+              (onFailure [_ ex]
+                (async/put! ch (ex->ex-info ex {:query statement :values values}))
                 (async/close! ch)))
-            (onFailure [_ ex]
-              (async/put! ch (ex->ex-info ex {:query statement :values values}))
-              (async/close! ch)))
-          (get-executor executor))
-         ch)))
+            (get-executor executor))))
+       (catch Throwable t
+         (async/put! ch t)
+         (async/close! ch)))
+     ch))
   ([^Session session query]
      (execute-chan-buffered session query {})))
 

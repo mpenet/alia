@@ -211,7 +211,25 @@
     (let [stmt "select * from foo where bar = ?;" values [1 2]]
       (is (:query (try @(bind (prepare *session* stmt) values)
                        (catch Exception ex
-                         (ex-data ex))))))))
+                         (ex-data ex))))))
+
+    (is (instance? clojure.lang.ExceptionInfo
+                   (async/<!! (execute-chan *session* stmt))))
+    (is (instance? clojure.lang.ExceptionInfo
+                   (async/<!! (execute-chan *session* "select * from users;"
+                                            {:values ["foo"]}))))
+    (is (instance? clojure.lang.ExceptionInfo
+                   (async/<!! (execute-chan *session* "select * from users;"
+                                            {:fetch-size :wtf}))))
+
+    (is (instance? clojure.lang.ExceptionInfo
+                   (async/<!! (execute-chan-buffered *session* stmt))))
+    (is (instance? clojure.lang.ExceptionInfo
+                   (async/<!! (execute-chan-buffered *session* "select * from users;"
+                                            {:values ["foo"]}))))
+    (is (instance? clojure.lang.ExceptionInfo
+                   (async/<!! (execute-chan-buffered *session* "select * from users;"
+                                            {:retry-policy :wtf}))))))
 
 (deftest test-lazy-query
   (is (= 10 (count (take 10 (lazy-query *session*

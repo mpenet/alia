@@ -1,9 +1,9 @@
-(defproject cc.qbits/alia "2.5.3"
+(defproject cc.qbits/alia "2.6.0-SNAPSHOT"
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.7.0-RC2"]
+  :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/core.memoize "0.5.6"
                   :exclusions [org.clojure/core.cache]]
                  [org.clojure/core.cache "0.6.4"]
