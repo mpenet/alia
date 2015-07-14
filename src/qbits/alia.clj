@@ -366,8 +366,7 @@ Values for consistency:
                              tracing? idempotent?
                              consistency serial-consistency fetch-size
                              timestamp paging-state)
-     (let [^ResultSetFuture rs-future (.executeAsync session statement)
-           ch (async/chan 1)]
+     (let [^ResultSetFuture rs-future (.executeAsync session statement)]
        (Futures/addCallback
         rs-future
         (reify FutureCallback
@@ -380,8 +379,7 @@ Values for consistency:
           (onFailure [_ ex]
             (when error
               (error ex))))
-        (get-executor executor))
-       ch)))
+        (get-executor executor)))))
   ([^Session session query]
    (execute-async session query {})))
 
