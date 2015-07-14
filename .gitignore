@@ -11,8 +11,6 @@ pom.xml
 .lein-plugins
 /doc
 /src/qbits/perf.clj
-/test/log4j.properties
-/src/log4j.properties
 /pom.xml.asc
 /.lein-env
 /.lein-repl-history
