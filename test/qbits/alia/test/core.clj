@@ -12,9 +12,7 @@
    [qbits.tardis :refer :all]
    [qbits.hayt :refer :all]
    [clojure.core.async :as async]
-   [lamina.core :as lamina]
-   [clojure.java.io :as io]
-   [clojure.java.shell :as shell])
+   [lamina.core :as lamina])
   (:import
    (com.datastax.driver.core Statement)))
 
@@ -200,6 +198,16 @@
                      (catch Exception ex
                        (ex-data ex)))))
 
+    (is (:query (try @(la/execute *session* "select * from users;"
+                                  {:values ["foo"]})
+                     (catch Exception ex
+                       (ex-data ex)))))
+
+    (is (:options (try @(la/execute *session* "select * from users;"
+                                  {:fetch-size :wtf})
+                     (catch Exception ex
+                       (ex-data ex)))))
+
     (is (:query (try @(la/execute *session* stmt)
                      (catch Exception ex
                        (ex-data ex)))))
@@ -229,7 +237,29 @@
                                             {:values ["foo"]}))))
     (is (instance? clojure.lang.ExceptionInfo
                    (async/<!! (execute-chan-buffered *session* "select * from users;"
-                                            {:retry-policy :wtf}))))))
+                                            {:retry-policy :wtf}))))
+
+    (is (:query (try @(ma/execute *session* "select * from users;"
+                                  {:values ["foo"]})
+                     (catch Exception ex
+                       (ex-data ex)))))
+
+    (is (:options (try @(ma/execute *session* "select * from users;"
+                                    {:fetch-size :wtf})
+                       (catch Exception ex
+                         (ex-data ex)))))
+
+    (let [p (promise)]
+      (execute-async *session* "select * from users;"
+                     {:values  ["foo"]
+                      :error (fn [r] (deliver p r))})
+      (is (:query (ex-data @p))))
+
+    (let [p (promise)]
+      (execute-async *session* "select * from users;"
+                          {:fetch-size :wtf
+                           :error (fn [r] (deliver p r))})
+      (:options (ex-data @p)))))
 
 (deftest test-lazy-query
   (is (= 10 (count (take 10 (lazy-query *session*

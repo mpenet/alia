@@ -379,7 +379,7 @@ Values for consistency:
                      (error (ex->ex-info err {:query statement :values values}))))))
              (onFailure [_ ex]
                (when error
-                 (error ex))))
+                 (error (ex->ex-info ex {:query statement :values values})))))
            (get-executor executor))))
      (catch Throwable t
        (error t))))
