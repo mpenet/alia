@@ -361,25 +361,28 @@ Values for consistency:
                                    routing-key retry-policy tracing? idempotent?
                                    string-keys? fetch-size values timestamp
                                    paging-state success error]}]
-   (let [^Statement statement (query->statement query values)]
-     (set-statement-options! statement routing-key retry-policy
-                             tracing? idempotent?
-                             consistency serial-consistency fetch-size
-                             timestamp paging-state)
-     (let [^ResultSetFuture rs-future (.executeAsync session statement)]
-       (Futures/addCallback
-        rs-future
-        (reify FutureCallback
-          (onSuccess [_ result]
-            (when success
-              (try
-                (success (codec/result-set->maps (.get rs-future) string-keys?))
-                (catch Exception err
-                  (error (ex->ex-info err {:query statement :values values}))))))
-          (onFailure [_ ex]
-            (when error
-              (error ex))))
-        (get-executor executor)))))
+   (try
+     (let [^Statement statement (query->statement query values)]
+       (set-statement-options! statement routing-key retry-policy
+                               tracing? idempotent?
+                               consistency serial-consistency fetch-size
+                               timestamp paging-state)
+       (let [^ResultSetFuture rs-future (.executeAsync session statement)]
+         (Futures/addCallback
+           rs-future
+           (reify FutureCallback
+             (onSuccess [_ result]
+               (when success
+                 (try
+                   (success (codec/result-set->maps (.get rs-future) string-keys?))
+                   (catch Exception err
+                     (error (ex->ex-info err {:query statement :values values}))))))
+             (onFailure [_ ex]
+               (when error
+                 (error ex))))
+           (get-executor executor))))
+     (catch Throwable t
+       (error t))))
   ([^Session session query]
    (execute-async session query {})))
 
