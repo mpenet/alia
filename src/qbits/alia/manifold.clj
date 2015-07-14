@@ -26,33 +26,36 @@
                                    serial-consistency routing-key
                                    retry-policy tracing? string-keys? idempotent?
                                    fetch-size timestamp values paging-state]}]
-     (let [^Statement statement (query->statement query values)]
-       (set-statement-options! statement routing-key retry-policy
-                               tracing? idempotent?
-                               consistency serial-consistency fetch-size
-                               timestamp paging-state)
-       (let [^ResultSetFuture rs-future
-             (try
-               (.executeAsync session statement)
-               (catch Exception ex
-                 (throw (ex->ex-info ex {:query statement :values values}))))
-             deferred (d/deferred)]
-         (d/on-realized deferred success error)
-         (Futures/addCallback
-          rs-future
-          (reify FutureCallback
-            (onSuccess [_ result]
-              (try
-                (d/success! deferred
-                            (codec/result-set->maps (.get rs-future) string-keys?))
-                (catch Exception err
-                  (d/error! deferred
-                            (ex->ex-info err {:query statement :values values})))))
-            (onFailure [_ ex]
-              (d/error! deferred
-                        (ex->ex-info ex {:query statement :values values}))))
-          (get-executor executor))
-         deferred)))
+   (let [deferred (d/deferred)]
+     (try
+       (let [^Statement statement (query->statement query values)]
+         (set-statement-options! statement routing-key retry-policy
+                                 tracing? idempotent?
+                                 consistency serial-consistency fetch-size
+                                 timestamp paging-state)
+         (let [^ResultSetFuture rs-future
+               (try
+                 (.executeAsync session statement)
+                 (catch Exception ex
+                   (throw (ex->ex-info ex {:query statement :values values}))))]
+           (d/on-realized deferred success error)
+           (Futures/addCallback
+             rs-future
+             (reify FutureCallback
+               (onSuccess [_ result]
+                 (try
+                   (d/success! deferred
+                               (codec/result-set->maps (.get rs-future) string-keys?))
+                   (catch Exception err
+                     (d/error! deferred
+                               (ex->ex-info err {:query statement :values values})))))
+               (onFailure [_ ex]
+                 (d/error! deferred
+                           (ex->ex-info ex {:query statement :values values}))))
+             (get-executor executor))))
+       (catch Throwable t
+         (d/error! deferred t)))
+     deferred))
   ([^Session session query]
      (execute session query {})))
 
@@ -72,33 +75,37 @@
                                    routing-key retry-policy tracing?
                                    string-keys? idempotent? fetch-size values
                                    stream timestamp paging-state]}]
-     (let [^Statement statement (query->statement query values)]
-       (set-statement-options! statement routing-key retry-policy
-                               tracing? idempotent?
-                               consistency serial-consistency fetch-size
-                               timestamp paging-state)
-       (let [^ResultSetFuture rs-future (.executeAsync session statement)
-             stream (or stream
-                        (s/stream (or fetch-size (-> session .getCluster
-                                                     .getConfiguration
-                                                     .getQueryOptions
-                                                     .getFetchSize))))]
-         (Futures/addCallback
-          rs-future
-          (reify FutureCallback
-            (onSuccess [_ result]
-              (try
-                (loop [rows (codec/result-set->maps (.get rs-future) string-keys?)]
-                  (when-let [row (first rows)]
-                    (when (s/put! stream row)
-                      (recur (rest rows)))))
-                (catch Exception err
-                  (s/put! stream (ex->ex-info err {:query statement :values values}))))
-              (s/close! stream))
-            (onFailure [_ ex]
-              (s/put! stream (ex->ex-info ex {:query statement :values values}))
-              (s/close! stream)))
-          (get-executor executor))
-         stream)))
+   (let [stream (or stream
+                    (s/stream (or fetch-size (-> session .getCluster
+                                                 .getConfiguration
+                                                 .getQueryOptions
+                                                 .getFetchSize))))]
+     (try
+       (let [^Statement statement (query->statement query values)]
+         (set-statement-options! statement routing-key retry-policy
+                                 tracing? idempotent?
+                                 consistency serial-consistency fetch-size
+                                 timestamp paging-state)
+         (let [^ResultSetFuture rs-future (.executeAsync session statement)]
+           (Futures/addCallback
+             rs-future
+             (reify FutureCallback
+               (onSuccess [_ result]
+                 (try
+                   (loop [rows (codec/result-set->maps (.get rs-future) string-keys?)]
+                     (when-let [row (first rows)]
+                       (when (s/put! stream row)
+                         (recur (rest rows)))))
+                   (catch Exception err
+                     (s/put! stream (ex->ex-info err {:query statement :values values}))))
+                 (s/close! stream))
+               (onFailure [_ ex]
+                 (s/put! stream (ex->ex-info ex {:query statement :values values}))
+                 (s/close! stream)))
+             (get-executor executor))))
+       (catch Throwable t
+         (s/put! stream t)
+         (s/close! stream)))
+     stream))
   ([^Session session query]
      (execute-buffered session query {})))
