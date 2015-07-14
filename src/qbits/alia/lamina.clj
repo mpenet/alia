@@ -25,33 +25,36 @@
                                    serial-consistency routing-key
                                    retry-policy tracing? string-keys? idempotent?
                                    fetch-size values timestamp paging-state]}]
-     (let [^Statement statement (query->statement query values)]
-       (set-statement-options! statement routing-key retry-policy
-                               tracing? idempotent?
-                               consistency serial-consistency fetch-size
-                               timestamp paging-state)
-       (let [^ResultSetFuture rs-future
-             (try
-               (.executeAsync session statement)
-               (catch Exception ex
-                 (throw (ex->ex-info ex {:query statement :values values}))))
-             async-result (l/result-channel)]
-         (l/on-realized async-result success error)
-         (Futures/addCallback
-          rs-future
-          (reify FutureCallback
-            (onSuccess [_ result]
-              (try
-                (l/success async-result
-                           (codec/result-set->maps (.get rs-future) string-keys?))
-                (catch Exception err
-                  (l/error async-result
-                           (ex->ex-info err {:query statement :values values})))))
-            (onFailure [_ ex]
-              (l/error async-result
-                       (ex->ex-info ex {:query statement :values values}))))
-          (get-executor executor))
-         async-result)))
+   (let [async-result (l/result-channel)]
+     (try
+       (let [^Statement statement (query->statement query values)]
+         (set-statement-options! statement routing-key retry-policy
+                                 tracing? idempotent?
+                                 consistency serial-consistency fetch-size
+                                 timestamp paging-state)
+         (let [^ResultSetFuture rs-future
+               (try
+                 (.executeAsync session statement)
+                 (catch Exception ex
+                   (throw (ex->ex-info ex {:query statement :values values}))))]
+           (l/on-realized async-result success error)
+           (Futures/addCallback
+             rs-future
+             (reify FutureCallback
+               (onSuccess [_ result]
+                 (try
+                   (l/success async-result
+                              (codec/result-set->maps (.get rs-future) string-keys?))
+                   (catch Exception err
+                     (l/error async-result
+                              (ex->ex-info err {:query statement :values values})))))
+               (onFailure [_ ex]
+                 (l/error async-result
+                          (ex->ex-info ex {:query statement :values values}))))
+             (get-executor executor))))
+       (catch Throwable t
+         (l/error async-result t)))
+     async-result))
     ([^Session session query]
        (execute session query {})))
 
