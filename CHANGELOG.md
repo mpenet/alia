@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.6.0
+
+* Removed deprecated Lamina interface
+
+* improve decoding performance
+
+* more uniform exception handling in async modes (all exceptions are
+returned in chan/deferred/function depending on the context)
+
 ## 2.5.3
 
 * Fix possible chan leaks/flow break in async error handling (thanks to @d-t-w).
