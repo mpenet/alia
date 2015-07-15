@@ -7,6 +7,7 @@
                  [org.clojure/core.memoize "0.5.6"
                   :exclusions [org.clojure/core.cache]]
                  [org.clojure/core.cache "0.6.4"]
+                 [cc.qbits/commons "0.4.0"]
                  [cc.qbits/hayt "3.0.0-rc1"]
                  [com.datastax.cassandra/cassandra-driver-core "2.1.6"]
                  [com.datastax.cassandra/cassandra-driver-dse "2.1.6"]
