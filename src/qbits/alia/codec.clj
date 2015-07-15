@@ -19,7 +19,8 @@
     statements (usefull for external libs such as joda time)"))
 
 (declare deserialize)
-(defmacro make-deserializers [[x idx col-type] & specs]
+
+(defmacro defdeserializers [[x idx col-type] & specs]
   (let [args [(vary-meta x assoc :tag "com.datastax.driver.core.GettableByIndexData")
               (vary-meta idx assoc :tag "java.lang.Integer")
               (vary-meta col-type assoc :tag "com.datastax.driver.core.DataType")]]
@@ -45,7 +46,7 @@
   [^"[Lcom.datastax.driver.core.DataType;" type-args pred]
   (.asJavaClass ^DataType (pred type-args)))
 
-(make-deserializers [x idx col-type]
+(defdeserializers [x idx col-type]
  :ascii     (decode (.getString x idx))
  :bigint    (decode (.getLong x idx))
  :blob      (decode (.getBytes x idx))

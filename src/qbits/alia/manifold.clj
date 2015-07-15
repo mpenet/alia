@@ -33,11 +33,7 @@
                                  tracing? idempotent?
                                  consistency serial-consistency fetch-size
                                  timestamp paging-state)
-         (let [^ResultSetFuture rs-future
-               (try
-                 (.executeAsync session statement)
-                 (catch Exception ex
-                   (throw (ex->ex-info ex {:query statement :values values}))))]
+         (let [^ResultSetFuture rs-future (.executeAsync session statement)]
            (d/on-realized deferred success error)
            (Futures/addCallback
              rs-future

@@ -3,7 +3,6 @@
    [clojure.test :refer :all]
    [clojure.data :refer :all]
    [qbits.alia :refer :all]
-   [qbits.alia.lamina :as la]
    [qbits.alia.manifold :as ma]
    [qbits.alia.codec :refer :all]
    [qbits.alia.codec.joda-time :refer :all]
@@ -11,8 +10,7 @@
    [qbits.alia.codec.nippy :refer :all]
    [qbits.tardis :refer :all]
    [qbits.hayt :refer :all]
-   [clojure.core.async :as async]
-   [lamina.core :as lamina])
+   [clojure.core.async :as async])
   (:import
    (com.datastax.driver.core Statement)))
 
@@ -121,25 +119,10 @@
   (is (= user-data-set
          (execute *session* (select :users)))))
 
-(deftest test-lamina-execute
-  ;; promise
-  (is (= user-data-set
-         @(la/execute *session* "select * from users;")))
-  ;; callback
-  (let [p (promise)]
-    (la/execute *session* "select * from users;"
-                   {:success (fn [r] (deliver p r))})
-    (is (= user-data-set @p))))
-
 (deftest test-manifold-execute
   ;; promise
   (is (= user-data-set
-         @(ma/execute *session* "select * from users;")))
-  ;; callback
-  (let [p (promise)]
-    (la/execute *session* "select * from users;"
-                {:success (fn [r] (deliver p r))})
-    (is (= user-data-set @p))))
+         @(ma/execute *session* "select * from users;"))))
 
 (deftest test-core-async-execute
   (is (= user-data-set
@@ -198,20 +181,6 @@
                      (catch Exception ex
                        (ex-data ex)))))
 
-    (is (:query (try @(la/execute *session* "select * from users;"
-                                  {:values ["foo"]})
-                     (catch Exception ex
-                       (ex-data ex)))))
-
-    (is (:options (try @(la/execute *session* "select * from users;"
-                                  {:fetch-size :wtf})
-                     (catch Exception ex
-                       (ex-data ex)))))
-
-    (is (:query (try @(la/execute *session* stmt)
-                     (catch Exception ex
-                       (ex-data ex)))))
-
     (is (:query (try @(prepare *session* stmt)
                      (catch Exception ex
                        (ex-data ex)))))
@@ -226,7 +195,7 @@
     (is (instance? clojure.lang.ExceptionInfo
                    (async/<!! (execute-chan *session* "select * from users;"
                                             {:values ["foo"]}))))
-    (is (instance? clojure.lang.ExceptionInfo
+    (is (instance? Throwable
                    (async/<!! (execute-chan *session* "select * from users;"
                                             {:fetch-size :wtf}))))
 
@@ -235,19 +204,20 @@
     (is (instance? clojure.lang.ExceptionInfo
                    (async/<!! (execute-chan-buffered *session* "select * from users;"
                                             {:values ["foo"]}))))
-    (is (instance? clojure.lang.ExceptionInfo
+    (is (instance? Throwable
                    (async/<!! (execute-chan-buffered *session* "select * from users;"
                                             {:retry-policy :wtf}))))
 
-    (is (:query (try @(ma/execute *session* "select * from users;"
+    (is (instance? Throwable
+                   (try @(ma/execute *session* "select * from users;"
                                   {:values ["foo"]})
-                     (catch Exception ex
-                       (ex-data ex)))))
+                     (catch Exception ex ex))))
 
-    (is (:options (try @(ma/execute *session* "select * from users;"
-                                    {:fetch-size :wtf})
-                       (catch Exception ex
-                         (ex-data ex)))))
+    (is (instance? Throwable
+                   (try @(ma/execute *session* "select * from users;"
+                                     {:fetch-size :wtf})
+                        (catch Exception ex
+                          ex))))
 
     (let [p (promise)]
       (execute-async *session* "select * from users;"
@@ -259,7 +229,7 @@
       (execute-async *session* "select * from users;"
                           {:fetch-size :wtf
                            :error (fn [r] (deliver p r))})
-      (:options (ex-data @p)))))
+      (instance? Throwable @p))))
 
 (deftest test-lazy-query
   (is (= 10 (count (take 10 (lazy-query *session*
@@ -290,15 +260,6 @@
           result-set (execute *session* query {:fetch-size 3})
           ^Statement statement (get-private-field result-set "statement")]
       (is (= 3 (.getFetchSize statement))))))
-
-(deftest test-fetch-size-async
-  (with-redefs [result-set->maps (fn [result-set string-keys?]
-                                   result-set)]
-    (let [query "select * from items;"
-          result-channel (la/execute *session* query {:fetch-size 4})
-          result-set (lamina/wait-for-result result-channel)
-          ^Statement statement (get-private-field result-set "statement")]
-      (is (= 4 (.getFetchSize statement))))))
 
 (deftest test-fetch-size-chan
   (with-redefs [result-set->maps (fn [result-set string-keys?]
