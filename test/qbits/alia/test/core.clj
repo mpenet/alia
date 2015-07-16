@@ -9,7 +9,7 @@
    [qbits.alia.codec.eaio-uuid :refer :all]
    [qbits.alia.codec.nippy :refer :all]
    [qbits.tardis :refer :all]
-   [qbits.hayt :refer :all]
+   [qbits.hayt :as h]
    [clojure.core.async :as async])
   (:import
    (com.datastax.driver.core Statement)))
@@ -117,7 +117,7 @@
          (execute *session* "select * from users;")))
 
   (is (= user-data-set
-         (execute *session* (select :users)))))
+         (execute *session* (h/select :users)))))
 
 (deftest test-manifold-execute
   ;; promise
@@ -149,14 +149,14 @@
 
 (deftest test-prepared
   (let [s-simple (prepare *session* "select * from users;")
-        s-parameterized-simple (prepare *session* (select :users (where {:user_name ?})))
-        s-parameterized-in (prepare *session* (select :users (where [[:in :user_name ?]])))
+        s-parameterized-simple (prepare *session* (h/select :users (h/where {:user_name h/?})))
+        s-parameterized-in (prepare *session* (h/select :users (h/where [[:in :user_name h/?]])))
         s-prepare-types (prepare *session*  "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")
         ;; s-parameterized-set (prepare  "select * from users where emails=?;")
         ;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
         ]
     (is (= user-data-set (execute *session* s-simple)))
-    (is (= [(first user-data-set)] (execute *session* (select :users (where {:user_name ?}))
+    (is (= [(first user-data-set)] (execute *session* (h/select :users (h/where {:user_name h/?}))
                                             {:values ["mpenet"]})))
     (is (= user-data-set (execute *session* s-parameterized-in {:values [["mpenet" "frodo"]]})))
     (is (= [(first user-data-set)]
@@ -164,6 +164,7 @@
     ;; manually  bound
     (is (= [(first user-data-set)]
            (execute *session* (bind s-parameterized-simple ["mpenet"]))))
+
     (is (= [] (execute *session* s-prepare-types {:values ["foobar"
                                                            0
                                                            #uuid "b474e171-7757-449a-87be-d2797d1336e3"
@@ -173,7 +174,9 @@
                                                            [1 2 3 4]
                                                            #{"foo" "bar"}
                                                            {"foo" 123}]})))
-    (execute *session*  "delete from users where user_name = 'foobar';")))
+    (let [delete-q "delete from users where user_name = 'foobar';"]
+      (is (= ()
+             (execute *session* (batch (repeat 3 delete-q))))))))
 
 (deftest test-error
   (let [stmt "slect prout from 1;"]
@@ -233,19 +236,19 @@
 
 (deftest test-lazy-query
   (is (= 10 (count (take 10 (lazy-query *session*
-                                        (select :items
-                                                (limit 2)
-                                                (where {:si (int 0)}))
+                                        (h/select :items
+                                                (h/limit 2)
+                                                (h/where {:si (int 0)}))
                                         (fn [q coll]
-                                          (merge q (where {:si (-> coll last :si inc)}))))))))
+                                          (merge q (h/where {:si (-> coll last :si inc)}))))))))
 
   (is (= 4 (count (take 10 (lazy-query *session*
-                                       (select :items
-                                               (limit 2)
-                                               (where {:si (int 0)}))
+                                       (h/select :items
+                                               (h/limit 2)
+                                               (h/where {:si (int 0)}))
                                        (fn [q coll]
                                          (when (< (-> coll last :si) 3)
-                                           (merge q (where {:si (-> coll last :si inc)}))))))))))
+                                           (merge q (h/where {:si (-> coll last :si inc)}))))))))))
 
 (defn ^:private get-private-field [instance field-name]
   (.get

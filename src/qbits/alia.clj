@@ -9,6 +9,7 @@
    [qbits.alia.cluster-options :as copt])
   (:import
    (com.datastax.driver.core
+    BatchStatement
     BoundStatement
     Cluster
     Cluster$Builder
@@ -254,10 +255,30 @@ pools/connections"
   (query->statement [q values]
     (SimpleStatement. q (to-array (map codec/encode values))))
 
+  BatchStatement
+  (query->statement [bs values]
+    (when values
+      (throw (ex-info {:type ::bind-error}
+                      "You cannot bind values to batch statements directly,
+               if you need to do so use qbits.alia/bind on your statements
+               separately")))
+    bs)
+
   clojure.lang.IPersistentMap
   (query->statement [q values]
     (query->statement (hayt-query-fn q) values)))
 
+(defn batch
+  "Takes a sequence of statements to be executed in batch.
+By default UNLOGGED, you can specify :logged :unlogged :counter as
+  an optional second argument to control the type"
+  ([qs] (batch qs :logged))
+  ([qs type]
+   (let [bs (BatchStatement.
+             (get enum/batch-statement-type type))]
+     (doseq [q qs]
+       (.add bs (query->statement q nil)))
+     bs)))
 
 (defn ^:no-doc set-statement-options!
   [^Statement statement routing-key retry-policy tracing? idempotent?
