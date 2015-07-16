@@ -270,7 +270,7 @@ pools/connections"
 
 (defn batch
   "Takes a sequence of statements to be executed in batch.
-By default UNLOGGED, you can specify :logged :unlogged :counter as
+By default LOGGED, you can specify :logged :unlogged :counter as
   an optional second argument to control the type"
   ([qs] (batch qs :logged))
   ([qs type]
