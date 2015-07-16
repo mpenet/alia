@@ -3,12 +3,13 @@
 ## 2.6.0
 
 * Add support to named placeholders in prepared statements (:value can
-  take a map that will either match placeholders of column name values)
+take a map that will either match placeholders of column name
+values) - Thanks to @d-t-w
 
 * Add `qbits.alia/batch `
 
 * Use shadded Netty dependency (allows to use another netty version in
-  your code if needed)
+  your code if needed) - Thanks to @d-t-w
 
 * Remove deprecated Lamina interface
 

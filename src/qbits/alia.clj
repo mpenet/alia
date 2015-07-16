@@ -20,7 +20,7 @@
     ResultSetFuture
     Session
     SimpleStatement
-      Statement)
+    Statement)
    (com.google.common.util.concurrent
     MoreExecutors
     Futures
@@ -238,8 +238,10 @@ pools/connections"
   (try
     (if (map? values)
       (let [bound (.bind statement)]
-        (doseq [[key val] values]
-          (codec/set-by-name (codec/encode val) bound (name key)))
+        (doseq [[k x] values]
+          (codec/set-named-parameter! bound
+                                      (name k)
+                                      (codec/encode x)))
         bound)
       (.bind statement (to-array (map codec/encode values))))
     (catch Exception ex

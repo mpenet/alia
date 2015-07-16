@@ -23,10 +23,6 @@
     "Encodes clj value into a valid cassandra value for prepared
     statements (usefull for external libs such as joda time)"))
 
-(defprotocol PNamedBinding
-  "Bind the val onto Settable by name"
-  (set-by-name [val settable name]))
-
 (declare deserialize)
 
 (defmacro defdeserializers [[x idx col-type] & specs]
@@ -132,62 +128,6 @@
   (decode [x] x)
   (encode [x] x))
 
-(extend-protocol PNamedBinding
-  Boolean
-  (set-by-name [val settable name]
-    (.setBool ^SettableByNameData settable name val))
-  Integer
-  (set-by-name [val settable name]
-    (.setInt ^SettableByNameData settable name val))
-  Long
-  (set-by-name [val settable name]
-    (.setLong ^SettableByNameData settable name val))
-  Date
-  (set-by-name [val settable name]
-    (.setDate ^SettableByNameData settable name val))
-  Float
-  (set-by-name [val settable name]
-    (.setFloat ^SettableByNameData settable name val))
-  Double
-  (set-by-name [val settable name]
-    (.setDouble ^SettableByNameData settable name val))
-  String
-  (set-by-name [val settable name]
-    (.setString ^SettableByNameData settable name val))
-  ByteBuffer
-  (set-by-name [val settable name]
-    (.setBytes ^SettableByNameData settable name val))
-  BigInteger
-  (set-by-name [val settable name]
-    (.setVarint ^SettableByNameData settable name val))
-  BigDecimal
-  (set-by-name [val settable name]
-    (.setDecimal ^SettableByNameData settable name val))
-  UUID
-  (set-by-name [val settable name]
-    (.setUUID ^SettableByNameData settable name val))
-  InetAddress
-  (set-by-name [val settable name]
-    (.setInet ^SettableByNameData settable name val))
-  List
-  (set-by-name [val settable name]
-    (.setList ^SettableByNameData settable name val))
-  Map
-  (set-by-name [val settable name]
-    (.setMap ^SettableByNameData settable name val))
-  Set
-  (set-by-name [val settable name]
-    (.setSet ^SettableByNameData settable name val))
-  UDTValue
-  (set-by-name [val settable name]
-    (.setUDTValue ^SettableByNameData settable name val))
-  TupleValue
-  (set-by-name [val settable name]
-    (.setTupleValue ^SettableByNameData settable name val))
-  nil
-  (set-by-name [_ settable name]
-    (.setToNull ^SettableByNameData settable name)))
-
 (defn result-set->maps
   [^ResultSet result-set string-keys?]
   (let [key-fn (if string-keys? identity keyword)]
@@ -204,3 +144,67 @@
                                     (deserialize row idx (.getType cdef idx))))))))
              result-set)
         (vary-meta assoc :execution-info (.getExecutionInfo result-set)))))
+
+(defprotocol PNamedBinding
+  "Bind the val onto Settable by name"
+  (-set-named-parameter! [val settable name]))
+
+(defn set-named-parameter!
+  [^SettableByNameData settable name val]
+  (-set-named-parameter! val settable name))
+
+(extend-protocol PNamedBinding
+  Boolean
+  (-set-named-parameter! [val settable name]
+    (.setBool ^SettableByNameData settable name val))
+  Integer
+  (-set-named-parameter! [val settable name]
+    (.setInt ^SettableByNameData settable name val))
+  Long
+  (-set-named-parameter! [val settable name]
+    (.setLong ^SettableByNameData settable name val))
+  Date
+  (-set-named-parameter! [val settable name]
+    (.setDate ^SettableByNameData settable name val))
+  Float
+  (-set-named-parameter! [val settable name]
+    (.setFloat ^SettableByNameData settable name val))
+  Double
+  (-set-named-parameter! [val settable name]
+    (.setDouble ^SettableByNameData settable name val))
+  String
+  (-set-named-parameter! [val settable name]
+    (.setString ^SettableByNameData settable name val))
+  ByteBuffer
+  (-set-named-parameter! [val settable name]
+    (.setBytes ^SettableByNameData settable name val))
+  BigInteger
+  (-set-named-parameter! [val settable name]
+    (.setVarint ^SettableByNameData settable name val))
+  BigDecimal
+  (-set-named-parameter! [val settable name]
+    (.setDecimal ^SettableByNameData settable name val))
+  UUID
+  (-set-named-parameter! [val settable name]
+    (.setUUID ^SettableByNameData settable name val))
+  InetAddress
+  (-set-named-parameter! [val settable name]
+    (.setInet ^SettableByNameData settable name val))
+  List
+  (-set-named-parameter! [val settable name]
+    (.setList ^SettableByNameData settable name val))
+  Map
+  (-set-named-parameter! [val settable name]
+    (.setMap ^SettableByNameData settable name val))
+  Set
+  (-set-named-parameter! [val settable name]
+    (.setSet ^SettableByNameData settable name val))
+  UDTValue
+  (-set-named-parameter! [val settable name]
+    (.setUDTValue ^SettableByNameData settable name val))
+  TupleValue
+  (-set-named-parameter! [val settable name]
+    (.setTupleValue ^SettableByNameData settable name val))
+  nil
+  (-set-named-parameter! [_ settable name]
+    (.setToNull ^SettableByNameData settable name)))
