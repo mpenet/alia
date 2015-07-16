@@ -13,6 +13,7 @@
     Cluster
     Cluster$Builder
     LatencyTracker
+    BatchStatement
     PreparedStatement
     Statement
     ResultSet
@@ -237,6 +238,17 @@ pools/connections"
                               :type ::bind-error
                               :values values}
                           "Query binding failed")))))
+
+(defn batch-statement
+  "Aggregate multiple Statement into a single BatchStatement"
+  [statements]
+  (try
+    (let [batch (BatchStatement.)]
+      (.addAll batch statements))
+    (catch Exception ex
+      (throw (ex->ex-info ex {:statements statements
+                              :type ::batch-error}
+                          "Statement batch creation failed")))))
 
 (defprotocol ^:no-doc PStatement
   (^:no-doc query->statement
