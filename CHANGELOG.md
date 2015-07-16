@@ -2,11 +2,19 @@
 
 ## 2.6.0
 
-* Removed deprecated Lamina interface
+* Add support to named placeholders in prepared statements (:value can
+  take a map that will either match placeholders of column name values)
 
-* improve decoding performance
+* Add `qbits.alia/batch `
 
-* more uniform exception handling in async modes (all exceptions are
+* Use shadded Netty dependency (allows to use another netty version in
+  your code if needed)
+
+* Remove deprecated Lamina interface
+
+* Improve decoding performance
+
+* More uniform exception handling in async modes (all exceptions are
 returned in chan/deferred/function depending on the context)
 
 ## 2.5.3
