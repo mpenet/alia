@@ -9,7 +9,9 @@
                  [org.clojure/core.cache "0.6.4"]
                  [cc.qbits/commons "0.4.0"]
                  [cc.qbits/hayt "3.0.0-rc1"]
-                 [com.datastax.cassandra/cassandra-driver-core "2.1.6"]
+                 [com.datastax.cassandra/cassandra-driver-core "2.1.6"
+                  :classifier "shaded"
+                  :exclusions [io.netty/*]]
                  [com.datastax.cassandra/cassandra-driver-dse "2.1.6"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]]
   :profiles {:1.4  {:dependencies [[org.clojure/clojure "1.4.0"]]}
