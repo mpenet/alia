@@ -131,8 +131,19 @@ keyspaces from the same cluster definition.
 ### Asynchronous interfaces:
 
 There are currently 3 interfacese to use the asynchronous methods of
-the underlying driver, the main one being **core.async**, but optional
-**manifold** and legacy **Lamina** interfaces are also available.
+the underlying driver, the main one being **core.async**, another
+using simple functions and an optional **manifold** interfaces is
+also available.
+
+
+### Async using function "callbacks"
+
+```clojure
+(execute-chan session
+              "select * from users;"
+              {:success (fn [rows] ...)
+               :error (fn [e] ...)})
+```
 
 #### Async using clojure/core.async
 
