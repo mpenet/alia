@@ -1,30 +1,32 @@
 (ns qbits.alia
   (:require
-   [qbits.alia.codec :as codec]
-   [qbits.alia.utils :as utils]
-   [qbits.alia.enum :as enum]
-   [qbits.hayt :as hayt]
-   [clojure.core.memoize :as memo]
-   [clojure.core.async :as async]
-   [qbits.alia.cluster-options :as copt])
+    [qbits.alia.codec :as codec]
+    [qbits.alia.utils :as utils]
+    [qbits.alia.enum :as enum]
+    [qbits.hayt :as hayt]
+    [clojure.core.memoize :as memo]
+    [clojure.core.async :as async]
+    [qbits.alia.cluster-options :as copt])
   (:import
-   (com.datastax.driver.core
-    BoundStatement
-    Cluster
-    Cluster$Builder
-    LatencyTracker
-    PreparedStatement
-    Statement
-    ResultSet
-    ResultSetFuture
-    Session
-    SimpleStatement
-    Statement)
-   (com.google.common.util.concurrent
-    MoreExecutors
-    Futures
-    FutureCallback)
-   (java.nio ByteBuffer)))
+    (com.datastax.driver.core
+      BoundStatement
+      Cluster
+      Cluster$Builder
+      LatencyTracker
+      PreparedStatement
+      Statement
+      ResultSet
+      ResultSetFuture
+      Session
+      SimpleStatement
+      Statement SettableByNameData UDTValue TupleValue)
+    (com.google.common.util.concurrent
+      MoreExecutors
+      Futures
+      FutureCallback)
+    (java.nio ByteBuffer)
+    (java.util Map List UUID Set Date)
+    (java.net InetAddress)))
 
 (defn ^:no-doc get-executor
   [x]
@@ -176,10 +178,10 @@ Values for consistency:
 :serial :three :two
 "
   ([options]
-     (-> (Cluster/builder)
-         (copt/set-cluster-options! (merge {:contact-points ["localhost"]}
-                                           options))
-         .build))
+   (-> (Cluster/builder)
+       (copt/set-cluster-options! (merge {:contact-points ["localhost"]}
+                                         options))
+       .build))
   ([] (cluster {})))
 
 (defn ^Session connect
@@ -187,9 +189,9 @@ Values for consistency:
 have this separate in order to allow users to connect to multiple
 keyspaces from a single cluster instance"
   ([^Cluster cluster keyspace]
-     (.connect cluster (name keyspace)))
+   (.connect cluster (name keyspace)))
   ([^Cluster cluster]
-     (.connect cluster)))
+   (.connect cluster)))
 
 (defn shutdown
   "Shutdowns Session or Cluster instance, clearing the underlying
@@ -199,13 +201,13 @@ pools/connections"
 
 (defn ^:no-doc ex->ex-info
   ([^Exception ex data msg]
-     (ex-info msg
-              (merge {:type ::execute
-                      :exception ex}
-                     data)
-              (.getCause ex)))
+   (ex-info msg
+            (merge {:type      ::execute
+                    :exception ex}
+                   data)
+            (.getCause ex)))
   ([ex data]
-     (ex->ex-info ex data "Query execution failed")))
+   (ex->ex-info ex data "Query execution failed")))
 
 (defn prepare
   "Takes a session and a query (raw string or hayt) and returns a
@@ -221,20 +223,88 @@ pools/connections"
       (.prepare session q)
       (catch Exception ex
         (throw (ex->ex-info ex
-                            {:type ::prepare-error
+                            {:type  ::prepare-error
                              :query q}
                             "Query prepare failed"))))))
+
+(defprotocol PNamedBinding
+  (set-by-name [val settable name]))
+
+(extend-protocol PNamedBinding
+  Boolean
+  (set-by-name [val settable name]
+    (.setBool ^SettableByNameData settable name val))
+  Integer
+  (set-by-name [val settable name]
+    (.setInt ^SettableByNameData settable name val))
+  Long
+  (set-by-name [val settable name]
+    (.setLong ^SettableByNameData settable name val))
+  Date
+  (set-by-name [val settable name]
+    (.setDate ^SettableByNameData settable name val))
+  Float
+  (set-by-name [val settable name]
+    (.setFloat ^SettableByNameData settable name val))
+  Double
+  (set-by-name [val settable name]
+    (.setDouble ^SettableByNameData settable name val))
+  String
+  (set-by-name [val settable name]
+    (.setString ^SettableByNameData settable name val))
+  ByteBuffer
+  (set-by-name [val settable name]
+    (.setBytes ^SettableByNameData settable name val))
+  BigInteger
+  (set-by-name [val settable name]
+    (.setVarint ^SettableByNameData settable name val))
+  BigDecimal
+  (set-by-name [val settable name]
+    (.setDecimal ^SettableByNameData settable name val))
+  UUID
+  (set-by-name [val settable name]
+    (.setUUID ^SettableByNameData settable name val))
+  InetAddress
+  (set-by-name [val settable name]
+    (.setInet ^SettableByNameData settable name val))
+  List
+  (set-by-name [val settable name]
+    (.setList ^SettableByNameData settable name val))
+  Map
+  (set-by-name [val settable name]
+    (.setMap ^SettableByNameData settable name val))
+  Set
+  (set-by-name [val settable name]
+    (.setSet ^SettableByNameData settable name val))
+  UDTValue
+  (set-by-name [val settable name]
+    (.setUDTValue ^SettableByNameData settable name val))
+  TupleValue
+  (set-by-name [val settable name]
+    (.setTupleValue ^SettableByNameData settable name val))
+  nil
+  (set-by-name [_ settable name]
+    (.setToNull ^SettableByNameData settable name)))
 
 (defn bind
   "Takes a statement and a collection of values and returns a
   com.datastax.driver.core.BoundStatement instance to be used with
-  `execute` (or one of its variants)"
+  `execute` (or one of its variants)
+
+   Where values:
+     Map: for named bindings (i.e. INSERT INTO table VALUES (:id :date))
+     List: for positional bindings (i.e. INSERT INTO table VALUES (?, ?)"
   [^PreparedStatement statement values]
   (try
-    (.bind statement (to-array (map codec/encode values)))
+    (if (map? values)
+      (let [bound (.bind statement)]
+        (doseq [[key val] values]
+          (set-by-name (codec/encode val) bound (name key)))
+        bound)
+      (.bind statement (to-array (map codec/encode values))))
     (catch Exception ex
-      (throw (ex->ex-info ex {:query statement
-                              :type ::bind-error
+      (throw (ex->ex-info ex {:query  statement
+                              :type   ::bind-error
                               :values values}
                           "Query binding failed")))))
 
@@ -318,15 +388,15 @@ Values for consistency:
                                    routing-key retry-policy tracing? string-keys?
                                    idempotent? paging-state
                                    fetch-size values timestamp]}]
-     (let [^Statement statement (query->statement query values)]
-       (set-statement-options! statement routing-key retry-policy
-                               tracing? idempotent?
-                               consistency serial-consistency fetch-size
-                               timestamp paging-state)
-       (try
-         (codec/result-set->maps (.execute session statement) string-keys?)
-         (catch Exception err
-           (throw (ex->ex-info err {:query statement :values values}))))))
+   (let [^Statement statement (query->statement query values)]
+     (set-statement-options! statement routing-key retry-policy
+                             tracing? idempotent?
+                             consistency serial-consistency fetch-size
+                             timestamp paging-state)
+     (try
+       (codec/result-set->maps (.execute session statement) string-keys?)
+       (catch Exception err
+         (throw (ex->ex-info err {:query statement :values values}))))))
   ;; to support old syle api with unrolled args
   ([^Session session query]
    (execute session query {})))
@@ -385,24 +455,24 @@ Values for consistency:
                                  timestamp paging-state)
          (let [^ResultSetFuture rs-future (.executeAsync session statement)]
            (Futures/addCallback
-            rs-future
-            (reify FutureCallback
-              (onSuccess [_ result]
-                (try
-                  (async/put! ch (codec/result-set->maps (.get rs-future) string-keys?))
-                  (catch Exception err
-                    (async/put! ch (ex->ex-info err {:query statement :values values}))))
-                (async/close! ch))
-              (onFailure [_ ex]
-                (async/put! ch (ex->ex-info ex {:query statement :values values}))
-                (async/close! ch)))
-            (get-executor executor))))
+             rs-future
+             (reify FutureCallback
+               (onSuccess [_ result]
+                 (try
+                   (async/put! ch (codec/result-set->maps (.get rs-future) string-keys?))
+                   (catch Exception err
+                     (async/put! ch (ex->ex-info err {:query statement :values values}))))
+                 (async/close! ch))
+               (onFailure [_ ex]
+                 (async/put! ch (ex->ex-info ex {:query statement :values values}))
+                 (async/close! ch)))
+             (get-executor executor))))
        (catch Throwable t
          (async/put! ch t)
          (async/close! ch)))
      ch))
   ([^Session session query]
-     (execute-chan session query {})))
+   (execute-chan session query {})))
 
 (defn execute-chan-buffered
   "Allows to execute a query and have rows returned in a
@@ -435,29 +505,29 @@ Values for consistency:
                                  timestamp paging-state)
          (let [^ResultSetFuture rs-future (.executeAsync session statement)]
            (Futures/addCallback
-            rs-future
-            (reify FutureCallback
-              (onSuccess [_ result]
-                (async/go
-                  (try
-                    (loop [rows (codec/result-set->maps
-                                 (.get ^ResultSetFuture rs-future) string-keys?)]
-                      (when-let [row (first rows)]
-                        (when (async/>! ch row)
-                          (recur (rest rows)))))
-                    (catch Exception err
-                      (async/put! ch (ex->ex-info err {:query statement :values values}))))
-                  (async/close! ch)))
-              (onFailure [_ ex]
-                (async/put! ch (ex->ex-info ex {:query statement :values values}))
-                (async/close! ch)))
-            (get-executor executor))))
+             rs-future
+             (reify FutureCallback
+               (onSuccess [_ result]
+                 (async/go
+                   (try
+                     (loop [rows (codec/result-set->maps
+                                   (.get ^ResultSetFuture rs-future) string-keys?)]
+                       (when-let [row (first rows)]
+                         (when (async/>! ch row)
+                           (recur (rest rows)))))
+                     (catch Exception err
+                       (async/put! ch (ex->ex-info err {:query statement :values values}))))
+                   (async/close! ch)))
+               (onFailure [_ ex]
+                 (async/put! ch (ex->ex-info ex {:query statement :values values}))
+                 (async/close! ch)))
+             (get-executor executor))))
        (catch Throwable t
          (async/put! ch t)
          (async/close! ch)))
      ch))
   ([^Session session query]
-     (execute-chan-buffered session query {})))
+   (execute-chan-buffered session query {})))
 
 (defn ^:no-doc lazy-query-
   [session query pred coll opts]
@@ -482,9 +552,9 @@ ex: (lazy-query session
                           (merge q (where {:si (-> coll last :x inc)})))
                 {:consistency :quorum :tracing? true})"
   ([session query pred opts]
-     (lazy-query- session query pred [] opts))
+   (lazy-query- session query pred [] opts))
   ([session query pred]
-     (lazy-query session query pred {})))
+   (lazy-query session query pred {})))
 
 
 (defn register!

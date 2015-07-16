@@ -1,49 +1,49 @@
 (ns qbits.alia.test.core
   (:require
-   [clojure.test :refer :all]
-   [clojure.data :refer :all]
-   [qbits.alia :refer :all]
-   [qbits.alia.manifold :as ma]
-   [qbits.alia.codec :refer :all]
-   [qbits.alia.codec.joda-time :refer :all]
-   [qbits.alia.codec.eaio-uuid :refer :all]
-   [qbits.alia.codec.nippy :refer :all]
-   [qbits.tardis :refer :all]
-   [qbits.hayt :refer :all]
-   [clojure.core.async :as async])
+    [clojure.test :refer :all]
+    [clojure.data :refer :all]
+    [qbits.alia :refer :all]
+    [qbits.alia.manifold :as ma]
+    [qbits.alia.codec :refer :all]
+    [qbits.alia.codec.joda-time :refer :all]
+    [qbits.alia.codec.eaio-uuid :refer :all]
+    [qbits.alia.codec.nippy :refer :all]
+    [qbits.tardis :refer :all]
+    [qbits.hayt :refer :all]
+    [clojure.core.async :as async])
   (:import
-   (com.datastax.driver.core Statement)))
+    (com.datastax.driver.core Statement)))
 
 (def ^:dynamic *cluster*)
 (def ^:dynamic *session*)
 
 ;; some test data
-(def user-data-set [{:created nil
-                     :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
-                     :last_name "Penet",
-                     :emails #{"m@p.com" "ma@pe.com"},
-                     :tags [1 2 3],
+(def user-data-set [{:created    nil
+                     :tuuid      #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
+                     :last_name  "Penet",
+                     :emails     #{"m@p.com" "ma@pe.com"},
+                     :tags       [1 2 3],
                      :first_name "Max",
-                     :amap {"foo" 1, "bar" 2},
-                     :auuid #uuid "42048d2d-c135-4c18-aa3a-e38a6d3be7f1",
-                     :valid true,
+                     :amap       {"foo" 1, "bar" 2},
+                     :auuid      #uuid "42048d2d-c135-4c18-aa3a-e38a6d3be7f1",
+                     :valid      true,
                      :birth_year 0,
-                     :user_name "mpenet"
-                     :tup ["a", "b"]
-                     :udt {"foo" "f" "bar" 100}}
-                    {:created nil
-                     :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
-                     :last_name "Baggins",
-                     :emails #{"baggins@gmail.com" "f@baggins.com"},
-                     :tags [4 5 6],
+                     :user_name  "mpenet"
+                     :tup        ["a", "b"]
+                     :udt        {"foo" "f" "bar" 100}}
+                    {:created    nil
+                     :tuuid      #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
+                     :last_name  "Baggins",
+                     :emails     #{"baggins@gmail.com" "f@baggins.com"},
+                     :tags       [4 5 6],
                      :first_name "Frodo",
-                     :amap {"foo" 1, "bar" 2},
-                     :auuid #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892",
-                     :valid true,
+                     :amap       {"foo" 1, "bar" 2},
+                     :auuid      #uuid "1f84b56b-5481-4ee4-8236-8a3831ee5892",
+                     :valid      true,
                      :birth_year 1,
-                     :user_name "frodo"
-                     :tup ["a", "b"]
-                     :udt {"foo" "f" "bar" 100}}])
+                     :user_name  "frodo"
+                     :tup        ["a", "b"]
+                     :udt        {"foo" "f" "bar" 100}}])
 
 ;; helpers
 
@@ -97,6 +97,12 @@
         (dotimes [i 10]
           (execute *session* (format "INSERT INTO items (id, text, si) VALUES(%s, 'prout', %s);" i i)))
 
+        (execute *session* "CREATE TABLE simple (
+                    id int,
+                    text varchar,
+                    PRIMARY KEY (id)
+                  );")
+
         ;; do the thing
         (test-runner)
 
@@ -138,8 +144,8 @@
                  (fn [r] (deliver p r)))
     (is (= user-data-set @p)))
 
-;;   ;; Something smarter could be done with alt! (select) but this will
-;;   ;; do for a test
+  ;;   ;; Something smarter could be done with alt! (select) but this will
+  ;;   ;; do for a test
   (is (= 3 (count (async/<!! (async/go
                                (loop [i 0 ret []]
                                  (if (= 3 i)
@@ -151,7 +157,7 @@
   (let [s-simple (prepare *session* "select * from users;")
         s-parameterized-simple (prepare *session* (select :users (where {:user_name ?})))
         s-parameterized-in (prepare *session* (select :users (where [[:in :user_name ?]])))
-        s-prepare-types (prepare *session*  "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")
+        s-prepare-types (prepare *session* "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")
         ;; s-parameterized-set (prepare  "select * from users where emails=?;")
         ;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
         ]
@@ -173,7 +179,7 @@
                                                            [1 2 3 4]
                                                            #{"foo" "bar"}
                                                            {"foo" 123}]})))
-    (execute *session*  "delete from users where user_name = 'foobar';")))
+    (execute *session* "delete from users where user_name = 'foobar';")))
 
 (deftest test-error
   (let [stmt "slect prout from 1;"]
@@ -203,15 +209,15 @@
                    (async/<!! (execute-chan-buffered *session* stmt))))
     (is (instance? clojure.lang.ExceptionInfo
                    (async/<!! (execute-chan-buffered *session* "select * from users;"
-                                            {:values ["foo"]}))))
+                                                     {:values ["foo"]}))))
     (is (instance? Throwable
                    (async/<!! (execute-chan-buffered *session* "select * from users;"
-                                            {:retry-policy :wtf}))))
+                                                     {:retry-policy :wtf}))))
 
     (is (instance? Throwable
                    (try @(ma/execute *session* "select * from users;"
-                                  {:values ["foo"]})
-                     (catch Exception ex ex))))
+                                     {:values ["foo"]})
+                        (catch Exception ex ex))))
 
     (is (instance? Throwable
                    (try @(ma/execute *session* "select * from users;"
@@ -221,14 +227,14 @@
 
     (let [p (promise)]
       (execute-async *session* "select * from users;"
-                     {:values  ["foo"]
-                      :error (fn [r] (deliver p r))})
+                     {:values ["foo"]
+                      :error  (fn [r] (deliver p r))})
       (is (:query (ex-data @p))))
 
     (let [p (promise)]
       (execute-async *session* "select * from users;"
-                          {:fetch-size :wtf
-                           :error (fn [r] (deliver p r))})
+                     {:fetch-size :wtf
+                      :error      (fn [r] (deliver p r))})
       (instance? Throwable @p))))
 
 (deftest test-lazy-query
@@ -249,9 +255,9 @@
 
 (defn ^:private get-private-field [instance field-name]
   (.get
-   (doto (.getDeclaredField (class instance) field-name)
-     (.setAccessible true))
-   instance))
+    (doto (.getDeclaredField (class instance) field-name)
+      (.setAccessible true))
+    instance))
 
 (deftest test-fetch-size
   (with-redefs [result-set->maps (fn [result-set string-keys?]
@@ -295,3 +301,16 @@
                           (async/close! ch)
                           (recur (cons row coll)))
                         coll)))))))
+
+(deftest named-bindings
+  (let [prep-write (prepare *session* "INSERT INTO simple (id, text) VALUES(:id, :text);")
+        prep-read (prepare *session* "SELECT * FROM simple WHERE id = :id;")
+        an-id (int 100)]
+
+    (is (= []
+           (execute *session* prep-write {:values {:id   an-id
+                                                   :text "inserted via named bindings"}})))
+
+    (is (= [{:id   an-id
+             :text "inserted via named bindings"}]
+           (execute *session* prep-read {:values {:id an-id}})))))
