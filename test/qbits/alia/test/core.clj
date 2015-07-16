@@ -97,6 +97,12 @@
         (dotimes [i 10]
           (execute *session* (format "INSERT INTO items (id, text, si) VALUES(%s, 'prout', %s);" i i)))
 
+        (execute *session* "CREATE TABLE simple (
+                    id int,
+                    text varchar,
+                    PRIMARY KEY (id)
+                  );")
+
         ;; do the thing
         (test-runner)
 
@@ -298,3 +304,16 @@
                           (async/close! ch)
                           (recur (cons row coll)))
                         coll)))))))
+
+(deftest named-bindings
+  (let [prep-write (prepare *session* "INSERT INTO simple (id, text) VALUES(:id, :text);")
+        prep-read (prepare *session* "SELECT * FROM simple WHERE id = :id;")
+        an-id (int 100)]
+
+    (is (= []
+           (execute *session* prep-write {:values {:id   an-id
+                                                   :text "inserted via named bindings"}})))
+
+    (is (= [{:id   an-id
+             :text "inserted via named bindings"}]
+           (execute *session* prep-read {:values {:id an-id}})))))
