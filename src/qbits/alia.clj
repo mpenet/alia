@@ -20,14 +20,12 @@
     ResultSetFuture
     Session
     SimpleStatement
-      Statement SettableByNameData UDTValue TupleValue)
+      Statement)
    (com.google.common.util.concurrent
     MoreExecutors
     Futures
     FutureCallback)
-    (java.nio ByteBuffer)
-    (java.util Map List UUID Set Date)
-    (java.net InetAddress)))
+    (java.nio ByteBuffer)))
 
 (defn ^:no-doc get-executor
   [x]
@@ -228,79 +226,20 @@ pools/connections"
                              :query q}
                             "Query prepare failed"))))))
 
-(defprotocol PNamedBinding
-  (set-by-name [val settable name]))
-
-(extend-protocol PNamedBinding
-  Boolean
-  (set-by-name [val settable name]
-    (.setBool ^SettableByNameData settable name val))
-  Integer
-  (set-by-name [val settable name]
-    (.setInt ^SettableByNameData settable name val))
-  Long
-  (set-by-name [val settable name]
-    (.setLong ^SettableByNameData settable name val))
-  Date
-  (set-by-name [val settable name]
-    (.setDate ^SettableByNameData settable name val))
-  Float
-  (set-by-name [val settable name]
-    (.setFloat ^SettableByNameData settable name val))
-  Double
-  (set-by-name [val settable name]
-    (.setDouble ^SettableByNameData settable name val))
-  String
-  (set-by-name [val settable name]
-    (.setString ^SettableByNameData settable name val))
-  ByteBuffer
-  (set-by-name [val settable name]
-    (.setBytes ^SettableByNameData settable name val))
-  BigInteger
-  (set-by-name [val settable name]
-    (.setVarint ^SettableByNameData settable name val))
-  BigDecimal
-  (set-by-name [val settable name]
-    (.setDecimal ^SettableByNameData settable name val))
-  UUID
-  (set-by-name [val settable name]
-    (.setUUID ^SettableByNameData settable name val))
-  InetAddress
-  (set-by-name [val settable name]
-    (.setInet ^SettableByNameData settable name val))
-  List
-  (set-by-name [val settable name]
-    (.setList ^SettableByNameData settable name val))
-  Map
-  (set-by-name [val settable name]
-    (.setMap ^SettableByNameData settable name val))
-  Set
-  (set-by-name [val settable name]
-    (.setSet ^SettableByNameData settable name val))
-  UDTValue
-  (set-by-name [val settable name]
-    (.setUDTValue ^SettableByNameData settable name val))
-  TupleValue
-  (set-by-name [val settable name]
-    (.setTupleValue ^SettableByNameData settable name val))
-  nil
-  (set-by-name [_ settable name]
-    (.setToNull ^SettableByNameData settable name)))
-
 (defn bind
   "Takes a statement and a collection of values and returns a
   com.datastax.driver.core.BoundStatement instance to be used with
   `execute` (or one of its variants)
 
    Where values:
-     Map: for named bindings (i.e. INSERT INTO table VALUES (:id :date))
-     List: for positional bindings (i.e. INSERT INTO table VALUES (?, ?)"
+     Map: for named bindings       (i.e. INSERT INTO table (id, date) VALUES (:id :date))
+     List: for positional bindings (i.e. INSERT INTO table (id, date) VALUES (?, ?))"
   [^PreparedStatement statement values]
   (try
     (if (map? values)
       (let [bound (.bind statement)]
         (doseq [[key val] values]
-          (set-by-name (codec/encode val) bound (name key)))
+          (codec/set-by-name (codec/encode val) bound (name key)))
         bound)
       (.bind statement (to-array (map codec/encode values))))
     (catch Exception ex

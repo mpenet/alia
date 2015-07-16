@@ -1,14 +1,19 @@
 (ns qbits.alia.codec
   (:require [qbits.commons :refer [case-enum]])
   (:import
-   (java.nio ByteBuffer)
-   (com.datastax.driver.core
-    DataType
-    DataType$Name
-    GettableByIndexData
-    ResultSet
-    Row
-    UserType$Field)))
+    (java.nio ByteBuffer)
+    (com.datastax.driver.core
+      DataType
+      DataType$Name
+      GettableByIndexData
+      ResultSet
+      Row
+      UserType$Field
+      SettableByNameData
+      UDTValue
+      TupleValue)
+    (java.util UUID List Map Set Date)
+    (java.net InetAddress)))
 
 (defprotocol PCodec
   (decode [x]
@@ -17,6 +22,10 @@
   (encode [x]
     "Encodes clj value into a valid cassandra value for prepared
     statements (usefull for external libs such as joda time)"))
+
+(defprotocol PNamedBinding
+  "Bind the val onto Settable by name"
+  (set-by-name [val settable name]))
 
 (declare deserialize)
 
@@ -103,15 +112,15 @@
   (encode [x] (ByteBuffer/wrap x))
   (decode [x] x)
 
-  java.util.Map
+  Map
   (encode [x] x)
   (decode [x] (into {} x))
 
-  java.util.Set
+  Set
   (encode [x] x)
   (decode [x] (into #{} x))
 
-  java.util.List
+  List
   (encode [x] x)
   (decode [x] (into [] x))
 
@@ -122,6 +131,62 @@
   nil
   (decode [x] x)
   (encode [x] x))
+
+(extend-protocol PNamedBinding
+  Boolean
+  (set-by-name [val settable name]
+    (.setBool ^SettableByNameData settable name val))
+  Integer
+  (set-by-name [val settable name]
+    (.setInt ^SettableByNameData settable name val))
+  Long
+  (set-by-name [val settable name]
+    (.setLong ^SettableByNameData settable name val))
+  Date
+  (set-by-name [val settable name]
+    (.setDate ^SettableByNameData settable name val))
+  Float
+  (set-by-name [val settable name]
+    (.setFloat ^SettableByNameData settable name val))
+  Double
+  (set-by-name [val settable name]
+    (.setDouble ^SettableByNameData settable name val))
+  String
+  (set-by-name [val settable name]
+    (.setString ^SettableByNameData settable name val))
+  ByteBuffer
+  (set-by-name [val settable name]
+    (.setBytes ^SettableByNameData settable name val))
+  BigInteger
+  (set-by-name [val settable name]
+    (.setVarint ^SettableByNameData settable name val))
+  BigDecimal
+  (set-by-name [val settable name]
+    (.setDecimal ^SettableByNameData settable name val))
+  UUID
+  (set-by-name [val settable name]
+    (.setUUID ^SettableByNameData settable name val))
+  InetAddress
+  (set-by-name [val settable name]
+    (.setInet ^SettableByNameData settable name val))
+  List
+  (set-by-name [val settable name]
+    (.setList ^SettableByNameData settable name val))
+  Map
+  (set-by-name [val settable name]
+    (.setMap ^SettableByNameData settable name val))
+  Set
+  (set-by-name [val settable name]
+    (.setSet ^SettableByNameData settable name val))
+  UDTValue
+  (set-by-name [val settable name]
+    (.setUDTValue ^SettableByNameData settable name val))
+  TupleValue
+  (set-by-name [val settable name]
+    (.setTupleValue ^SettableByNameData settable name val))
+  nil
+  (set-by-name [_ settable name]
+    (.setToNull ^SettableByNameData settable name)))
 
 (defn result-set->maps
   [^ResultSet result-set string-keys?]
