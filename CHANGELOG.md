@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.6.2
+
+* fix decoding of tuple/udt values when NULL (issue #40)
+
+## 2.6.1
+
+* Meh, Broken deploy
+
 ## 2.6.0
 
 * Add support to named placeholders in prepared statements (:value can
