@@ -75,32 +75,32 @@
               (decode (.getMap x idx
                                (types-args->type t first)
                                (types-args->type t second))))
- :tuple     (let [tuple-value (.getTupleValue x idx)
-                  types (.getComponentTypes (.getType tuple-value))
-                  len (.size types)]
-              (loop [tuple []
-                     idx' 0]
-                (if (= idx' len)
-                  tuple
-                  (recur (conj tuple (decode (deserialize tuple-value
-                                                          idx'
-                                                          (.get types idx'))))
-                         (unchecked-inc-int idx')))))
- :udt       (let [udt-value (.getUDTValue x idx)
-                  udt-type (.getType udt-value)
-                  udt-type-iter (.iterator udt-type)
-                  len (.size udt-type)]
-              (loop [udt {}
-                     idx' 0]
-                (if (= idx' len)
-                  udt
-                  (let [^UserType$Field type (.next udt-type-iter)]
-                    (recur (assoc udt
-                                  (.getName type)
-                                  (decode (deserialize udt-value
-                                                       idx'
-                                                       (.getType type))))
-                           (unchecked-inc-int idx')))))))
+ :tuple     (when-let [tuple-value (.getTupleValue x idx)]
+              (let [types (.getComponentTypes (.getType tuple-value))
+                    len (.size types)]
+                (loop [tuple []
+                       idx' 0]
+                  (if (= idx' len)
+                    tuple
+                    (recur (conj tuple (decode (deserialize tuple-value
+                                                            idx'
+                                                            (.get types idx'))))
+                           (unchecked-inc-int idx'))))))
+ :udt       (when-let [udt-value (.getUDTValue x idx)]
+              (let [udt-type (.getType udt-value)
+                    udt-type-iter (.iterator udt-type)
+                    len (.size udt-type)]
+                (loop [udt {}
+                       idx' 0]
+                  (if (= idx' len)
+                    udt
+                    (let [^UserType$Field type (.next udt-type-iter)]
+                      (recur (assoc udt
+                                    (.getName type)
+                                    (decode (deserialize udt-value
+                                                         idx'
+                                                         (.getType type))))
+                             (unchecked-inc-int idx'))))))))
 
 (extend-protocol PCodec
 
