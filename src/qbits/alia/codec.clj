@@ -30,22 +30,21 @@
               (vary-meta idx assoc :tag "java.lang.Integer")
               (vary-meta col-type assoc :tag "com.datastax.driver.core.DataType")]]
     `(do
-       ~@(conj
-          (mapv (fn [[decoder-type form]]
-                  `(defn ~(->> decoder-type name (str "decode-") symbol)
-                     ~args
-                     ~form))
-                (partition 2 specs))
-          `(defn deserialize ~args
-             (case-enum (-> ~col-type .getName)
-               ~@(mapcat (fn [[decoder-type _]]
-                           [(->> (name decoder-type)
-                                 (.toUpperCase)
-                                 (str "com.datastax.driver.core.DataType$Name/")
-                                 symbol)
-                            `(~(symbol (str "decode-" (name decoder-type)))
-                              ~x ~idx ~col-type)])
-                         (partition 2 specs))))))))
+       ~@(mapv (fn [[decoder-type form]]
+                 `(defn ~(->> decoder-type name (str "decode-") symbol)
+                    ~args
+                    ~form))
+               (partition 2 specs))
+       (defn deserialize ~args
+         (case-enum (-> ~col-type .getName)
+                    ~@(mapcat (fn [[decoder-type _]]
+                                [(->> (name decoder-type)
+                                      (.toUpperCase)
+                                      (str "com.datastax.driver.core.DataType$Name/")
+                                      symbol)
+                                 `(~(symbol (str "decode-" (name decoder-type)))
+                                   ~x ~idx ~col-type)])
+                              (partition 2 specs)))))))
 
 (defn ^Class types-args->type
   [^"[Lcom.datastax.driver.core.DataType;" type-args pred]
