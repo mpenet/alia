@@ -3,6 +3,7 @@
    [qbits.alia.codec :as codec]
    [qbits.alia.codec.udt]
    [qbits.alia.codec.tuple]
+   [qbits.commons.ns :as nsq]
    [qbits.alia.utils :as utils]
    [qbits.alia.enum :as enum]
    [qbits.hayt :as hayt]
@@ -27,7 +28,7 @@
     MoreExecutors
     Futures
     FutureCallback)
-    (java.nio ByteBuffer)))
+   (java.nio ByteBuffer)))
 
 (defn ^:no-doc get-executor
   [x]
@@ -532,5 +533,5 @@ ex: (lazy-query session
   (.unregister cluster latency-tracker))
 
 ;; custom encoders
-(def udt qbits.alia.codec.udt/encoder)
-(def tuple qbits.alia.codec.tuple/encoder)
+(nsq/alias-var 'udt #'qbits.alia.codec.udt/encoder)
+(nsq/alias-var 'tuple #'qbits.alia.codec.tuple/encoder)

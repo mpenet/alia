@@ -100,6 +100,9 @@
   (-set-field! x u k))
 
 (defn encoder
+  "Takes a Session, optionaly keyspace name, UDT name and returns a
+  function that can be used to encode a value into a UDTValue suitable
+  to be used in PreparedStatements"
   ([^Session session type]
    (encoder session
                 (.getLoggedKeyspace session)
