@@ -37,5 +37,7 @@
           :exclude [qbits.alia.enum
                     qbits.alia.utils
                     qbits.alia.codec
+                    qbits.alia.codec.udt
+                    qbits.alia.codec.tuple
                     qbits.alia.cluster-options]}
   :global-vars {*warn-on-reflection* true})
