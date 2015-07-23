@@ -6,7 +6,8 @@
   functions to be used with prepared statements. They both return a
   function that can be used to encode tuple/udt of the selected type.
   ex:
-  ```clj
+
+  ```clojure
   (let [user (qbits.alia/udt session :user)]
     (execute session
              user-insert-prepared-stmt
