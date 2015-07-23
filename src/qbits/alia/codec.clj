@@ -6,9 +6,11 @@
       DataType
       DataType$Name
       GettableByIndexData
+      KeyspaceMetadata
       ResultSet
       Row
       UserType$Field
+      Session
       SettableByNameData
       UDTValue
       TupleValue)
@@ -156,54 +158,176 @@
   Boolean
   (-set-named-parameter! [val settable name]
     (.setBool ^SettableByNameData settable name val))
+
   Integer
   (-set-named-parameter! [val settable name]
     (.setInt ^SettableByNameData settable name val))
+
   Long
   (-set-named-parameter! [val settable name]
     (.setLong ^SettableByNameData settable name val))
+
   Date
   (-set-named-parameter! [val settable name]
     (.setDate ^SettableByNameData settable name val))
+
   Float
   (-set-named-parameter! [val settable name]
     (.setFloat ^SettableByNameData settable name val))
+
   Double
   (-set-named-parameter! [val settable name]
     (.setDouble ^SettableByNameData settable name val))
+
   String
   (-set-named-parameter! [val settable name]
     (.setString ^SettableByNameData settable name val))
+
   ByteBuffer
   (-set-named-parameter! [val settable name]
     (.setBytes ^SettableByNameData settable name val))
+
   BigInteger
   (-set-named-parameter! [val settable name]
     (.setVarint ^SettableByNameData settable name val))
+
   BigDecimal
   (-set-named-parameter! [val settable name]
     (.setDecimal ^SettableByNameData settable name val))
+
   UUID
   (-set-named-parameter! [val settable name]
     (.setUUID ^SettableByNameData settable name val))
+
   InetAddress
   (-set-named-parameter! [val settable name]
     (.setInet ^SettableByNameData settable name val))
+
   List
   (-set-named-parameter! [val settable name]
     (.setList ^SettableByNameData settable name val))
+
   Map
   (-set-named-parameter! [val settable name]
     (.setMap ^SettableByNameData settable name val))
+
   Set
   (-set-named-parameter! [val settable name]
     (.setSet ^SettableByNameData settable name val))
+
   UDTValue
   (-set-named-parameter! [val settable name]
     (.setUDTValue ^SettableByNameData settable name val))
+
   TupleValue
   (-set-named-parameter! [val settable name]
     (.setTupleValue ^SettableByNameData settable name val))
+
   nil
   (-set-named-parameter! [_ settable name]
     (.setToNull ^SettableByNameData settable name)))
+
+
+(defprotocol PUDTEncoder
+  (-set-udt-field! [x u k]))
+
+(defn set-udt-field!
+  "Where's flip when you need it"
+  [u k x]
+  (-set-udt-field! x u k))
+
+(extend-protocol PUDTEncoder
+
+  BigInteger
+  (-set-udt-field! [b u k]
+    (.setVarint ^UDTValue u ^String k b))
+
+  Boolean
+  (-set-udt-field! [b u k]
+    (.setBool ^UDTValue u ^String k  b))
+
+  ByteBuffer
+  (-set-udt-field! [b u k]
+    (.setBytes ^UDTValue u ^String k  b))
+
+  Date
+  (-set-udt-field! [d u k]
+    (.setDate ^UDTValue u ^String k  d))
+
+  BigDecimal
+  (-set-udt-field! [d u k]
+    (.setDecimal ^UDTValue u ^String k  d))
+
+  Double
+  (-set-udt-field! [d u k]
+    (.setDouble ^UDTValue u ^String k  d))
+
+  Float
+  (-set-udt-field! [f u k]
+    (.setFloat ^UDTValue u ^String k  f))
+
+  InetAddress
+  (-set-udt-field! [i u k]
+    (.setInet ^UDTValue u ^String k  i))
+
+  Integer
+  (-set-udt-field! [i u k]
+    (.setInt ^UDTValue u ^String k  i))
+
+  List
+  (-set-udt-field! [l u k]
+    (.setList ^UDTValue u ^String k  l))
+
+  Long
+  (-set-udt-field! [l u k]
+    (.setLong ^UDTValue u ^String k  l))
+
+  Map
+  (-set-udt-field! [m u k]
+    (.setMap ^UDTValue u ^String k  m))
+
+  Set
+  (-set-udt-field! [s u k]
+    (.setSet ^UDTValue u ^String k  s))
+
+  String
+  (-set-udt-field! [x u k]
+    (.setString ^UDTValue u ^String k  x))
+
+  nil
+  (-set-udt-field! [n u k]
+    (.setToNull ^UDTValue u ^String k))
+
+  String
+  (-set-udt-field! [x u k]
+    (.setString ^UDTValue u ^String k  x))
+
+  UDTValue
+  (-set-udt-field! [x u k]
+    (.setUDTValue ^UDTValue u ^String k  x))
+
+  UUID
+  (-set-udt-field! [uuid u k]
+    (.setUUID ^UDTValue u ^String k  uuid)))
+
+(defn udt-encoder
+  ([^Session session type]
+   (udt-encoder session
+                (.getLoggedKeyspace session)
+                type))
+  ([^Session session ks type]
+   (udt-encoder session
+                ks
+                type
+                nil))
+  ([^Session session ks type opts]
+   (let [ut (-> session
+                .getCluster
+                .getMetadata
+                (.getKeyspace ks)
+                (.getUserType (name type)))]
+     (fn [x]
+       (let [utv (.newValue ut)]
+         (doseq [[k v] x]
+           (set-udt-field! utv (name k) v))
+         utv)))))

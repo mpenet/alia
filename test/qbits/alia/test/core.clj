@@ -12,7 +12,7 @@
    [qbits.hayt :as h]
    [clojure.core.async :as async])
   (:import
-   (com.datastax.driver.core Statement)))
+   (com.datastax.driver.core Statement UDTValue)))
 
 (def ^:dynamic *cluster*)
 (def ^:dynamic *session*)
@@ -305,7 +305,7 @@
                           (recur (cons row coll)))
                         coll)))))))
 
-(deftest named-bindings
+(deftest test-named-bindings
   (let [prep-write (prepare *session* "INSERT INTO simple (id, text) VALUES(:id, :text);")
         prep-read (prepare *session* "SELECT * FROM simple WHERE id = :id;")
         an-id (int 100)]
@@ -317,3 +317,9 @@
     (is (= [{:id   an-id
              :text "inserted via named bindings"}]
            (execute *session* prep-read {:values {:id an-id}})))))
+
+
+(deftest test-udt-encoder
+  (let [encoder (udt-encoder *session* :udt)]
+    (is (instance? UDTValue (encoder {:foo "f" "bar" 100})))
+    (is (instance? UDTValue (encoder {:foo nil "bar" 100})))))
