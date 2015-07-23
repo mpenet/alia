@@ -108,8 +108,6 @@
   ([^Session session table column]
    (encoder session (.getLoggedKeyspace session) table column))
   ([^Session session ks table column]
-   (encoder session ks table column nil))
-  ([^Session session ks table column opts]
    (let [^TupleType t (-> session
                           .getCluster
                           .getMetadata

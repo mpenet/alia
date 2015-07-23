@@ -107,8 +107,6 @@
   ([^Session session type]
    (encoder session (.getLoggedKeyspace session) type))
   ([^Session session ks type]
-   (encoder session ks type nil))
-  ([^Session session ks type opts]
    (let [t (-> session
                 .getCluster
                 .getMetadata
