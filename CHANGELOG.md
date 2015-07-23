@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.7.0
+
+* `qbits.alia/tuple` and `qbits.alia/udt`: add Tuple and UDT encoder
+  functions to be used with prepared statements. They both return a
+  function that can be used to encode tuple/udt of the selected type.
+  ex:
+  ```clj
+  (let [user (qbits.alia/udt session :user)]
+    (execute session
+             user-insert-prepared-stmt
+             {:values [(user {:id "foo" :age 10})]}))
+  ```
+
 ## 2.6.2
 
 * fix decoding of tuple/udt values when NULL (issue #40)
