@@ -61,6 +61,11 @@
                                 foo text,
                                 bar bigint
                            )")
+
+        (execute *session* "CREATE TYPE udtct (
+                                foo text,
+                                tup frozen<tuple<varchar, varchar>>
+                           )")
         (execute *session* "CREATE TABLE users (
                 user_name varchar,
                 first_name varchar,
@@ -320,6 +325,10 @@
 
 
 (deftest test-udt-encoder
-  (let [encoder (udt-encoder *session* :udt)]
+  (let [encoder (udt *session* :udt)
+        encoder-ct (udt *session* :udtct)
+        tup (tuple *session* :users :tup)]
     (is (instance? UDTValue (encoder {:foo "f" "bar" 100})))
-    (is (instance? UDTValue (encoder {:foo nil "bar" 100})))))
+    (is (instance? UDTValue (encoder {:foo nil "bar" 100})))
+    (is (instance? UDTValue (encoder {:foo nil "bar" 100})))
+    (is (instance? UDTValue (encoder-ct {:foo "f" :tup (tup ["a" "b"])})))))

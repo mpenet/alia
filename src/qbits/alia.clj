@@ -1,6 +1,8 @@
 (ns qbits.alia
   (:require
    [qbits.alia.codec :as codec]
+   [qbits.alia.codec.udt]
+   [qbits.alia.codec.tuple]
    [qbits.alia.utils :as utils]
    [qbits.alia.enum :as enum]
    [qbits.hayt :as hayt]
@@ -528,3 +530,7 @@ ex: (lazy-query session
   "Unregister querylogger/latency tracker from cluster"
   [^Cluster cluster ^LatencyTracker latency-tracker]
   (.unregister cluster latency-tracker))
+
+;; custom encoders
+(def udt qbits.alia.codec.udt/encoder)
+(def tuple qbits.alia.codec.tuple/encoder)
