@@ -1,4 +1,5 @@
 (ns qbits.alia.codec.tuple
+  (:require [qbits.alia.codec :as codec])
   (:import
    (com.datastax.driver.core
     Session
@@ -121,6 +122,6 @@
          (loop [i 0
                 coll coll]
            (if-let [x (first coll)]
-             (set-field! ttv i x)
+             (set-field! ttv i (codec/encode x))
              (recur (inc i) (rest coll))))
          ttv)))))

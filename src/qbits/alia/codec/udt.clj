@@ -1,4 +1,5 @@
 (ns qbits.alia.codec.udt
+  (:require [qbits.alia.codec :as codec])
   (:import
    (com.datastax.driver.core
     Session
@@ -116,5 +117,5 @@
      (fn [x]
        (let [utv (.newValue t)]
          (doseq [[k v] x]
-           (set-field! utv (name k) v))
+           (set-field! utv (name k) (codec/encode v)))
          utv)))))
