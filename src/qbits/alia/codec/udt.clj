@@ -104,14 +104,9 @@
   function that can be used to encode a value into a UDTValue suitable
   to be used in PreparedStatements"
   ([^Session session type]
-   (encoder session
-                (.getLoggedKeyspace session)
-                type))
+   (encoder session (.getLoggedKeyspace session) type))
   ([^Session session ks type]
-   (encoder session
-                ks
-                type
-                nil))
+   (encoder session ks type nil))
   ([^Session session ks type opts]
    (let [t (-> session
                 .getCluster

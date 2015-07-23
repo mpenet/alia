@@ -105,16 +105,9 @@
   name and returns a function that can be used to encode a value into
   a TupleValue suitable to be used in PreparedStatements"
   ([^Session session table column]
-   (encoder session
-                (.getLoggedKeyspace session)
-                table
-                column))
+   (encoder session (.getLoggedKeyspace session) table column))
   ([^Session session ks table column]
-   (encoder session
-                (.getLoggedKeyspace session)
-                table
-                column
-                nil))
+   (encoder session ks table column nil))
   ([^Session session ks table column opts]
    (let [^TupleType t (-> session
                           .getCluster
