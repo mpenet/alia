@@ -30,7 +30,7 @@
                      :birth_year 0,
                      :user_name "mpenet"
                      :tup ["a", "b"]
-                     :udt {"foo" "f" "bar" 100}}
+                     :udt {:foo "f" :bar 100}}
                     {:created nil
                      :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
                      :last_name "Baggins",
@@ -43,7 +43,7 @@
                      :birth_year 1,
                      :user_name "frodo"
                      :tup ["a", "b"]
-                     :udt {"foo" "f" "bar" 100}}])
+                     :udt {:foo "f" :bar 100}}])
 
 ;; helpers
 

@@ -96,7 +96,7 @@
                     udt
                     (let [^UserType$Field type (.next udt-type-iter)]
                       (recur (assoc udt
-                                    (.getName type)
+                                    (-> type .getName keyword)
                                     (decode (deserialize udt-value
                                                          idx'
                                                          (.getType type))))
