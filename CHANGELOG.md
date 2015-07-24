@@ -2,17 +2,26 @@
 
 ## 2.7.0
 
+**Breaking changes**
+
+* UDT field names are now decoded as clojure Keywords instead of
+  strings
+
+** New Features **
+
 * `qbits.alia/tuple` and `qbits.alia/udt`: add Tuple and UDT encoder
   functions to be used with prepared statements. They both return a
   function that can be used to encode tuple/udt of the selected type.
   ex:
 
-  ```clojure
-  (let [user (qbits.alia/udt session :user)]
-    (execute session
-             user-insert-prepared-stmt
-             {:values [(user {:id "foo" :age 10})]}))
-  ```
+  ```clojure (let [->user (qbits.alia/udt session :user)] (execute
+  session user-insert-prepared-stmt {:values
+  [(->user {:id "foo" :age 10})]})) ```
+
+  Internal encoding of values respects the main encoder
+  (`qbits.codec.PCodec`), that means if you extended it for joda time
+  or your own types for this should work transparently even
+  if your UDT are deeply nested.
 
 ## 2.6.2
 
