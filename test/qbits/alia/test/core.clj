@@ -325,9 +325,9 @@
 
 
 (deftest test-udt-encoder
-  (let [encoder (udt *session* :udt)
-        encoder-ct (udt *session* :udtct)
-        tup (tuple *session* :users :tup)]
+  (let [encoder (udt-encoder *session* :udt)
+        encoder-ct (udt-encoder *session* :udtct)
+        tup (tuple-encoder *session* :users :tup)]
     (is (instance? UDTValue (encoder {:foo "f" "bar" 100})))
     (is (instance? UDTValue (encoder {:foo nil "bar" 100})))
     (is (instance? UDTValue (encoder {:foo nil "bar" 100})))
