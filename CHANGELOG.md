@@ -14,9 +14,12 @@
   function that can be used to encode tuple/udt of the selected type.
   ex:
 
-  ```clojure (let [->user (qbits.alia/udt session :user)] (execute
-  session user-insert-prepared-stmt {:values
-  [(->user {:id "foo" :age 10})]})) ```
+  ```clojure
+  (let [user (qbits.alia/udt session :user)]
+    (execute session
+             user-insert-prepared-stmt
+             {:values [(user {:id "foo" :age 10})]}))
+  ```
 
   Internal encoding of values respects the main encoder
   (`qbits.codec.PCodec`), that means if you extended it for joda time
