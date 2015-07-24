@@ -199,7 +199,11 @@ keyspaces from a single cluster instance"
   "Shutdowns Session or Cluster instance, clearing the underlying
 pools/connections"
   [x]
-  (.closeAsync x))
+  (cond
+    (instance? Session x)
+    (.closeAsync ^Session x)
+    (instance? Cluster x)
+    (.closeAsync ^Cluster x)))
 
 (defn ^:no-doc ex->ex-info
   ([^Exception ex data msg]
