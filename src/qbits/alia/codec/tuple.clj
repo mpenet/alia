@@ -103,7 +103,7 @@
 
 (defn encoder
   "Takes a Session, optionaly keyspace name, table name and column
-  name and returns a function that can be used to encode a value into
+  name and returns a function that can be used to encode a collection into
   a TupleValue suitable to be used in PreparedStatements"
   ([^Session session table column]
    (encoder session (.getLoggedKeyspace session) table column))
