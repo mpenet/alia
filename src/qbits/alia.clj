@@ -537,5 +537,5 @@ ex: (lazy-query session
   (.unregister cluster latency-tracker))
 
 ;; custom encoders
-(nsq/alias-var 'udt #'qbits.alia.codec.udt/encoder)
-(nsq/alias-var 'tuple #'qbits.alia.codec.tuple/encoder)
+(nsq/alias-var 'udt-encoder #'qbits.alia.codec.udt/encoder)
+(nsq/alias-var 'tuple-encoder #'qbits.alia.codec.tuple/encoder)

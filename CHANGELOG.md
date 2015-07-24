@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.7.0
+## 2.7.1
 
 **Breaking changes**
 
@@ -9,13 +9,13 @@
 
 ** New Features **
 
-* `qbits.alia/tuple` and `qbits.alia/udt`: add Tuple and UDT encoder
-  functions to be used with prepared statements. They both return a
-  function that can be used to encode tuple/udt of the selected type.
-  ex:
+* `qbits.alia/tuple-encoder` and `qbits.alia/udt-encoder`: add Tuple
+  and UDT encoder functions to be used with prepared statements. They
+  both return a function that can be used to encode tuple/udt of the
+  selected type.  ex:
 
   ```clojure
-  (let [user (qbits.alia/udt session :user)]
+  (let [user (qbits.alia/udt-encoder session :user)]
     (execute session
              user-insert-prepared-stmt
              {:values [(user {:id "foo" :age 10})]}))
