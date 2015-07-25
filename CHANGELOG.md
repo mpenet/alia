@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.7.2
+
+* All enum taking fns will now reject invalid values and throw if
+something weird is supplied
+
+* row decoding is now truly lazy, skipping clojure chunking and
+  respecting fetch-size more accurately (especially important for
+  execute-chan-buffered).
+
 ## 2.7.1
 
 **Breaking changes**
