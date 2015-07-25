@@ -436,6 +436,8 @@ Here is an example that is provided for supporting joda-time.
     (.toDate x)))
 ```
 
+Decoding is automatic for any cql type, including tuples and UDTs.
+
 ## Hayt: Query DSL
 
 Alia comes with the latest version of [Hayt](https://github.com/mpenet/hayt).
