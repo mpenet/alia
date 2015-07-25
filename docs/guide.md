@@ -307,6 +307,35 @@ query time for every call to `execute` or `execute-async`).
 You don't have to deal with translations of data types, this is
 done under the hood.
 
+If you have too use UDT or Tuples you will have to create custom
+encoder functions for them. This is very easy:
+
+```clojure
+(def ->user (qbits.alia/udt-encoder session "mykeyspace" "user"))
+
+;; and then you can use this function to create valid UDTValues:
+(alia/execute session statement {:values [(->user {:name "Max Penet" :age 38})]})
+```
+
+Same for Tuples
+
+```clojure
+(def ->point (qbits.alia/udt-encoder session "mykeyspace" "point"))
+
+;; and then you can use this function to create valid UDTValues:
+(alia/execute session statement {:values [(->point [1 2])]})
+```
+
+You can easily mix them:
+
+```clojure
+(def ->address (qbits.alia/udt-encoder session "mykeyspace" "address"))
+(def ->user (qbits.alia/udt-encoder session "mykeyspace" "user"))
+
+(alia/execute session statement {:values [(->user {:name "Max Penet" :age 38 :address (->address {:street "..."})})]})
+```
+*
+
 And this is it for the core of the function you need to know.
 There are a few other that can be useful though.
 
