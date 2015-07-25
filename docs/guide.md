@@ -11,9 +11,15 @@ curve or need to reach for the docs should be minimal.
 Alia also comes with [Hayt](#hayt-query-dsl) a CQL query DSL inspired
 by korma/ClojureQL.
 
+This guide is far from complete, but it should give you an idea of how
+to get started. For advanced uses please use the
+[api docs](http://mpenet.github.io/alia/qbits.alia.html)), or ping me
+on IRC (#clojure on freenode), slack (clojurians) or the mailing list,
+I am always glad to help.
+
 ## Cluster initialisation
 
-To get started you will need to prepare a cluster definition, so that
+To get started you will need to prepare a cluster instance, so that
 you can create sessions from it and interact with multiple keyspaces.
 
 ```clojure
@@ -275,6 +281,8 @@ but require 1 (optionally 2) more steps.
 
 In order to prepare a statement you need to use `alia/prepare`
 
+#### Positional parameters
+
 ```clojure
 (def statement (alia/prepare session "SELECT * FROM foo WHERE foo=? AND bar=?;"))
 ```
@@ -284,7 +292,7 @@ In order to prepare a statement you need to use `alia/prepare`
 (alia/execute session statement {:values ["value-of-foo" "value-of-bar"]})
 ```
 
-with named markers:
+#### With named parameters
 
 ```clojure
 (def statement (alia/prepare session "SELECT * FROM foo WHERE foo= :foo AND bar= :bar;"))
@@ -294,6 +302,7 @@ with named markers:
 ```clojure
 (alia/execute session statement {:values {:foo "value-of-foo" :bar "value-of-bar"}})
 ```
+#### qbits.alia/bind advanced uses
 
 Alternatively you can bind values prior to execution (in case the
 value don't change often and you don't want this step to be repeated at
@@ -306,6 +315,8 @@ query time for every call to `execute` or `execute-async`).
 
 You don't have to deal with translations of data types, this is
 done under the hood.
+
+#### UDT and Tuple
 
 If you have too use UDT or Tuples you will have to create custom
 encoder functions for them. This is very easy:
@@ -320,7 +331,7 @@ encoder functions for them. This is very easy:
 Same for Tuples
 
 ```clojure
-(def ->point (qbits.alia/udt-encoder session "mykeyspace" "point"))
+(def ->point (alia/udt-encoder session "mykeyspace" "point"))
 
 ;; and then you can use this function to create valid UDTValues:
 (alia/execute session statement {:values [(->point [1 2])]})
@@ -330,26 +341,42 @@ You can easily mix them:
 
 ```clojure
 (def ->address (qbits.alia/udt-encoder session "mykeyspace" "address"))
-(def ->user (qbits.alia/udt-encoder session "mykeyspace" "user"))
+(def ->user (alia/udt-encoder session "mykeyspace" "user"))
 
 (alia/execute session statement {:values [(->user {:name "Max Penet" :age 38 :address (->address {:street "..."})})]})
 ```
 *
 
-And this is it for the core of the function you need to know.
-There are a few other that can be useful though.
-
-
 ### Batching
 
-TODO
+You can batch queries using CQL directly (with or without hayt), we
+also support a feature of the driver that allows to batch any query
+time (prepared, simple, etc).
 
-### `alia/execute` & `alia/execute-async` advanced options
+```clojure
+(alia/execute session (alia/batch ...))
+```
+
+`batch` takes a collection of queries, they can be of any type
+accepted by execute, raw string, hayt query, prepared statement etc.
+
+If you're batching prepared statements be aware that you cannot bind
+values via :values in execute, if you need to do so use
+qbits.alia/bind on your statements separately.
+
+```clojure
+(alia/execute session (alia/batch [(bind stmt ["foo]) ...]))
+```
+
+Keep you batch size relatively small, it's not advised to send huge
+amounts of queries this way.
+
+### `alia/execute` & its variants advanced options
 
 The complete signature of execute looks like this
 
-`execute` and `execute-async` support a number of options I didn't
-mention earlier, you can specify
+`execute`, `execute-chan`, `execute-chan-buffered` and `execute-async`
+support a number of options I didn't mention earlier, you can specify
 * `:consistency` [Consistency](#consistency)
 * `:retry-policy` [Retry Policy](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
 * `:routing-key` [RoutingKey](#routing-key)
@@ -359,10 +386,9 @@ mention earlier, you can specify
    dealing with compact storage "wide rows").
 * `:fetch-size` (int) sets max number of rows returned from server at a time.
 
-Additionally `execute-async` accepts
-an `:executor` option that will set the java.util.concurrent
-`ExecutorService` instance to be used for the ResultFuture (see:
-[Executors](#executors)).
+
+Some of execute functions have specific options, see
+[api docs](http://mpenet.github.io/alia/qbits.alia.html)).
 
 #### Consistency
 
@@ -376,15 +402,6 @@ Here are the supported consistency and serial-consistency levels:
 
 You can also set the consistency globaly at the cluster level via
 `qbits.alia/cluster` options.
-
-#### Executors/Threading model
-
-The executor used to deal with result set futures (in asynchronous
-mode) can be passed as a named argument to `alia/execute-*` functions:
-
-```clojure
-(alia/execute-async session bst {:executor executor-instance})
-```
 
 #### Routing key
 
@@ -455,12 +472,17 @@ values, it's for convenience really, it compiles the query under the
 hood and only passes the parameterized string with ? placeholders).
 ```clojure
 (prepare session (select :user (where {:foo "bar"})))
+
+;; positional parameter
 (prepare session (select :user (where {:bar ?})))
+
+;; named parameter
+(prepare session (select :user (where {:bar :bar})))
 ```
 
 Ex:
 ```clojure
-(execute session (select :users (where {:name :foo})))
+(execute session (select :users (where {:name "foo"})))
 ```
 You can have control over the query caching using
 `set-hayt-query-fn!` and provide your own memoize implementation or you
