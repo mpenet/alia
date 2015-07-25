@@ -13,18 +13,12 @@ by korma/ClojureQL.
 
 ## Cluster initialisation
 
-The binary protocol server is not started with the default
-configuration file coming with Cassandra 1.2. In the cassandra.yaml
-file, you need to set:
-
-`start_native_transport: true`
-
 To get started you will need to prepare a cluster definition, so that
 you can create sessions from it and interact with multiple keyspaces.
 
 ```clojure
 
-(require '[qbits.alia :as alia] )
+(require '[qbits.alia :as alia])
 
 (def cluster (alia/cluster))
 ```
@@ -127,7 +121,11 @@ The following options are supported:
 The handling of these options is achieved with a multimethod that you
 could extend if you need to handle some special case or want to create
 your own options templates.
-See `qbits.alia.cluster-options/set-cluster-option!` [[source]](../src/qbits/alia/cluster_options.clj#L19)
+
+There are also a few more options such as custom NettyOptions,
+Speculative Execution Policy & co. See
+`qbits.alia.cluster-options/set-cluster-option!`
+[[source]](../src/qbits/alia/cluster_options.clj#L19)
 
 ## Retry, Reconnection, Load balancing policies
 
@@ -141,6 +139,10 @@ described in detail:
 * [Reconnection Policies](http://mpenet.github.io/alia/qbits.alia.policy.reconnection.html)
 
 * [Retry Policies](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
+
+* [Speculative Execution](http://mpenet.github.io/alia/qbits.alia.policy.speculative-execution.html)
+
+* [Address Translater](http://mpenet.github.io/alia/qbits.alia.policy.address-translater.html)
 
 ## Creating Sessions from a cluster instance
 
@@ -168,7 +170,7 @@ or if you want to use a particular keyspace from the start:
 
 You can interact with C* using either raw queries or prepared statements.
 There are three function that allow you to do that: `alia/execute`,
-`alia/execute-async` and `alia/execute-chan`.
+`alia/execute-async`,  `alia/execute-chan`, `alia/execute-chan-buffered`.
 
 These functions support a number of options, but the simplest example
 of its use would look like this:
@@ -202,55 +204,25 @@ when it's possible: in this example `:emails` is a C* native Set,
 The previous examples will block until a response is received from
 cassandra. But it is possible to avoid that and perform them asynchronously.
 
-There are currently 2 interfaces for doing so. One using Lamina that
-returns a result-channel (a promise) and additionaly an experimental
-interface using `clojure/core.async` returning a clojure.core.async/chan.
+You have 3 options here:
 
-#### Lamina asynchronous interface
+* core.async interface (which is the recommended way)
 
-You will need to use `execute-async` which returns
-[result-channel](https://github.com/ztellman/lamina/wiki/Result-Channels)
-from [Lamina](https://github.com/ztellman/lamina) (you can think of it
-as a promise, it will return immediately), meaning you need to use
-`clojure.core/deref` or `@` to get its value once it is realized (it's
-one way to do it, more about this later). If an error happened, when
-you deref the query it will throw the exception.
+* ztellman/manifold optional interface
 
-```clojure
-(def query (alia/execute-async session "SELECT * FROM foo;"))
-;; ... more queries
+* plain old callback based interface
 
-;; and later to get its value
+#### Callback based interface
 
-(do-something @query)
-```
-
-But in this example the deref operation is blocking, so this might not
-be appropriate all the time.
-A better way to run queries asynchronously is to provide callbacks to
-the `execute-async` call:
+You will need to use `execute-async` which returns a future and accepts
+2 callbacks via its options, one for :success one for :error
 
 ```clojure
-(alia/execute-async session "SELECT * FROM foo;" :success (fn [rs] (do-something rs)))
-```
-Again it will return immediately (as a `result-channel`) and will
-trigger the `:success` callback passing it the resultset once the
-result is available. You can also provide an `:error` callback.
-
-
-```clojure
-(alia/execute-async session
-                    "SELECT * FROM foo;"
-                    {:success (fn [rs] (do-something rs))
-                     :error (fn [ex] (deal-with-the-error ex))})
+(def query (alia/execute-async session "SELECT * FROM foo;" {:success (fn [r] ...) :error (fn [e] ...)})}))
 ```
 
-[Lamina](https://github.com/ztellman/lamina) makes it easy to work in
-asynchronous situations, I encourage you to read about
-[pipelines](https://github.com/ztellman/lamina/wiki/Pipelines-new) and
-[channels](https://github.com/ztellman/lamina/wiki/Channels-new) in
-particular, its API is really rich.
-
+You can also just deref the return value as it is a future, but it's
+almost never what you want.
 
 #### clojure/core.async asynchronous interface
 
@@ -288,10 +260,13 @@ and a callback as second:
              (conj ret (<! (execute-chan session "select * from users limit 1")))))))
 ```
 
-Some interesting examples are in the
-[official walkthrough](https://github.com/clojure/core.async/blob/master/examples/walkthrough.clj)
-
-This is experimental at this point and subject to changes.
+`alia/execute-chan-buffered` is a different beast, it allows
+controlled streaming of rows in a channel (1 channel value = 1
+row). When you setup your query the channel buffer will inherit the
+fetch size of the context and allow you to control when/how to
+retrieve the streamed results the server is sending you and exert
+backpressure. You could this way retrieve a very large dataset and
+handle it in a streaming fashion.
 
 ### Prepared statements
 
@@ -309,6 +284,17 @@ In order to prepare a statement you need to use `alia/prepare`
 (alia/execute session statement {:values ["value-of-foo" "value-of-bar"]})
 ```
 
+with named markers:
+
+```clojure
+(def statement (alia/prepare session "SELECT * FROM foo WHERE foo= :foo AND bar= :bar;"))
+```
+
+
+```clojure
+(alia/execute session statement {:values {:foo "value-of-foo" :bar "value-of-bar"}})
+```
+
 Alternatively you can bind values prior to execution (in case the
 value don't change often and you don't want this step to be repeated at
 query time for every call to `execute` or `execute-async`).
@@ -323,6 +309,11 @@ done under the hood.
 
 And this is it for the core of the function you need to know.
 There are a few other that can be useful though.
+
+
+### Batching
+
+TODO
 
 ### `alia/execute` & `alia/execute-async` advanced options
 
@@ -348,8 +339,7 @@ an `:executor` option that will set the java.util.concurrent
 
 Here are the supported consistency and serial-consistency levels:
 
-`:all` `:any` `:each-quorum` `:local-quorum` `:one` `:quorum` `:three` `:two`
-
+`:each-quorum, :one, :local-quorum, :quorum, :three, :all, :serial, :two, :local-serial, :local-one, :any`
 
 ```clojure
 (alia/execute session bst {:consistency :all})
@@ -358,23 +348,13 @@ Here are the supported consistency and serial-consistency levels:
 You can also set the consistency globaly at the cluster level via
 `qbits.alia/cluster` options.
 
-#### Executors
+#### Executors/Threading model
 
 The executor used to deal with result set futures (in asynchronous
-mode) can be passed as a named argument to `alia/execute-async`, or like
-sessions, and consistency be set with a function globally or with a
-binding:
-
+mode) can be passed as a named argument to `alia/execute-*` functions:
 
 ```clojure
 (alia/execute-async session bst {:executor executor-instance})
-```
-Alia comes with a thin wrapper for j.u.c Executors, [mpenet/knit](https://github.com/mpenet/knit).
-
-Ex:
-```clojure
-(require '[qbits.knit :as knit])
-(alia/execute-async session bst {:executor (knit/executor :fixed :num-threads 50)})
 ```
 
 #### Routing key
