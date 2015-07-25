@@ -128,6 +128,11 @@
   (decode [x] x)
   (encode [x] x))
 
+(defn lazy-result-set
+  [^ResultSet result-set]
+  (when-let [row (.one result-set)]
+    (lazy-seq (cons row (lazy-result-set result-set)))))
+
 (defn result-set->maps
   [^ResultSet result-set string-keys?]
   (let [key-fn (if string-keys? identity keyword)]
@@ -142,7 +147,7 @@
                             (assoc! row-map
                                     (key-fn (.getName cdef idx))
                                     (deserialize row idx (.getType cdef idx))))))))
-             result-set)
+             (lazy-result-set result-set))
         (vary-meta assoc :execution-info (.getExecutionInfo result-set)))))
 
 (defprotocol PNamedBinding

@@ -302,14 +302,13 @@
                          (recur (cons row coll))
                          coll))))))
 
-  ;; (let [ch (execute-chan-buffered *session* "select * from items;" {:fetch-size 1})]
-  ;;   (is (< 3 (count (loop [coll []]
-  ;;                     (if-let [row (async/<!! ch)]
-  ;;                       (do
-  ;;                         (async/close! ch)
-  ;;                         (recur (cons row coll)))
-  ;;                       coll))))))
-  )
+  (let [ch (execute-chan-buffered *session* "select * from items;" {:fetch-size 1})]
+    (is (= 1 (count (loop [coll []]
+                      (if-let [row (async/<!! ch)]
+                        (do
+                          (async/close! ch)
+                          (recur (cons row coll)))
+                        coll)))))))
 
 (deftest test-named-bindings
   (let [prep-write (prepare *session* "INSERT INTO simple (id, text) VALUES(:id, :text);")
