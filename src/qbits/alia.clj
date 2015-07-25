@@ -396,7 +396,8 @@ Values for consistency:
              (onFailure [_ ex]
                (when error
                  (error (ex->ex-info ex {:query statement :values values})))))
-           (get-executor executor))))
+           (get-executor executor))
+         rs-future))
      (catch Throwable t
        (error t))))
   ([^Session session query]
