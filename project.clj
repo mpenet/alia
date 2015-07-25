@@ -1,5 +1,5 @@
 (def driver-version "2.1.7.1")
-(defproject cc.qbits/alia "2.7.1"
+(defproject cc.qbits/alia "2.7.1-SNAPSHOT"
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"
@@ -8,7 +8,7 @@
                  [org.clojure/core.memoize "0.5.6"
                   :exclusions [org.clojure/core.cache]]
                  [org.clojure/core.cache "0.6.4"]
-                 [cc.qbits/commons "0.4.0"]
+                 [cc.qbits/commons "0.4.1"]
                  [cc.qbits/hayt "3.0.0-rc1"]
                  [com.datastax.cassandra/cassandra-driver-core ~driver-version
                   :classifier "shaded"

@@ -292,8 +292,7 @@ By default LOGGED, you can specify :logged :unlogged :counter as
   an optional second argument to control the type"
   ([qs] (batch qs :logged))
   ([qs type]
-   (let [bs (BatchStatement.
-             (get enum/batch-statement-type type))]
+   (let [bs (BatchStatement. (enum/batch-statement-type type))]
      (doseq [q qs]
        (.add bs (query->statement q nil)))
      bs)))
