@@ -27,9 +27,7 @@
                                    [cc.qbits/tardis "1.0.0"]
                                    [codox "0.8.10"]
                                    [manifold "0.1.0-beta3"]
-                                   [org.slf4j/slf4j-log4j12 "1.7.3"]]
-                    :resource-paths ["test/resources"]
-                    :jvm-opts     ["-javaagent:lib/jamm-0.2.5.jar"]}}
+                                   [org.slf4j/slf4j-log4j12 "1.7.3"]]}}
   :jar-exclusions [#"log4j.properties"]
   :codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master/"
           :src-linenum-anchor-prefix "L"
