@@ -331,4 +331,16 @@
     (is (instance? UDTValue (encoder {:foo "f" "bar" 100})))
     (is (instance? UDTValue (encoder {:foo nil "bar" 100})))
     (is (instance? UDTValue (encoder {:foo nil "bar" 100})))
-    (is (instance? UDTValue (encoder-ct {:foo "f" :tup (tup ["a" "b"])})))))
+    (is (instance? UDTValue (encoder-ct {:foo "f" :tup (tup ["a" "b"])})))
+    (is (= :qbits.alia.codec.udt/type-not-found
+           (-> (try (udt-encoder *session* :invalid-type) (catch Exception e e))
+               ex-data
+               :type)))
+    (is (= :qbits.alia.codec.tuple/type-not-found
+           (-> (try (tuple-encoder *session* :users :invalid-type) (catch Exception e e))
+               ex-data
+               :type)))
+    (is (= :qbits.alia.codec.tuple/type-not-found
+           (-> (try (tuple-encoder *session* :invalid-col :invalid-type) (catch Exception e e))
+               ex-data
+               :type)))))

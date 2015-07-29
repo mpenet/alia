@@ -107,13 +107,19 @@
   ([^Session session type]
    (encoder session (.getLoggedKeyspace session) type))
   ([^Session session ks type]
-   (let [t (-> session
-                .getCluster
-                .getMetadata
-                (.getKeyspace (name ks))
-                (.getUserType (name type)))]
+   (let [t (some-> session
+                   .getCluster
+                   .getMetadata
+                   (.getKeyspace (name ks))
+                   (.getUserType (name type)))]
+     (when-not t
+       (throw (ex-info (format "User Type '%s' not found on Keyspace '%s'"
+                               (name type)
+                               (name ks))
+                       {:type ::type-not-found})))
      (fn [x]
        (let [utv (.newValue t)]
          (doseq [[k v] x]
            (set-field! utv (name k) (codec/encode v)))
          utv)))))
+;; https://github.com/pyr/cyanite/issues/113

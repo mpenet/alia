@@ -108,13 +108,18 @@
   ([^Session session table column]
    (encoder session (.getLoggedKeyspace session) table column))
   ([^Session session ks table column]
-   (let [^TupleType t (-> session
-                          .getCluster
-                          .getMetadata
-                          (.getKeyspace (name ks))
-                          (.getTable (name table))
-                          (.getColumn (name column))
-                          (.getType))]
+   (let [^TupleType t (some-> session
+                              .getCluster
+                              .getMetadata
+                              (.getKeyspace (name ks))
+                              (.getTable (name table))
+                              (.getColumn (name column))
+                              (.getType))]
+     (when-not t
+       (throw (ex-info (format "Tuple Column '%s' not found on Keyspace '%s'"
+                               (name column)
+                               (name ks))
+                       {:type ::type-not-found})))
      (fn [coll]
        (let [ttv (.newValue t)]
          (loop [i 0
