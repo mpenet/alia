@@ -9,6 +9,8 @@ something weird is supplied
   respecting fetch-size more accurately (especially important for
   execute-chan-buffered).
 
+* invalid udt/tuple encoders now throw if supplied an invalid type name
+
 ## 2.7.1
 
 **Breaking changes**
