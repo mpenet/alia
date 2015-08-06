@@ -34,7 +34,7 @@
                                  consistency serial-consistency fetch-size
                                  timestamp paging-state)
          (let [^ResultSetFuture rs-future (.executeAsync session statement)]
-           (d/on-realized deferred success error)
+           (d/on-realized deferred (or success (fn [_])) (or error (fn [_])))
            (Futures/addCallback
              rs-future
              (reify FutureCallback
