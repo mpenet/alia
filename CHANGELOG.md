@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.7.3
+
+* manifold interface, fix NPE when missing success or error handler
+  passed to manifold/on-realized
+
 ## 2.7.2
 
 * All enum taking fns will now reject invalid values and throw if
