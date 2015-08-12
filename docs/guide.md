@@ -224,7 +224,7 @@ You will need to use `execute-async` which returns a future and accepts
 2 callbacks via its options, one for :success one for :error
 
 ```clojure
-(def query (alia/execute-async session "SELECT * FROM foo;" {:success (fn [r] ...) :error (fn [e] ...)})}))
+(alia/execute-async session "SELECT * FROM foo;" {:success (fn [r] ...) :error (fn [e] ...)})
 ```
 
 You can also just deref the return value as it is a future, but it's
@@ -306,7 +306,7 @@ In order to prepare a statement you need to use `alia/prepare`
 
 Alternatively you can bind values prior to execution (in case the
 value don't change often and you don't want this step to be repeated at
-query time for every call to `execute` or `execute-async`).
+query type for every call to `execute` or `execute-async`).
 
 ```clojure
 (def bst (alia/bind statement ["value-of-foo" "value-of-bar"]))
@@ -345,7 +345,6 @@ You can easily mix them:
 
 (alia/execute session statement {:values [(->user {:name "Max Penet" :age 38 :address (->address {:street "..."})})]})
 ```
-*
 
 ### Batching
 
