@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.7.4
+
+* drop :exception-info metadata on result-set
+
+* prevent calls to ResultSet.one() when not needed (true fire and forget)
+
 ## 2.7.3
 
 * manifold interface, fix NPE when missing success or error handler
