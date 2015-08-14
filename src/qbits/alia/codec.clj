@@ -163,13 +163,12 @@
     (reduce [this f init]
       (let [key-fn (or key-fn keyword)]
         (loop [ret init]
-          (let [row (.one result-set)]
-            (if row
-              (let [ret (f ret (decode-row row key-fn))]
-                (if (reduced? ret)
-                  @ret
-                  (recur ret)))
-              ret)))))))
+          (if-let [row (.one result-set)]
+            (let [ret (f ret (decode-row row key-fn))]
+              (if (reduced? ret)
+                @ret
+                (recur ret)))
+            ret))))))
 
 (defn result-set->maps
   [^ResultSet result-set result-set-fn key-fn]
