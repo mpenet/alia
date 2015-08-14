@@ -137,21 +137,43 @@
   [^ResultSet result-set]
   (lazy-seq (lazy-result-set- result-set)))
 
+(defn decode-row
+  [^Row row key-fn]
+  (let [cdef (.getColumnDefinitions row)
+        len (.size cdef)]
+    (loop [idx (int 0)
+           row-map (transient {})]
+      (if (= idx len)
+        (persistent! row-map)
+        (recur (unchecked-inc-int idx)
+               (assoc! row-map
+                       (key-fn (.getName cdef idx))
+                       (deserialize row idx (.getType cdef idx))))))))
+
+(defn ->result-set
+  [^ResultSet result-set key-fn]
+  (reify ResultSet
+    clojure.lang.Seqable
+    (seq [_]
+      (let [key-fn (or key-fn keyword)]
+        (map #(decode-row % key-fn)
+             (lazy-result-set result-set))))
+
+    clojure.lang.IReduceInit
+    (reduce [this f init]
+      (let [key-fn (or key-fn keyword)]
+        (loop [ret init]
+          (let [row (.one result-set)]
+            (if row
+              (let [ret (f ret (decode-row row key-fn))]
+                (if (reduced? ret)
+                  @ret
+                  (recur ret)))
+              ret)))))))
+
 (defn result-set->maps
-  [^ResultSet result-set string-keys?]
-  (let [key-fn (if string-keys? identity keyword)]
-    (map (fn [^Row row]
-           (let [cdef (.getColumnDefinitions row)
-                 len (.size cdef)]
-             (loop [idx (int 0)
-                    row-map (transient {})]
-               (if (= idx len)
-                 (persistent! row-map)
-                 (recur (unchecked-inc-int idx)
-                        (assoc! row-map
-                                (key-fn (.getName cdef idx))
-                                (deserialize row idx (.getType cdef idx))))))))
-         (lazy-result-set result-set))))
+  [^ResultSet result-set result-set-fn key-fn]
+  ((or result-set-fn seq) (->result-set result-set key-fn)))
 
 (defprotocol PNamedBinding
   "Bind the val onto Settable by name"

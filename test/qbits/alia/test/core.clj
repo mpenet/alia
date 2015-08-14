@@ -116,13 +116,6 @@
         (shutdown *session*)
         (shutdown *cluster*)))))
 
-;; (deftest test-string-keys
-;;   (is (= (map (fn [user-map]
-;;                 (into {} (map (juxt (comp name key) val)
-;;                               user-map)))
-;;               user-data-set)
-;;          (execute *session* "select * from users;" {:string-keys? true}))))
-
 (deftest test-sync-execute
   (is (= user-data-set
          (execute *session* "select * from users;")))
@@ -268,16 +261,14 @@
    instance))
 
 (deftest test-fetch-size
-  (with-redefs [result-set->maps (fn [result-set string-keys?]
-                                   result-set)]
+  (with-redefs [result-set->maps (fn [result-set _ _] result-set)]
     (let [query "select * from items;"
           result-set (execute *session* query {:fetch-size 3})
           ^Statement statement (get-private-field result-set "statement")]
       (is (= 3 (.getFetchSize statement))))))
 
 (deftest test-fetch-size-chan
-  (with-redefs [result-set->maps (fn [result-set string-keys?]
-                                   result-set)]
+  (with-redefs [result-set->maps (fn [result-set _ _] result-set)]
     (let [query "select * from items;"
           result-channel (execute-chan *session* query {:fetch-size 5})
           result-set (async/<!! result-channel)

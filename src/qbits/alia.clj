@@ -337,7 +337,7 @@ The following options are supported:
 * `:routing-key` : ByteBuffer
 * `:retry-policy` : one of qbits.alia.policy.retry/*
 * `:tracing?` : Bool, toggles query tracing (available via query result metadata)
-* `:string-keys?` : Bool, stringify keys (they are keyword by default)
+* `:key-fn` : fn applied on keys (they are keyword by default)
 * `:fetch-size` : Number, sets query fetching size
 * `:timestamp` : Number, sets the timestamp for query (if not specified in CQL)
 * `:idempotent?` : Whether this statement is idempotent, i.e. whether
@@ -353,8 +353,9 @@ Values for consistency:
 :all :any :each-quorum :local-one :local-quorum :local-serial :one :quorum
 :serial :three :two"
   ([^Session session query {:keys [consistency serial-consistency
-                                   routing-key retry-policy tracing? string-keys?
-                                   idempotent? paging-state
+                                   routing-key retry-policy
+                                   result-set-fn key-fn
+                                   tracing? idempotent? paging-state
                                    fetch-size values timestamp]}]
      (let [^Statement statement (query->statement query values)]
        (set-statement-options! statement routing-key retry-policy
@@ -362,7 +363,9 @@ Values for consistency:
                                consistency serial-consistency fetch-size
                                timestamp paging-state)
        (try
-         (codec/result-set->maps (.execute session statement) string-keys?)
+         (codec/result-set->maps (.execute session statement)
+                                 result-set-fn
+                                 key-fn)
          (catch Exception err
            (throw (ex->ex-info err {:query statement :values values}))))))
   ;; to support old syle api with unrolled args
@@ -374,8 +377,9 @@ Values for consistency:
   callback functions via options. For options refer to
   `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy tracing? idempotent?
-                                   string-keys? fetch-size values timestamp
+                                   routing-key retry-policy result-set-fn
+                                   tracing? idempotent?
+                                   key-fn fetch-size values timestamp
                                    paging-state success error]}]
    (try
      (let [^Statement statement (query->statement query values)]
@@ -390,7 +394,9 @@ Values for consistency:
              (onSuccess [_ result]
                (when success
                  (try
-                   (success (codec/result-set->maps (.get rs-future) string-keys?))
+                   (success (codec/result-set->maps (.get rs-future)
+                                                    result-set-fn
+                                                    key-fn))
                    (catch Exception err
                      (error (ex->ex-info err {:query statement :values values}))))))
              (onFailure [_ ex]
@@ -412,14 +418,14 @@ Values for consistency:
 
   For options refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy tracing? idempotent?
-                                   string-keys? fetch-size values timestamp
+                                   routing-key retry-policy result-set-fn
+                                   tracing? idempotent?
+                                   key-fn fetch-size values timestamp
                                    paging-state]}]
    (let [ch (async/chan 1)]
      (try
        (let [^Statement statement (query->statement query values)]
-         (set-statement-options! statement routing-key retry-policy
-                                 tracing? idempotent?
+         (set-statement-options! statement routing-key retry-policy tracing? idempotent?
                                  consistency serial-consistency fetch-size
                                  timestamp paging-state)
          (let [^ResultSetFuture rs-future (.executeAsync session statement)]
@@ -428,7 +434,9 @@ Values for consistency:
             (reify FutureCallback
               (onSuccess [_ result]
                 (try
-                  (async/put! ch (codec/result-set->maps (.get rs-future) string-keys?))
+                  (async/put! ch (codec/result-set->maps (.get rs-future)
+                                                         result-set-fn
+                                                         key-fn))
                   (catch Exception err
                     (async/put! ch (ex->ex-info err {:query statement :values values}))))
                 (async/close! ch))
@@ -458,8 +466,8 @@ Values for consistency:
   responsability to handle these how you deem appropriate. For options
   refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy tracing? idempotent?
-                                   string-keys? fetch-size values timestamp
+                                   routing-key retry-policy result-set-fn tracing? idempotent?
+                                   key-fn fetch-size values timestamp
                                    channel paging-state]}]
    (let [ch (or channel (async/chan (or fetch-size (-> session
                                                        .getCluster
@@ -480,7 +488,9 @@ Values for consistency:
                 (async/go
                   (try
                     (loop [rows (codec/result-set->maps
-                                 (.get ^ResultSetFuture rs-future) string-keys?)]
+                                 (.get ^ResultSetFuture rs-future)
+                                 result-set-fn
+                                 key-fn)]
                       (when-let [row (first rows)]
                         (when (async/>! ch row)
                           (recur (rest rows)))))

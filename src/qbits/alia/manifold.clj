@@ -23,8 +23,8 @@
 
   For other options refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [success error executor consistency
-                                   serial-consistency routing-key
-                                   retry-policy tracing? string-keys? idempotent?
+                                   serial-consistency routing-key result-set-fn
+                                   retry-policy tracing? key-fn idempotent?
                                    fetch-size timestamp values paging-state]}]
    (let [deferred (d/deferred)]
      (try
@@ -41,7 +41,9 @@
                (onSuccess [_ result]
                  (try
                    (d/success! deferred
-                               (codec/result-set->maps (.get rs-future) string-keys?))
+                               (codec/result-set->maps (.get rs-future)
+                                                       result-set-fn
+                                                       key-fn))
                    (catch Exception err
                      (d/error! deferred
                                (ex->ex-info err {:query statement :values values})))))
@@ -68,8 +70,8 @@
   responsability to handle these how you deem appropriate. For options
   refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy tracing?
-                                   string-keys? idempotent? fetch-size values
+                                   routing-key result-set-fn retry-policy tracing?
+                                   key-fn idempotent? fetch-size values
                                    stream timestamp paging-state]}]
    (let [stream (or stream
                     (s/stream (or fetch-size (-> session .getCluster
@@ -88,7 +90,9 @@
              (reify FutureCallback
                (onSuccess [_ result]
                  (try
-                   (loop [rows (codec/result-set->maps (.get rs-future) string-keys?)]
+                   (loop [rows (codec/result-set->maps (.get rs-future)
+                                                       result-set-fn
+                                                       key-fn)]
                      (when-let [row (first rows)]
                        (when (s/put! stream row)
                          (recur (rest rows)))))
