@@ -1,13 +1,19 @@
 # Changelog
 
-## 2.8.0
+## 2.8.0 - clojure 1.7 required
 
 * ResultSet decoding is now done via a protocol that implements both
 seq() and IReduceInit(), the former would return an unchunked lazy seq
 (it's the detault, same as previous versions, it's equivalent to
 passing `{:result-set-fn seq}` to execute), and the later would you to
 get a reducible for instance if you pass `#(into [] %)` as a
-`:result-set-fn`, which is eager and cheaper.
+`:result-set-fn`, which is eager and cheaper. `IReduceInit` is 1.7+
+only, hence the new requirement.
+
+* Via `:result-set-fn` you can also reach ExecutionInfos from the rs
+(which was previously always set as metadata to rs) by calling
+qbits.codec/execution-info on the argument passed to your function,
+from there you could for instance log the information returned.
 
 * Breaking: `:string-keys?` is removed in favor of `:key-fn`
 

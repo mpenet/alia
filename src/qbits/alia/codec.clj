@@ -128,6 +128,9 @@
   (decode [x] x)
   (encode [x] x))
 
+(defprotocol PResultSet
+  (execution-info [this]))
+
 (defn lazy-result-set-
   [^ResultSet result-set]
   (when-let [row (.one result-set)]
@@ -153,8 +156,11 @@
 (defn ->result-set
   [^ResultSet result-set key-fn]
   (reify ResultSet
+    PResultSet
+    (execution-info [this]
+      (.getAllExecutionInfo result-set))
     clojure.lang.Seqable
-    (seq [_]
+    (seq [this]
       (let [key-fn (or key-fn keyword)]
         (map #(decode-row % key-fn)
              (lazy-result-set result-set))))
