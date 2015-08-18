@@ -339,4 +339,4 @@
 (deftest test-result-set-types
   (is (instance? clojure.lang.LazySeq (execute *session* "select * from items;")))
   (is (instance? clojure.lang.PersistentVector (execute *session* "select * from items;"
-                                                        {:result-set-fn #(into [])}))))
+                                                        {:result-set-fn #(into [] %)}))))
