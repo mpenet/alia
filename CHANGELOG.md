@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.8.0
+
+* ResultSet decoding is now done via a protocol that implements both
+seq() and IReduceInit(), the former would return an unchunked lazy seq
+(it's the detault, same as previous versions, it's equivalent to
+passing `{:result-set-fn seq}` to execute), and the later would you to
+get a reducible for instance if you pass `#(into [] %)` as a
+`:result-set-fn`, which is eager and cheaper.
+
+* Breaking: `:string-keys?` is removed in favor of `:key-fn`
+
 ## 2.7.4
 
 * drop :exception-info metadata on result-set
