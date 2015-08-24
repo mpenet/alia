@@ -32,7 +32,7 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 
 ## Installation
 
-Alia requires runs on clojure >= 1.7 (we're using IReduceInit internally)
+Alia runs on clojure >= 1.7 (we're using IReduceInit internally)
 
 The binary protocol server is not started with the default
 configuration file coming with Cassandra 1.2+
