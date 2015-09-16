@@ -250,13 +250,10 @@ Some examples:
        (order-by [:bar :asc])
        (using :ttl 10000))
 
-;; To compile the queries just use ->raw or ->prepared
+;; To compile the queries just use ->raw
 
 (->raw (select :foo))
 > "SELECT * FROM foo;"
-
-(->prepared (select :foo (where {:bar 1})))
-> ["SELECT * FROM foo WHERE bar=?;" [1]]
 
 ```
 
