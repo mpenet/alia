@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.8.1
+
+* Handle custom decoding in deeply nested datastructures via PCodec
+  protocol issue #45
+
 ## 2.8.0 - clojure 1.7 required
 
 * ResultSet decoding is now done via a protocol that implements both
