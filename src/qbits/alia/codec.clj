@@ -75,19 +75,8 @@
                (decode (.getMap x idx
                                 (types-args->type t first)
                                 (types-args->type t second))))
-  :tuple     (when-let [tuple-value (.getTupleValue x idx)]
-               (let [types (.getComponentTypes (.getType tuple-value))
-                     len (.size types)]
-                 (loop [tuple (transient [])
-                        idx' 0]
-                   (if (= idx' len)
-                     (persistent! tuple)
-                     (recur (conj! tuple (decode (deserialize tuple-value
-                                                              idx'
-                                                              (.get types idx'))))
-                            (unchecked-inc-int idx'))))))
-  :udt       (when-let [udt-value (.getUDTValue x idx)]
-               (decode udt-value)))
+  :tuple     (some-> x (.getTupleValue idx) decode)
+  :udt       (some-> x (.getUDTValue idx) decode))
 
 (extend-protocol PCodec
 
@@ -131,6 +120,21 @@
                                                 idx'
                                                 (.getType type))))
                    (unchecked-inc-int idx')))))))
+
+  TupleValue
+  (encode [x] x)
+  (decode [tuple-value]
+    (let [types (.getComponentTypes (.getType tuple-value))
+          len (.size types)]
+      (loop [tuple (transient [])
+             idx' 0]
+        (if (= idx' len)
+          (persistent! tuple)
+          (recur (conj! tuple
+                        (decode (deserialize tuple-value
+                                             idx'
+                                             (.get types idx'))))
+                 (unchecked-inc-int idx'))))))
 
   Object
   (encode [x] x)
