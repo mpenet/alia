@@ -1,20 +1,20 @@
 (ns qbits.alia.codec
   (:require [qbits.commons :refer [case-enum]])
   (:import
-    (java.nio ByteBuffer)
-    (com.datastax.driver.core
-      DataType
-      DataType$Name
-      GettableByIndexData
-      KeyspaceMetadata
-      ResultSet
-      Row
-      UserType$Field
-      SettableByNameData
-      UDTValue
-      TupleValue)
-    (java.util UUID List Map Set Date)
-    (java.net InetAddress)))
+   (java.nio ByteBuffer)
+   (com.datastax.driver.core
+    DataType
+    DataType$Name
+    GettableByIndexData
+    KeyspaceMetadata
+    ResultSet
+    Row
+    UserType$Field
+    SettableByNameData
+    UDTValue
+    TupleValue)
+   (java.util UUID List Map Set Date)
+   (java.net InetAddress)))
 
 (defprotocol PCodec
   (decode [x]
@@ -24,7 +24,7 @@
     "Encodes clj value into a valid cassandra value for prepared
     statements (usefull for external libs such as joda time)"))
 
-(declare deserialize)
+(declare deserialize decode-xform)
 
 (defmacro defdeserializers [[x idx col-type] & specs]
   (let [args [(vary-meta x assoc :tag "com.datastax.driver.core.GettableByIndexData")
@@ -52,46 +52,42 @@
   (.asJavaClass ^DataType (pred type-args)))
 
 (defdeserializers [x idx col-type]
- :ascii     (decode (.getString x idx))
- :bigint    (decode (.getLong x idx))
- :blob      (decode (.getBytes x idx))
- :boolean   (decode (.getBool x idx))
- :counter   (decode (.getLong x idx))
- :custom    (decode (.getBytesUnsafe x idx))
- :decimal   (decode (.getDecimal x idx))
- :double    (decode (.getDouble x idx))
- :float     (decode (.getFloat x idx))
- :inet      (decode (.getInet x idx))
- :int       (decode (.getInt x idx))
- :text      (decode (.getString x idx))
- :timestamp (decode (.getDate x idx))
- :timeuuid  (decode (.getUUID x idx))
- :uuid      (decode (.getUUID x idx))
- :varchar   (decode (.getString x idx))
- :varint    (decode (.getVarint x idx))
-
- :list      (decode (.getList x idx (types-args->type (.getTypeArguments col-type) first)))
- :set       (decode (.getSet x idx (types-args->type (.getTypeArguments col-type) first)))
- :map       (let [t (.getTypeArguments col-type)]
-              (decode (.getMap x idx
-                               (types-args->type t first)
-                               (types-args->type t second))))
- :tuple     (when-let [tuple-value (.getTupleValue x idx)]
-              (let [types (.getComponentTypes (.getType tuple-value))
-                    len (.size types)]
-                (loop [tuple []
-                       idx' 0]
-                  (if (= idx' len)
-                    tuple
-                    (recur (conj tuple (decode (deserialize tuple-value
-                                                            idx'
-                                                            (.get types idx'))))
-                           (unchecked-inc-int idx'))))))
- :udt       (when-let [udt-value (.getUDTValue x idx)]
-              (decode udt-value)))
-
-
-(def ^:no-doc decode-xform (map decode))
+  :ascii     (decode (.getString x idx))
+  :bigint    (decode (.getLong x idx))
+  :blob      (decode (.getBytes x idx))
+  :boolean   (decode (.getBool x idx))
+  :counter   (decode (.getLong x idx))
+  :custom    (decode (.getBytesUnsafe x idx))
+  :decimal   (decode (.getDecimal x idx))
+  :double    (decode (.getDouble x idx))
+  :float     (decode (.getFloat x idx))
+  :inet      (decode (.getInet x idx))
+  :int       (decode (.getInt x idx))
+  :text      (decode (.getString x idx))
+  :timestamp (decode (.getDate x idx))
+  :timeuuid  (decode (.getUUID x idx))
+  :uuid      (decode (.getUUID x idx))
+  :varchar   (decode (.getString x idx))
+  :varint    (decode (.getVarint x idx))
+  :list      (decode (.getList x idx (types-args->type (.getTypeArguments col-type) first)))
+  :set       (decode (.getSet x idx (types-args->type (.getTypeArguments col-type) first)))
+  :map       (let [t (.getTypeArguments col-type)]
+               (decode (.getMap x idx
+                                (types-args->type t first)
+                                (types-args->type t second))))
+  :tuple     (when-let [tuple-value (.getTupleValue x idx)]
+               (let [types (.getComponentTypes (.getType tuple-value))
+                     len (.size types)]
+                 (loop [tuple (transient [])
+                        idx' 0]
+                   (if (= idx' len)
+                     (persistent! tuple)
+                     (recur (conj! tuple (decode (deserialize tuple-value
+                                                              idx'
+                                                              (.get types idx'))))
+                            (unchecked-inc-int idx'))))))
+  :udt       (when-let [udt-value (.getUDTValue x idx)]
+               (decode udt-value)))
 
 (extend-protocol PCodec
 
@@ -124,17 +120,18 @@
     (let [udt-type (.getType udt-value)
           udt-type-iter (.iterator udt-type)
           len (.size udt-type)]
-      (loop [udt {}
+      (loop [udt (transient {})
              idx' 0]
         (if (= idx' len)
-          udt
+          (persistent! udt)
           (let [^UserType$Field type (.next udt-type-iter)]
-            (recur (assoc udt
-                          (-> type .getName keyword)
-                          (decode (deserialize udt-value
-                                               idx'
-                                               (.getType type))))
+            (recur (assoc! udt
+                           (-> type .getName keyword)
+                           (decode (deserialize udt-value
+                                                idx'
+                                                (.getType type))))
                    (unchecked-inc-int idx')))))))
+
   Object
   (encode [x] x)
   (decode [x] x)
@@ -142,6 +139,8 @@
   nil
   (decode [x] x)
   (encode [x] x))
+
+(def ^:no-doc decode-xform (map decode))
 
 (defprotocol PResultSet
   (execution-info [this]))
