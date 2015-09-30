@@ -69,6 +69,7 @@
  :uuid      (decode (.getUUID x idx))
  :varchar   (decode (.getString x idx))
  :varint    (decode (.getVarint x idx))
+
  :list      (decode (.getList x idx (types-args->type (.getTypeArguments col-type) first)))
  :set       (decode (.getSet x idx (types-args->type (.getTypeArguments col-type) first)))
  :map       (let [t (.getTypeArguments col-type)]
@@ -87,20 +88,10 @@
                                                             (.get types idx'))))
                            (unchecked-inc-int idx'))))))
  :udt       (when-let [udt-value (.getUDTValue x idx)]
-              (let [udt-type (.getType udt-value)
-                    udt-type-iter (.iterator udt-type)
-                    len (.size udt-type)]
-                (loop [udt {}
-                       idx' 0]
-                  (if (= idx' len)
-                    udt
-                    (let [^UserType$Field type (.next udt-type-iter)]
-                      (recur (assoc udt
-                                    (-> type .getName keyword)
-                                    (decode (deserialize udt-value
-                                                         idx'
-                                                         (.getType type))))
-                             (unchecked-inc-int idx'))))))))
+              (decode udt-value)))
+
+
+(def ^:no-doc decode-xform (map decode))
 
 (extend-protocol PCodec
 
@@ -110,16 +101,40 @@
 
   Map
   (encode [x] x)
-  (decode [x] (into {} x))
+  (decode [x]
+    (->> x
+         (reduce (fn [m [k v]]
+                   (assoc! m k (decode v)))
+                 (transient {}))
+         persistent!))
 
   Set
   (encode [x] x)
-  (decode [x] (into #{} x))
+  (decode [x]
+    (into #{} decode-xform x))
 
   List
   (encode [x] x)
-  (decode [x] (into [] x))
+  (decode [x]
+    (into [] decode-xform x))
 
+  UDTValue
+  (encode [x] x)
+  (decode [udt-value]
+    (let [udt-type (.getType udt-value)
+          udt-type-iter (.iterator udt-type)
+          len (.size udt-type)]
+      (loop [udt {}
+             idx' 0]
+        (if (= idx' len)
+          udt
+          (let [^UserType$Field type (.next udt-type-iter)]
+            (recur (assoc udt
+                          (-> type .getName keyword)
+                          (decode (deserialize udt-value
+                                               idx'
+                                               (.getType type))))
+                   (unchecked-inc-int idx')))))))
   Object
   (encode [x] x)
   (decode [x] x)
