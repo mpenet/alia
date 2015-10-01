@@ -1,11 +1,17 @@
 # Changelog
 
-## 2.8.1
+## 2.9.0
+
+* Respect nullability of row cells: previously a Boolean column would
+  be False when no value was set, a Long would always default to 0 and
+  so on. This differed from cqlsh and what's general expected and was
+  a side effect of the java API available at the time the decoding
+  code was written.
 
 * Handle custom decoding in deeply nested datastructures via PCodec
-protocol issue #45
-
-* Respect nullability of row cells
+  protocol https://github.com/mpenet/alia/issues/45. It's on by default
+  but it is possible to turn this off by extending PCodec protocol for
+  Map, List, Set, TupleValue, UDTValue to just be "identity".
 
 ## 2.8.0 - clojure 1.7 required
 
