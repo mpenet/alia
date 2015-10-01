@@ -3,7 +3,9 @@
 ## 2.8.1
 
 * Handle custom decoding in deeply nested datastructures via PCodec
-  protocol issue #45
+protocol issue #45
+
+* Respect nullability of row cells
 
 ## 2.8.0 - clojure 1.7 required
 
