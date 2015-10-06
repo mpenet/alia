@@ -47,7 +47,7 @@ Then add this to your dependencies:
 
 If you are running Cassandra 2.0+:
 ```clojure
-[cc.qbits/alia "2.9.0"]
+[cc.qbits/alia "2.10.0"]
 ```
 
 If you are running Cassandra 1.2:

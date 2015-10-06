@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.10.0
+
+* Use java-driver 2.1.8 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/tree/2.1/changelog)
+
 ## 2.9.0
 
 * Respect nullability of row cells: previously a Boolean column would
