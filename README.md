@@ -117,6 +117,7 @@ keyspaces from the same cluster definition.
                          {'foo': 1, 'bar': 2}, [4, 5, 6],
                          1f84b56b-5481-4ee4-8236-8a3831ee5892, true);")
 
+  ;; prepared statement with positional parameter(s)
   (def prepared-statement (alia/prepare session "select * from users where user_name=?;"))
 
   (alia/execute session prepared-statement {:values ["frodo"]})
@@ -131,6 +132,13 @@ keyspaces from the same cluster definition.
        :valid true,
        :birth_year 1,
        :user_name "frodo"})
+
+  ;; prepared statement with named parameter(s)
+  (def prepared-statement (alia/prepare session "select * from users where user_name= :name limit :limit;"))
+
+  (alia/execute session prepared-statement {:values {:name "frodo" :limit 1}})
+
+
 ```
 
 ### Asynchronous interfaces:
