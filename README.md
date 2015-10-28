@@ -143,7 +143,7 @@ keyspaces from the same cluster definition.
 
 ### Asynchronous interfaces:
 
-There are currently 3 interfacese to use the asynchronous methods of
+There are currently 3 interfaces to use the asynchronous methods of
 the underlying driver, the main one being **core.async**, another
 using simple functions and an optional **manifold** interfaces is
 also available.
