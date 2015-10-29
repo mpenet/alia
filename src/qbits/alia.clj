@@ -410,7 +410,7 @@ Values for consistency:
    (execute-async session query {})))
 
 (defn execute-chan
-  "Same as execute, but returns a clojure.core.async/chan that is
+  "Same as execute, but returns a clojure.core.async/promise-chan that is
   wired to the underlying ResultSetFuture. This means this is usable
   with `go` blocks or `take!`. Exceptions are sent to the channel as a
   value, it's your responsability to handle these how you deem
@@ -422,7 +422,7 @@ Values for consistency:
                                    tracing? idempotent?
                                    key-fn fetch-size values timestamp
                                    paging-state]}]
-   (let [ch (async/chan 1)]
+   (let [ch (async/promise-chan)]
      (try
        (let [^Statement statement (query->statement query values)]
          (set-statement-options! statement routing-key retry-policy tracing? idempotent?
@@ -441,12 +441,10 @@ Values for consistency:
                     (async/put! ch (ex->ex-info err {:query statement :values values}))))
                 (async/close! ch))
               (onFailure [_ ex]
-                (async/put! ch (ex->ex-info ex {:query statement :values values}))
-                (async/close! ch)))
+                (async/put! ch (ex->ex-info ex {:query statement :values values}))))
             (get-executor executor))))
        (catch Throwable t
-         (async/put! ch t)
-         (async/close! ch)))
+         (async/put! ch t)))
      ch))
   ([^Session session query]
      (execute-chan session query {})))

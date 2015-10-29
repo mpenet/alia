@@ -234,7 +234,8 @@ almost never what you want.
 
 `alia/execute-chan` has the same signature as the other execute
 functions and as the name implies returns a clojure/core.async
-channel that will contain a list of rows at some point or an exception instance.
+promise-chan that will contain a list of rows at some point or an
+exception instance.
 
 Once you run it you have a couple of options to pull data from it.
 

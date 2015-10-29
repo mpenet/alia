@@ -47,7 +47,7 @@ Then add this to your dependencies:
 
 If you are running Cassandra 2.0+:
 ```clojure
-[cc.qbits/alia "2.10.0"]
+[cc.qbits/alia "2.11.0"]
 ```
 
 If you are running Cassandra 1.2:
@@ -163,7 +163,7 @@ also available.
 
 `alia/execute-chan` has the same signature as the other execute
 functions and as the name implies returns a clojure/core.async
-channel that will contain a list of rows at some point or an exception
+promise-chan that will contain a list of rows at some point or an exception
 instance.
 
 Once you run it you have a couple of options to pull data from it.

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.11.0
+
+* Use latest core.async: as a result `qbits.alia/execute-chan` now
+  returns a core.async/promise-chan.
+
+* Update core.memoize dependency
+
 ## 2.10.0
 
 * Use java-driver 2.1.8 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/tree/2.1/changelog)
