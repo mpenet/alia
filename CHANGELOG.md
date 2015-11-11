@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.12.0
+
+* Use java-driver 2.1.9 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/tree/2.1/changelog)
+
 ## 2.11.0
 
 * Use latest core.async: as a result `qbits.alia/execute-chan` now
