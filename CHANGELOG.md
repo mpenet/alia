@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.12.1
+
+* Correct cassandra-driver-dse exclusions see https://github.com/mpenet/alia/pull/47
+
 ## 2.12.0
 
 * Use java-driver 2.1.9 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/tree/2.1/changelog)
