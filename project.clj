@@ -12,7 +12,7 @@
                   :classifier "shaded"
                   :exclusions [io.netty/*]]
                  [com.datastax.cassandra/cassandra-driver-dse ~driver-version
-                  :exclusions [io.netty/*]]
+                  :exclusions [com.datastax.cassandra/cassandra-driver-core]]
                  [org.clojure/core.async "0.2.371"]]
   :profiles {:1.8  {:dependencies [[org.clojure/clojure "1.8.0-SNAPSHOT"]]}
              :dev  {:dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
