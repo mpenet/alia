@@ -7,7 +7,6 @@
    [qbits.alia.utils :as utils]
    [qbits.alia.enum :as enum]
    [qbits.hayt :as hayt]
-   [clojure.core.memoize :as memo]
    [clojure.core.async :as async]
    [qbits.alia.cluster-options :as copt])
   (:import
@@ -33,14 +32,6 @@
 (defn ^:no-doc get-executor
   [x]
   (or x (MoreExecutors/sameThreadExecutor)))
-
-(def ^:no-doc hayt-query-fn (memo/lu hayt/->raw :lu/threshold 100))
-
-(def set-hayt-query-fn!
-  "Sets root value of hayt-query-fn, allowing to control how hayt
-    queries are executed , defaults to LU with a threshold of 100,
-    this is a global var, changing it will impact all threads"
-  (utils/var-root-setter hayt-query-fn))
 
 (defn cluster
   "Takes an option map and returns a new
@@ -90,9 +81,9 @@ The following options are supported:
 * `:netty-options`: (advanced) see
   http://docs.datastax.com/en/drivers/java/2.1/com/datastax/driver/core/NettyOptions.html
 
-* `:address-translater`: Configures the address translater to use for
+* `:address-translator`: Configures the address translator to use for
   the new cluster. Expects
-  a [AddressTranslater](http://mpenet.github.io/alia/qbits.alia.policy.address-translater.html)
+  a [AddressTranslator](http://mpenet.github.io/alia/qbits.alia.policy.address-translator.html)
   or you can pass :ec2-multi-region which would translate in the
   underlying implementations.
 
@@ -284,7 +275,7 @@ pools/connections"
 
   clojure.lang.IPersistentMap
   (query->statement [q values]
-    (query->statement (hayt-query-fn q) values)))
+    (query->statement (hayt/->raw q) values)))
 
 (defn batch
   "Takes a sequence of statements to be executed in batch.

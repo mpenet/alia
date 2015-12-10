@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.0.0-beta1
+
+* typo translater -> translator (from upstream)
+
+* remove hayt query caching, let this to the end user to manage if wanted
+
+More infos here about using 3.x: https://github.com/datastax/java-driver/tree/3.0/upgrade_guide
+
 ## 2.12.1
 
 * Correct cassandra-driver-dse exclusions see https://github.com/mpenet/alia/pull/47

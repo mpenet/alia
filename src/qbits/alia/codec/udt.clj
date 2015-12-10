@@ -33,7 +33,7 @@
 
   Date
   (-set-field! [d u k]
-    (.setDate ^UDTValue u ^String k  d))
+    (.setTimestamp ^UDTValue u ^String k  d))
 
   BigDecimal
   (-set-field! [d u k]

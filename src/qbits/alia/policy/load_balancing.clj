@@ -64,9 +64,12 @@ be prefered to this policy in that case.
 
 http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/DCAwareRoundRobinPolicy.html"
   ([dc used-hosts-per-remote-dc]
-     (DCAwareRoundRobinPolicy. dc (int used-hosts-per-remote-dc)))
-  ([dc]
-     (DCAwareRoundRobinPolicy. dc)))
+   (let [b (-> (DCAwareRoundRobinPolicy/builder))]
+     (.withLocalDc b dc)
+     (when used-hosts-per-remote-dc
+       (.withUsedHostsPerRemoteDc b (int used-hosts-per-remote-dc)))
+     (.build b)))
+  ([dc] (dc-aware-round-robin-policy dc nil)))
 
 (defn whitelist-policy
   "A load balancing policy wrapper that ensure that only hosts from a

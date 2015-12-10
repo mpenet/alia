@@ -1,11 +1,11 @@
-(ns qbits.alia.policy.address-translater
+(ns qbits.alia.policy.address-translator
   (:import
    (com.datastax.driver.core.policies
-    EC2MultiRegionAddressTranslater
-    IdentityTranslater)))
+    EC2MultiRegionAddressTranslator
+    IdentityTranslator)))
 
-(defn ec2-multi-region-address-translater
-  "AddressTranslater implementation for a multi-region EC2 deployment where
+(defn ec2-multi-region-address-translator
+  "AddressTranslator implementation for a multi-region EC2 deployment where
   clients are also deployed in EC2.
 
   Its distinctive feature is that it translates addresses according to
@@ -16,9 +16,9 @@
   This optimizes network costs, because Amazon charges more for
   communication over public IPs."
   []
-  (EC2MultiRegionAddressTranslater.))
+  (EC2MultiRegionAddressTranslator.))
 
-(defn identity-translater
-  "The default AddressTranslater used by the driver that do no translation."
+(defn identity-translator
+  "The default AddressTranslator used by the driver that do no translation."
   []
-  (IdentityTranslater.))
+  (IdentityTranslator.))

@@ -43,6 +43,6 @@
 
 (defn query-logger
   [cluster options]
-  (-> (QueryLogger/builder cluster)
+  (-> (QueryLogger/builder)
       (set-query-logger-options! options)
       .build))

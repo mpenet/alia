@@ -3,7 +3,7 @@
    [qbits.alia.enum :as enum]
    [clojure.java.io :as io]
    [qbits.alia.timestamp-generator :as tsg]
-   [qbits.alia.policy.address-translater :as at])
+   [qbits.alia.policy.address-translator :as at])
   (:import
    (com.datastax.driver.core
     Cluster$Builder
@@ -12,10 +12,12 @@
     ProtocolOptions$Compression
     QueryOptions
     SocketOptions
+    JdkSSLOptions
+    JdkSSLOptions$Builder
     SSLOptions
     TimestampGenerator)
    (com.datastax.driver.core.policies
-    AddressTranslater
+    AddressTranslator
     LoadBalancingPolicy
     ReconnectionPolicy
     RetryPolicy
@@ -58,8 +60,7 @@
 (defmethod set-cluster-option! :pooling-options
   [_ ^Cluster$Builder builder {:keys [core-connections-per-host
                                       max-connections-per-host
-                                      max-simultaneous-requests-per-connection
-                                      min-simultaneous-requests-per-connection]
+                                      max-simultaneous-requests-per-connection]
                                :as pooling-options}]
   (doseq [[opt x] pooling-options]
     (set-cluster-option! opt builder x))
@@ -88,14 +89,6 @@
   (let [po (pooling-options builder)]
     (doseq [[dist value] max-simultaneous-requests-per-connection]
       (.setMaxSimultaneousRequestsPerConnectionThreshold po (enum/host-distance dist)
-                                                         (int value)))
-    builder))
-
-(defmethod set-cluster-option! :min-simultaneous-requests-per-connection
-  [_ ^Cluster$Builder builder min-simultaneous-requests-per-connection]
-  (let [po (pooling-options builder)]
-    (doseq [[dist value] min-simultaneous-requests-per-connection]
-      (.setMinSimultaneousRequestsPerConnectionThreshold po (enum/host-distance dist)
                                                          (int value)))
     builder))
 
@@ -221,10 +214,6 @@
   (.withSSL builder
             (if (instance? ssl-options SSLOptions)
               ssl-options
-              ;; Following part is inspired by
-              ;; http://www.datastax.com/dev/blog/accessing-secure-dse-clusters-with-cql-native-protocolker
-              ;; and
-              ;; https://github.com/clojurewerkz/cassaforte/pull/60
               (let [{:keys [keystore-path keystore-password cipher-suites]} ssl-options
                     keystore (KeyStore/getInstance "JKS")
                     ssl-context (SSLContext/getInstance "SSL")
@@ -237,10 +226,14 @@
                 (.init ssl-context
                        (.getKeyManagers keymanager)
                        (.getTrustManagers trustmanager) nil)
-                (SSLOptions. ssl-context
-                             (if cipher-suites
-                               (into-array String cipher-suites)
-                               SSLOptions/DEFAULT_SSL_CIPHER_SUITES))))))
+                (doto (JdkSSLOptions/builder)
+                  (.build)
+                  (.withCipherSuites ^Builder (into-array String
+                                                          (if cipher-suites
+                                                            cipher-suites
+                                                            ["TLS_RSA_WITH_AES_128_CBC_SHA"
+                                                             "TLS_RSA_WITH_AES_256_CBC_SHA"])))
+                  (.withSSLContext ssl-context))))))
 
 (defmethod set-cluster-option! :timestamp-generator
   [_ ^Cluster$Builder builder ts-generator]
@@ -253,13 +246,13 @@
                                :thread-local (tsg/thread-local))))
   builder)
 
-(defmethod set-cluster-option! :address-translater
+(defmethod set-cluster-option! :address-translator
   [_ ^Cluster$Builder builder at]
-  (.withAddressTranslater builder
-                          (if (instance? AddressTranslater)
+  (.withAddressTranslator builder
+                          (if (instance? AddressTranslator)
                             at
                             (case at
-                              :ec2-multi-region (at/ec2-multi-region-address-translater))))
+                              :ec2-multi-region (at/ec2-multi-region-address-translator))))
   builder)
 
 (defmethod set-cluster-option! :netty-options
