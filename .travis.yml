@@ -10,7 +10,7 @@ branches:
     - master
 
 env:
-  - CASSANDRA_VERSION=21
+  - CASSANDRA_VERSION=22
 
 before_install:
   - sudo echo "deb http://www.apache.org/dist/cassandra/debian ${CASSANDRA_VERSION}x main" | sudo tee -a /etc/apt/sources.list
