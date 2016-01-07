@@ -12,7 +12,8 @@
    [qbits.hayt :as h]
    [clojure.core.async :as async])
   (:import
-   (com.datastax.driver.core Statement UDTValue)))
+   (com.datastax.driver.core Statement UDTValue)
+   (clojure.lang ExceptionInfo)))
 
 (def ^:dynamic *cluster*)
 (def ^:dynamic *session*)
@@ -312,7 +313,31 @@
 
     (is (= [{:id   an-id
              :text "inserted via named bindings"}]
-           (execute *session* prep-read {:values {:id an-id}})))))
+           (execute *session* prep-read {:values {:id an-id}})))
+
+    (let [next-id (int 101)
+          final-id (int 102)]
+
+      ;; named bindings that are not part of the primary key are optional
+      (is (= []
+            (execute *session* prep-write {:values {:id next-id}})))
+
+      (is (= [{:id   next-id
+               :text nil}]
+            (execute *session* prep-read {:values {:id next-id}})))
+
+      ;; named bindings that are a part of the primary key are required
+      (is (thrown? ExceptionInfo
+            (execute *session* prep-write {:values {:text "inserted via named bindings"}})))
+
+      ;; values that are not a named binding of the query are ignored
+      (is (= []
+            (execute *session* prep-write {:values {:id      final-id
+                                                    :ignored 10}})))
+
+      (is (= [{:id   final-id
+               :text nil}]
+            (execute *session* prep-read {:values {:id final-id}}))))))
 
 
 (deftest test-udt-encoder

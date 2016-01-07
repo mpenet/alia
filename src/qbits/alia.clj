@@ -22,7 +22,8 @@
     ResultSetFuture
     Session
     SimpleStatement
-    Statement)
+    Statement
+    ColumnDefinitions$Definition)
    (com.google.common.util.concurrent
     MoreExecutors
     Futures
@@ -236,10 +237,9 @@ pools/connections"
   (try
     (if (map? values)
       (let [bound (.bind statement)]
-        (doseq [[k x] values]
-          (codec/set-named-parameter! bound
-                                      (name k)
-                                      (codec/encode x)))
+        (doseq [^ColumnDefinitions$Definition column (.getVariables statement)]
+          (let [binding-name (.getName column)]
+            (codec/set-named-parameter! bound binding-name (codec/encode (get values (keyword binding-name))))))
         bound)
       (.bind statement (to-array (map codec/encode values))))
     (catch Exception ex
