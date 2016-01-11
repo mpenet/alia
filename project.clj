@@ -23,7 +23,7 @@
                                    [manifold "0.1.1"]
                                    [org.slf4j/slf4j-log4j12 "1.7.3"]]}}
   :jar-exclusions [#"log4j.properties"]
-  :jvm-opts ["-Dclojure.compiler.direct-linking=true"]
+  ;; :jvm-opts ["-Dclojure.compiler.direct-linking=true"]
   :codox {:src-dir-uri "https://github.com/mpenet/alia/blob/master/"
           :src-linenum-anchor-prefix "L"
           :defaults {:doc/format :markdown}
