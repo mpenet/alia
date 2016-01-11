@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.0-rc1
+
+* Use java-driver 3.0.0-rc1 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/tree/3.0/changelog)
+
 ## 3.0.0-beta1
 
 * typo translater -> translator (from upstream)

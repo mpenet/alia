@@ -254,26 +254,39 @@
                                          (when (< (-> coll last :si) 3)
                                            (merge q (h/where {:si (-> coll last :si inc)}))))))))))
 
-(defn ^:private get-private-field [instance field-name]
-  (.get
-   (doto (.getDeclaredField (class instance) field-name)
-     (.setAccessible true))
-   instance))
 
-(deftest test-fetch-size
-  (with-redefs [result-set->maps (fn [result-set _ _] result-set)]
-    (let [query "select * from items;"
-          result-set (execute *session* query {:fetch-size 3})
-          ^Statement statement (get-private-field result-set "statement")]
-      (is (= 3 (.getFetchSize statement))))))
+(let [get-private-field
+      (fn [instance field-name]
+        (.get
+         (doto (.getDeclaredField (class instance) field-name)
+           (.setAccessible true))
+         instance))
 
-(deftest test-fetch-size-chan
-  (with-redefs [result-set->maps (fn [result-set _ _] result-set)]
-    (let [query "select * from items;"
-          result-channel (execute-chan *session* query {:fetch-size 5})
-          result-set (async/<!! result-channel)
-          ^Statement statement (get-private-field result-set "statement")]
-      (is (= 5 (.getFetchSize statement))))))
+      result-set-fn-with-execution-infos
+      (fn [rs]
+        (-> (seq rs)
+            (vary-meta assoc
+                       :execution-info (execution-info rs))))
+
+      get-fetch-size
+      (fn [rs]
+        (-> rs meta :execution-info first
+            (get-private-field "statement")
+            .getFetchSize))]
+
+  (deftest test-fetch-size
+    (let [result-set (execute *session*
+                              "select * from items;"
+                              {:fetch-size 3
+                               :result-set-fn result-set-fn-with-execution-infos})]
+      (is (= 3 (get-fetch-size result-set)))))
+
+  (deftest test-fetch-size-chan
+    (let [result-ch (execute-chan *session*
+                                       "select * from items;"
+                                       {:fetch-size 5
+                                        :result-set-fn result-set-fn-with-execution-infos})]
+      (is (= 5 (get-fetch-size (async/<!! result-ch)))))))
 
 (deftest test-execute-chan-buffered
   (let [ch (execute-chan-buffered *session* "select * from items;" {:fetch-size 5})]
