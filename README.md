@@ -35,6 +35,8 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 
 ## Installation
 
+### Alia
+
 Alia runs on clojure >= 1.7 (we're using IReduceInit internally)
 
 The binary protocol server is not started with the default
@@ -61,6 +63,15 @@ If you are running Cassandra 1.2:
 ```clojure
 [cc.qbits/alia "1.10.2"]
 ```
+
+### Hayt (the query DSL)
+
+If you wish to use Hayt you need to add it to your dependencies
+
+`[cc.qbits/hayt "3.0.0"]`
+
+Then `require`/`use` `qbits.hayt` and you're good to go.
+
 
 Please check the
 [Changelog](https://github.com/mpenet/alia/blob/master/CHANGELOG.md)
