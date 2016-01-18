@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.0.0-rc2
+
+**Breaking change**
+
+* `Hayt` is not included by default anymore. You can include it
+  manually in your dependencies, then simply loading `qbits.hayt` in
+  the namespace(s) where you use it with alia and will extend the
+  appropriate protocol and **provide total backward compatibility**.  (I
+  had to do this to accomodate users which had dependency conflicts
+  with hayt (and were not using it)).
+
+  tldr: add `[cc.qbits/hayt "3.0.0"]` in your deps
+  if/when you use it.
+
 ## 3.0.0-rc1
 
 * Use java-driver 3.0.0-rc1 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/tree/3.0/changelog)

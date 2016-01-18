@@ -6,7 +6,6 @@
    [qbits.commons.ns :as nsq]
    [qbits.alia.utils :as utils]
    [qbits.alia.enum :as enum]
-   [qbits.hayt :as hayt]
    [clojure.core.async :as async]
    [qbits.alia.cluster-options :as copt])
   (:import
@@ -22,6 +21,7 @@
     ResultSetFuture
     Session
     SimpleStatement
+    RegularStatement
     Statement)
    (com.google.common.util.concurrent
     MoreExecutors
@@ -35,9 +35,9 @@
 
 (defn cluster
   "Takes an option map and returns a new
-com.datastax.driver.core/Cluster instance.
+  com.datastax.driver.core/Cluster instance.
 
-The following options are supported:
+  The following options are supported:
 
 * `:contact-points` : List of nodes ip addresses to connect to.
 
@@ -159,36 +159,36 @@ The following options are supported:
 * `:jmx-reporting?` Bool, enables/disables JMX reporting of the metrics.
 
 
-The handling of these options is achieved with a multimethod that you
-could extend if you need to handle some special case or want to create
-your own options templates.
-See `qbits.alia.cluster-options/set-cluster-option!` [source](../src/qbits/alia/cluster_options.clj#L19)
+  The handling of these options is achieved with a multimethod that you
+  could extend if you need to handle some special case or want to create
+  your own options templates.
+  See `qbits.alia.cluster-options/set-cluster-option!` [source](../src/qbits/alia/cluster_options.clj#L19)
 
 
-Values for consistency:
+  Values for consistency:
 
 :all :any :each-quorum :local-one :local-quorum :local-serial :one :quorum
 :serial :three :two
-"
+  "
   ([options]
-     (-> (Cluster/builder)
-         (copt/set-cluster-options! (merge {:contact-points ["localhost"]}
-                                           options))
-         .build))
+   (-> (Cluster/builder)
+       (copt/set-cluster-options! (merge {:contact-points ["localhost"]}
+                                         options))
+       .build))
   ([] (cluster {})))
 
 (defn ^Session connect
   "Returns a new com.datastax.driver.core/Session instance. We need to
-have this separate in order to allow users to connect to multiple
-keyspaces from a single cluster instance"
+  have this separate in order to allow users to connect to multiple
+  keyspaces from a single cluster instance"
   ([^Cluster cluster keyspace]
-     (.connect cluster (name keyspace)))
+   (.connect cluster (name keyspace)))
   ([^Cluster cluster]
-     (.connect cluster)))
+   (.connect cluster)))
 
 (defn shutdown
   "Shutdowns Session or Cluster instance, clearing the underlying
-pools/connections"
+  pools/connections"
   [x]
   (cond
     (instance? Session x)
@@ -198,31 +198,15 @@ pools/connections"
 
 (defn ^:no-doc ex->ex-info
   ([^Exception ex data msg]
-     (ex-info msg
-              (merge {:type ::execute
-                      :exception ex}
-                     data)
-              (.getCause ex)))
+   (ex-info msg
+            (merge {:type ::execute
+                    :exception ex}
+                   data)
+            (.getCause ex)))
   ([ex data]
-     (ex->ex-info ex data "Query execution failed")))
+   (ex->ex-info ex data "Query execution failed")))
 
-(defn prepare
-  "Takes a session and a query (raw string or hayt) and returns a
-  com.datastax.driver.core.PreparedStatement instance to be used in
-  `execute` after it's been bound with `bind`. Hayt query parameter
-  will be compiled with qbits.hayt/->raw internaly
-  ex: (prepare session (select :foo (where {:bar ?})))"
-  [^Session session query]
-  (let [^String q (if (map? query)
-                    (hayt/->raw query)
-                    query)]
-    (try
-      (.prepare session q)
-      (catch Exception ex
-        (throw (ex->ex-info ex
-                            {:type ::prepare-error
-                             :query q}
-                            "Query prepare failed"))))))
+
 
 (defn bind
   "Takes a statement and a collection of values and returns a
@@ -250,7 +234,7 @@ pools/connections"
 
 (defprotocol ^:no-doc PStatement
   (^:no-doc query->statement
-    [q values] "Encodes input into a Statement instance"))
+   [q values] "Encodes input into a Statement instance"))
 
 (extend-protocol PStatement
   Statement
@@ -271,15 +255,27 @@ pools/connections"
                       "You cannot bind values to batch statements directly,
                if you need to do so use qbits.alia/bind on your statements
                separately")))
-    bs)
+    bs))
 
-  clojure.lang.IPersistentMap
-  (query->statement [q values]
-    (query->statement (hayt/->raw q) values)))
+(defn prepare
+  "Takes a session and a query (raw string or hayt) and returns a
+  com.datastax.driver.core.PreparedStatement instance to be used in
+  `execute` after it's been bound with `bind`. Hayt query parameter
+  will be compiled with qbits.hayt/->raw internaly
+  ex: (prepare session (select :foo (where {:bar ?})))"
+  [^Session session query]
+  (let [q (query->statement query nil)]
+    (try
+      (.prepare session ^RegularStatement q)
+      (catch Exception ex
+        (throw (ex->ex-info ex
+                            {:type ::prepare-error
+                             :query q}
+                            "Query prepare failed"))))))
 
 (defn batch
   "Takes a sequence of statements to be executed in batch.
-By default LOGGED, you can specify :logged :unlogged :counter as
+  By default LOGGED, you can specify :logged :unlogged :counter as
   an optional second argument to control the type"
   ([qs] (batch qs :logged))
   ([qs type]
@@ -314,13 +310,13 @@ By default LOGGED, you can specify :logged :unlogged :counter as
 
 (defn execute
   "Executes a query against a session.
-Returns a collection of rows.
+  Returns a collection of rows.
 
-The query can be a raw string, a PreparedStatement (returned by
-`prepare`) with values passed via the `:values` option key will be bound by
-`execute`, BoundStatement (returned by `qbits.alia/bind`), or a Hayt query.
+  The query can be a raw string, a PreparedStatement (returned by
+  `prepare`) with values passed via the `:values` option key will be bound by
+  `execute`, BoundStatement (returned by `qbits.alia/bind`).
 
-The following options are supported:
+  The following options are supported:
 
 * `:values` : values to be bound to a prepared query
 * `:consistency` : Keyword, consistency
@@ -339,7 +335,7 @@ The following options are supported:
   fetch results from a given page, rather than restarting from the
   beginning
 
-Values for consistency:
+  Values for consistency:
 
 :all :any :each-quorum :local-one :local-quorum :local-serial :one :quorum
 :serial :three :two"
@@ -348,17 +344,17 @@ Values for consistency:
                                    result-set-fn key-fn
                                    tracing? idempotent? paging-state
                                    fetch-size values timestamp]}]
-     (let [^Statement statement (query->statement query values)]
-       (set-statement-options! statement routing-key retry-policy
-                               tracing? idempotent?
-                               consistency serial-consistency fetch-size
-                               timestamp paging-state)
-       (try
-         (codec/result-set->maps (.execute session statement)
-                                 result-set-fn
-                                 key-fn)
-         (catch Exception err
-           (throw (ex->ex-info err {:query statement :values values}))))))
+   (let [^Statement statement (query->statement query values)]
+     (set-statement-options! statement routing-key retry-policy
+                             tracing? idempotent?
+                             consistency serial-consistency fetch-size
+                             timestamp paging-state)
+     (try
+       (codec/result-set->maps (.execute session statement)
+                               result-set-fn
+                               key-fn)
+       (catch Exception err
+         (throw (ex->ex-info err {:query statement :values values}))))))
   ;; to support old syle api with unrolled args
   ([^Session session query]
    (execute session query {})))
@@ -380,20 +376,20 @@ Values for consistency:
                                timestamp paging-state)
        (let [^ResultSetFuture rs-future (.executeAsync session statement)]
          (Futures/addCallback
-           rs-future
-           (reify FutureCallback
-             (onSuccess [_ result]
-               (when success
-                 (try
-                   (success (codec/result-set->maps (.get rs-future)
-                                                    result-set-fn
-                                                    key-fn))
-                   (catch Exception err
-                     (error (ex->ex-info err {:query statement :values values}))))))
-             (onFailure [_ ex]
-               (when error
-                 (error (ex->ex-info ex {:query statement :values values})))))
-           (get-executor executor))
+          rs-future
+          (reify FutureCallback
+            (onSuccess [_ result]
+              (when success
+                (try
+                  (success (codec/result-set->maps (.get rs-future)
+                                                   result-set-fn
+                                                   key-fn))
+                  (catch Exception err
+                    (error (ex->ex-info err {:query statement :values values}))))))
+            (onFailure [_ ex]
+              (when error
+                (error (ex->ex-info ex {:query statement :values values})))))
+          (get-executor executor))
          rs-future))
      (catch Throwable t
        (error t))))
@@ -438,7 +434,7 @@ Values for consistency:
          (async/put! ch t)))
      ch))
   ([^Session session query]
-     (execute-chan session query {})))
+   (execute-chan session query {})))
 
 (defn execute-chan-buffered
   "Allows to execute a query and have rows returned in a
@@ -495,7 +491,7 @@ Values for consistency:
          (async/close! ch)))
      ch))
   ([^Session session query]
-     (execute-chan-buffered session query {})))
+   (execute-chan-buffered session query {})))
 
 (defn ^:no-doc lazy-query-
   [session query pred coll opts]
@@ -505,24 +501,24 @@ Values for consistency:
                 (lazy-query- session (pred query coll) pred coll opts)))))
 
 (defn lazy-query
-  "Takes a session, a query (hayt, raw or prepared) and a query modifier fn (that
-receives the last query and last chunk and returns a new query or nil).
-The first chunk will be the original query result, then for each
-subsequent chunk the query will be the result of last query
-modified by the modifier fn unless the fn returns nil,
-which would causes the iteration to stop.
+  "Takes a session, a query (raw or prepared) and a query modifier fn (that
+  receives the last query and last chunk and returns a new query or nil).
+  The first chunk will be the original query result, then for each
+  subsequent chunk the query will be the result of last query
+  modified by the modifier fn unless the fn returns nil,
+  which would causes the iteration to stop.
 
-It also accepts any of `execute` options.
+  It also accepts any of `execute` options.
 
-ex: (lazy-query session
+  ex: (lazy-query session
                 (select :items (limit 2) (where {:x (int 1)}))
                         (fn [q coll]
                           (merge q (where {:si (-> coll last :x inc)})))
                 {:consistency :quorum :tracing? true})"
   ([session query pred opts]
-     (lazy-query- session query pred [] opts))
+   (lazy-query- session query pred [] opts))
   ([session query pred]
-     (lazy-query session query pred {})))
+   (lazy-query session query pred {})))
 
 
 (defn register!

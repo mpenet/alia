@@ -8,8 +8,8 @@
    [qbits.alia.codec.joda-time :refer :all]
    [qbits.alia.codec.eaio-uuid :refer :all]
    [qbits.alia.codec.nippy :refer :all]
-   [qbits.tardis :refer :all]
    [qbits.hayt :as h]
+   [qbits.tardis :refer :all]
    [clojure.core.async :as async])
   (:import
    (com.datastax.driver.core Statement UDTValue)))
