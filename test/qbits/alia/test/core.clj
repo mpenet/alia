@@ -323,9 +323,14 @@
            (execute *session* prep-write {:values {:id   an-id
                                                    :text "inserted via named bindings"}})))
 
-    (is (= [{:id   an-id
+    (is (= [{:id an-id
              :text "inserted via named bindings"}]
-           (execute *session* prep-read {:values {:id an-id}})))))
+           (execute *session* prep-read {:values {:id an-id}})))
+
+    (is (= [{:id an-id
+             :text "inserted via named bindings"}]
+           (execute *session* "SELECT * FROM simple WHERE id = :id;"
+                    {:values {:id an-id}})))))
 
 
 (deftest test-udt-encoder

@@ -246,7 +246,13 @@
 
   String
   (query->statement [q values]
-    (SimpleStatement. q (to-array (map codec/encode values))))
+    (if (map? values)
+      (SimpleStatement. q
+                        ^java.util.Map (reduce-kv (fn [m k v]
+                                                    (assoc m (name k) v))
+                                                  {}
+                                                  values))
+      (SimpleStatement. q (to-array (map codec/encode values)))))
 
   BatchStatement
   (query->statement [bs values]
