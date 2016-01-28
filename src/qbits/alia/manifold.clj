@@ -25,14 +25,15 @@
   ([^Session session query {:keys [success error executor consistency
                                    serial-consistency routing-key result-set-fn
                                    retry-policy tracing? key-fn idempotent?
-                                   fetch-size timestamp values paging-state]}]
+                                   fetch-size timestamp values paging-state
+                                   read-timeout]}]
    (let [deferred (d/deferred)]
      (try
        (let [^Statement statement (query->statement query values)]
          (set-statement-options! statement routing-key retry-policy
                                  tracing? idempotent?
                                  consistency serial-consistency fetch-size
-                                 timestamp paging-state)
+                                 timestamp paging-state read-timeout)
          (let [^ResultSetFuture rs-future (.executeAsync session statement)]
            (d/on-realized deferred (or success (fn [_])) (or error (fn [_])))
            (Futures/addCallback
@@ -72,7 +73,8 @@
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key result-set-fn retry-policy tracing?
                                    key-fn idempotent? fetch-size values
-                                   stream timestamp paging-state]}]
+                                   stream timestamp paging-state
+                                   read-timeout]}]
    (let [stream (or stream
                     (s/stream (or fetch-size (-> session .getCluster
                                                  .getConfiguration
@@ -83,7 +85,7 @@
          (set-statement-options! statement routing-key retry-policy
                                  tracing? idempotent?
                                  consistency serial-consistency fetch-size
-                                 timestamp paging-state)
+                                 timestamp paging-state read-timeout)
          (let [^ResultSetFuture rs-future (.executeAsync session statement)]
            (Futures/addCallback
              rs-future

@@ -60,7 +60,7 @@
 (defmethod set-cluster-option! :pooling-options
   [_ ^Cluster$Builder builder {:keys [core-connections-per-host
                                       max-connections-per-host
-                                      max-simultaneous-requests-per-connection]
+                                      connection-thresholds]
                                :as pooling-options}]
   (doseq [[opt x] pooling-options]
     (set-cluster-option! opt builder x))
@@ -84,26 +84,43 @@
       (.setMaxConnectionsPerHost po (enum/host-distance dist) (int value)))
     builder))
 
-(defmethod set-cluster-option! :max-simultaneous-requests-per-connection
-  [_ ^Cluster$Builder builder max-simultaneous-requests-per-connection]
+(defmethod set-cluster-option! :connection-thresholds
+  [_ ^Cluster$Builder builder values]
+  (doseq [dist+value values]
+    (set-cluster-option! :connection-threshold builder dist+value))
+  builder)
+
+(defmethod set-cluster-option! :connection-threshold
+  [_ ^Cluster$Builder builder [dist value]]
   (let [po (pooling-options builder)]
-    (doseq [[dist value] max-simultaneous-requests-per-connection]
-      (.setMaxSimultaneousRequestsPerConnectionThreshold po (enum/host-distance dist)
-                                                         (int value)))
+    (.setNewConnectionThreshold po (enum/host-distance dist)
+                                (int value))
     builder))
 
 (defn ^SocketOptions ^:no-doc socket-options
   [^Cluster$Builder builder]
   (-> builder .getConfiguration .getSocketOptions))
 
-(defmethod set-cluster-option! :connect-timeout-millis
-  [_ ^Cluster$Builder builder connect-timeout-millis]
-  (-> builder socket-options (.setConnectTimeoutMillis (int connect-timeout-millis)))
+(defmethod set-cluster-option! :connect-timeout
+  [_ ^Cluster$Builder builder connect-timeout]
+  (-> builder socket-options (.setConnectTimeoutMillis (int connect-timeout)))
   builder)
 
+;; backward compat
+(defmethod set-cluster-option! :connect-timeout-millis
+  [_ ^Cluster$Builder builder connect-timeout]
+  (set-cluster-option! :connect-timeout builder connect-timeout)
+  builder)
+
+(defmethod set-cluster-option! :read-timeout
+  [_ ^Cluster$Builder builder read-timeout]
+  (-> builder socket-options (.setReadTimeoutMillis (int read-timeout)))
+  builder)
+
+;; backward compat
 (defmethod set-cluster-option! :read-timeout-millis
-  [_ ^Cluster$Builder builder read-timeout-millis]
-  (-> builder socket-options (.setReadTimeoutMillis (int read-timeout-millis)))
+  [_ ^Cluster$Builder builder connect-timeout]
+  (set-cluster-option! :read-timeout builder connect-timeout)
   builder)
 
 (defmethod set-cluster-option! :receive-buffer-size
@@ -137,8 +154,12 @@
   builder)
 
 (defmethod set-cluster-option! :socket-options
-  [_ ^Cluster$Builder builder {:keys [connect-timeout-millis
+  [_ ^Cluster$Builder builder {:keys [connect-timeout
+                                      read-timeout
+                                      ;;backward compat
+                                      connect-timeout-millis
                                       read-timeout-millis
+                                      ;;
                                       receive-buffer-size
                                       send-buffer-size
                                       so-linger

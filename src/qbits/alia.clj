@@ -27,7 +27,8 @@
     MoreExecutors
     Futures
     FutureCallback)
-   (java.nio ByteBuffer)))
+   (java.nio ByteBuffer)
+   (java.util Map)))
 
 (defn ^:no-doc get-executor
   [x]
@@ -138,12 +139,12 @@
 
   + `:core-connections-per-host` Number
   + `:max-connections-per-host` Number
-  + `:max-simultaneous-requests-per-connection` Number
+  + `:connection-thresholds` [[host-distance-kw value]+]
   + `:min-simultaneous-requests-per-connection` Number
 
 * `:socket-options`: a map of
-    - `:connect-timeout-millis` Number
-    - `:read-timeout-millis` Number
+    - `:connect-timeout` Number
+    - `:read-timeout` Number
     - `:receive-buffer-size` Number
     - `:send-buffer-size` Number
     - `:so-linger` Number
@@ -248,10 +249,10 @@
   (query->statement [q values]
     (if (map? values)
       (SimpleStatement. q
-                        ^java.util.Map (reduce-kv (fn [m k v]
-                                                    (assoc m (name k) v))
-                                                  {}
-                                                  values))
+                        ^Map (reduce-kv (fn [m k v]
+                                          (assoc m (name k) v))
+                                        {}
+                                        values))
       (SimpleStatement. q (to-array (map codec/encode values)))))
 
   BatchStatement
@@ -292,7 +293,8 @@
 
 (defn ^:no-doc set-statement-options!
   [^Statement statement routing-key retry-policy tracing? idempotent?
-   consistency serial-consistency fetch-size timestamp paging-state]
+   consistency serial-consistency fetch-size timestamp paging-state
+   read-timeout]
   (when routing-key
     (.setRoutingKey ^SimpleStatement statement
                     ^ByteBuffer routing-key))
@@ -312,7 +314,9 @@
     (.setSerialConsistencyLevel statement
                                 (enum/consistency-level serial-consistency)))
   (when consistency
-    (.setConsistencyLevel statement (enum/consistency-level consistency))))
+    (.setConsistencyLevel statement (enum/consistency-level consistency)))
+  (when read-timeout
+    (.setReadTimeoutMillis statement read-timeout)))
 
 (defn execute
   "Executes a query against a session.
@@ -349,12 +353,13 @@
                                    routing-key retry-policy
                                    result-set-fn key-fn
                                    tracing? idempotent? paging-state
-                                   fetch-size values timestamp]}]
+                                   fetch-size values timestamp
+                                   read-timeout]}]
    (let [^Statement statement (query->statement query values)]
      (set-statement-options! statement routing-key retry-policy
                              tracing? idempotent?
                              consistency serial-consistency fetch-size
-                             timestamp paging-state)
+                             timestamp paging-state read-timeout)
      (try
        (codec/result-set->maps (.execute session statement)
                                result-set-fn
@@ -373,13 +378,14 @@
                                    routing-key retry-policy result-set-fn
                                    tracing? idempotent?
                                    key-fn fetch-size values timestamp
-                                   paging-state success error]}]
+                                   paging-state read-timeout
+                                   success error]}]
    (try
      (let [^Statement statement (query->statement query values)]
        (set-statement-options! statement routing-key retry-policy
                                tracing? idempotent?
                                consistency serial-consistency fetch-size
-                               timestamp paging-state)
+                               timestamp paging-state read-timeout)
        (let [^ResultSetFuture rs-future (.executeAsync session statement)]
          (Futures/addCallback
           rs-future
@@ -414,13 +420,13 @@
                                    routing-key retry-policy result-set-fn
                                    tracing? idempotent?
                                    key-fn fetch-size values timestamp
-                                   paging-state]}]
+                                   paging-state read-timeout]}]
    (let [ch (async/promise-chan)]
      (try
        (let [^Statement statement (query->statement query values)]
          (set-statement-options! statement routing-key retry-policy tracing? idempotent?
                                  consistency serial-consistency fetch-size
-                                 timestamp paging-state)
+                                 timestamp paging-state read-timeout)
          (let [^ResultSetFuture rs-future (.executeAsync session statement)]
            (Futures/addCallback
             rs-future
@@ -457,9 +463,10 @@
   responsability to handle these how you deem appropriate. For options
   refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy result-set-fn tracing? idempotent?
-                                   key-fn fetch-size values timestamp
-                                   channel paging-state]}]
+                                   routing-key retry-policy result-set-fn key-fn
+                                   tracing? idempotent?
+                                   fetch-size values timestamp channel
+                                   paging-state read-timeout]}]
    (let [ch (or channel (async/chan (or fetch-size (-> session
                                                        .getCluster
                                                        .getConfiguration
@@ -470,7 +477,7 @@
          (set-statement-options! statement routing-key retry-policy
                                  tracing? idempotent?
                                  consistency serial-consistency fetch-size
-                                 timestamp paging-state)
+                                 timestamp paging-state read-timeout)
          (let [^ResultSetFuture rs-future (.executeAsync session statement)]
            (Futures/addCallback
             rs-future
