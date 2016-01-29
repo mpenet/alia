@@ -6,8 +6,7 @@
 
 * Simple statements can now take named placeholders (same as prepared):
 
-```
-clojure
+```clojure
 (execute session "SELECT * FROM foo WHERE bar = :bar-value" {:values {:bar-value "something"}})`
 ```
 
