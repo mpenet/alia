@@ -250,7 +250,7 @@
     (if (map? values)
       (SimpleStatement. q
                         ^Map (reduce-kv (fn [m k v]
-                                          (assoc m (name k) v))
+                                          (assoc m (name k) (codec/encode v)))
                                         {}
                                         values))
       (SimpleStatement. q (to-array (map codec/encode values)))))
