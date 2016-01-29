@@ -5,7 +5,11 @@
 * Use java-driver 3.0.0 (final) [driver-core/CHANGELOG](https://github.com/datastax/java-driver/tree/3.0/changelog)
 
 * Simple statements can now take named placeholders (same as prepared):
-`(execute session "SELECT * FROM foo WHERE bar = :bar-value" {:values {:bar-value "something"}})`
+
+```
+clojure
+(execute session "SELECT * FROM foo WHERE bar = :bar-value" {:values {:bar-value "something"}})`
+```
 
 * Add per query `read-timeout` via execute options
 
