@@ -140,7 +140,6 @@
   + `:core-connections-per-host` Number
   + `:max-connections-per-host` Number
   + `:connection-thresholds` [[host-distance-kw value]+]
-  + `:min-simultaneous-requests-per-connection` Number
 
 * `:socket-options`: a map of
     - `:connect-timeout` Number
@@ -339,13 +338,14 @@
 * `:timestamp` : Number, sets the timestamp for query (if not specified in CQL)
 * `:idempotent?` : Whether this statement is idempotent, i.e. whether
   it can be applied multiple times without changing the result beyond
-  the initial application.
+  the initial application
 * `:paging-state` : Expects a com.datastax.driver.core.PagingState
   instance. This will cause the next execution of this statement to
   fetch results from a given page, rather than restarting from the
   beginning
+* `:read-timeout` : Read timeout in milliseconds
 
-  Values for consistency:
+  Possible values for consistency:
 
 :all :any :each-quorum :local-one :local-quorum :local-serial :one :quorum
 :serial :three :two"
