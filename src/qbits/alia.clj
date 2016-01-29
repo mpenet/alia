@@ -4,7 +4,6 @@
    [qbits.alia.codec.udt]
    [qbits.alia.codec.tuple]
    [qbits.commons.ns :as nsq]
-   [qbits.alia.utils :as utils]
    [qbits.alia.enum :as enum]
    [clojure.core.async :as async]
    [qbits.alia.cluster-options :as copt])
