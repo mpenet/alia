@@ -346,10 +346,11 @@
   result-set is an unchunked lazy seq, you can control this using this
   option. If you pass a function that supports IReduceInit you can
   have full control over how the resultset is formed (chunked,
-  unchunked, eager or not, etc). A common use is to pass #(into [] %)
+  unchunked, eager or not, etc). A common use is to pass `#(into [] %)`
   as result-set-fn, you then get an eager value, with minimal copies,
   no intermediary seq and potentially better performance. This can be
-  very powerfull when used right.
+  very powerfull when used right (for instance with transducers
+  `#(into [] xform %))`.
 * `:read-timeout` : Read timeout in milliseconds
 
   Possible values for consistency:
