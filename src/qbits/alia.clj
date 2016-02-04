@@ -342,6 +342,14 @@
   instance. This will cause the next execution of this statement to
   fetch results from a given page, rather than restarting from the
   beginning
+* `:result-set-fn` : Defaults to `clojure.core/seq` By default a
+  result-set is an unchunked lazy seq, you can control this using this
+  option. If you pass a function that supports IReduceInit you can
+  have full control over how the resultset is formed (chunked,
+  unchunked, eager or not, etc). A common use is to pass #(into [] %)
+  as result-set-fn, you then get an eager value, with minimal copies,
+  no intermediary seq and potentially better performance. This can be
+  very powerfull when used right.
 * `:read-timeout` : Read timeout in milliseconds
 
   Possible values for consistency:
