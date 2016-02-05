@@ -4,6 +4,7 @@
    [clojure.data :refer :all]
    [qbits.alia :refer :all]
    [qbits.alia.manifold :as ma]
+   [qbits.alia.async :refer [execute-chan execute-chan-buffered]]
    [qbits.alia.codec :refer :all]
    [qbits.alia.codec.joda-time :refer :all]
    [qbits.alia.codec.eaio-uuid :refer :all]

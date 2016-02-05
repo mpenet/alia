@@ -1,8 +1,7 @@
-/target
+*target*
 /tmp
-/lib
-/classes
-/checkouts
+*lib/*
+*classes/*
 pom.xml
 *.jar
 *.class
@@ -17,3 +16,4 @@ pom.xml
 /.nrepl-port
 *.iml
 .idea
+.lein-env
