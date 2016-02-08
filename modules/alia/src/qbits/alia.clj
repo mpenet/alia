@@ -4,7 +4,6 @@
    [qbits.alia.codec.udt]
    [qbits.alia.codec.tuple]
    [qbits.commons.ns :as nsq]
-   [qbits.commons.jvm :refer [compile-if-ns-exists compile-if]]
    [qbits.alia.enum :as enum]
    [qbits.alia.cluster-options :as copt])
   (:import

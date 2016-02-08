@@ -1,4 +1,4 @@
-(defproject cc.qbits/alia-manifold "3.1.0"
+(defproject cc.qbits/alia-manifold "3.1.1"
   :description ""
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"

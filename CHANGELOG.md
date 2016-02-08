@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.1
+
+* remove aliases to async functions since it acutally doesn't work
+  (you can import them from `qbits.alia.async`).
+
 ## 3.1.0
 
 **Breaking changes (package/dependency level, not code)**
@@ -10,9 +15,10 @@
   upcoming Component, optional schemas for cluster options, direct
   linking, etc).
 
-  If you don't really care and want the whole package like before,
-  with 100% compatibility with 3.0.0 you can just change your
-  dependencies to `[cc.qbits/alia-all "3.1.0"]`.
+  If you don't really care and want the whole package like before, you
+  can just change your dependencies to `[cc.qbits/alia-all "3.1.0"]`.
+  If you were using `execute-chan` or `execute-chan-buffered`, you
+  will now find these 2 function in `qbits.alia.async`
 
   Alia was split like this:
 

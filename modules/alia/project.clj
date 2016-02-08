@@ -1,4 +1,4 @@
-(defproject cc.qbits/alia "3.1.0"
+(defproject cc.qbits/alia "3.1.1"
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"

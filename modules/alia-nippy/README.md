@@ -7,7 +7,7 @@ Adds `nippy` support to alia
 Add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia-nippy "3.1.0"]
+[cc.qbits/alia-nippy "3.1.1"]
 ```
 
 ## License
