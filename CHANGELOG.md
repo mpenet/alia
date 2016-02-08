@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.1.1
+## 3.1.2
 
 * remove aliases to async functions since it acutally doesn't work
   (you can import them from `qbits.alia.async`).
@@ -35,8 +35,8 @@
   A simple example, if you only want to use the core and the
   core.async extenstion you can just add these to your dependencies:
 
-    `[cc.qbits/alia "3.1.0"]
-     [cc.qbits/alia-async "3.1.0"]`
+    `[cc.qbits/alia "3.1.2"]
+     [cc.qbits/alia-async "3.1.2"]`
 
 ## 3.0.0
 

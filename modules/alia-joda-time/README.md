@@ -7,7 +7,7 @@ Adds Joda Time support to alia
 Add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia-joda-time "3.1.1"]
+[cc.qbits/alia-joda-time "3.1.2"]
 ```
 
 ## License
