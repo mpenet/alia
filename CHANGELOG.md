@@ -2,11 +2,13 @@
 
 ## 3.1.0
 
-** Breaking changes (package/dependency level, not code) **
+**Breaking changes (package/dependency level, not code)**
 
 * Alia was split into separate libaries to allow more flexible builds,
   lighter dependencies, better aot'isability and also make it ok to
-  add more exotic features without adding weight on the core.
+  add more exotic features without adding weight on the core (an
+  upcoming Component, optional schemas for cluster options, direct
+  linking, etc).
 
   If you don't really care and want the whole package like before,
   with 100% compatibility with 3.0.0 you can just change your
@@ -20,6 +22,15 @@
     + `alia-eaio-uuid`: eaio.uuid codec extension
     + `alia-joda-time`: joda-time codec extension
     + `alia-nippy`: the Nippy codec extension
+
+  They are located in [./libs](https://github.com/mpenet/alia/tree/master/libs).
+  The version numbers will always match the core lib, `alia` to avoid confusions.
+
+  A simple example, if you only want to use the core and the
+  core.async extenstion you can just add these to your dependencies:
+
+    `[cc.qbits/alia "3.1.0"]
+     [cc.qbits/alia-async "3.1.0"]`
 
 ## 3.0.0
 
