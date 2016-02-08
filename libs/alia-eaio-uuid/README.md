@@ -1,13 +1,13 @@
-# alia-joda-time
+# alia-eaio-uuid
 
-Adds Joda Time support to alia
+Adds support for http://stephenc.github.io/eaio-uuid/
 
 ## Installation
 
 Add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia-joda-time "3.0.0"]
+[cc.qbits/alia-eaio-uuid "3.1.0"]
 ```
 
 ## License

@@ -1,13 +1,13 @@
-# alia-manifold
+# alia-joda-time
 
-Adds `manifold` support to alia
+Adds Joda Time support to alia
 
 ## Installation
 
 Add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia-manifold "3.0.0"]
+[cc.qbits/alia-joda-time "3.1.0"]
 ```
 
 ## License

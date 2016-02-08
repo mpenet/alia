@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.1.0
+
+** Breaking changes (package/dependency level, not code) **
+
+* Alia was split into separate libaries to allow more flexible builds,
+  lighter dependencies, better aot'isability and also make it ok to
+  add more exotic features without adding weight on the core.
+
+  If you don't really care and want the whole package like before,
+  with 100% compatibility with 3.0.0 you can just change your
+  dependencies to `[cc.qbits/alia-all "3.1.0"]`.
+
+  Alia was split like this:
+
+    + `alia`: minimal core of the driver (whithout core.async/manifold/custom codec extensions)
+    + `alia-async`: core.async interface (`qbits.alia/execute-chan`, `qbits.alia/execute-chan-buffered`)
+    + `alia-manifold`: manifold async interaface (`qbits.alia.manifold/*` same as before)
+    + `alia-eaio-uuid`: eaio.uuid codec extension
+    + `alia-joda-time`: joda-time codec extension
+    + `alia-nippy`: the Nippy codec extension
+
 ## 3.0.0
 
 * Use java-driver 3.0.0 (final) [driver-core/CHANGELOG](https://github.com/datastax/java-driver/tree/3.0/changelog)
