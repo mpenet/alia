@@ -457,8 +457,3 @@
 ;; custom encoders
 (nsq/alias-var 'udt-encoder #'qbits.alia.codec.udt/encoder)
 (nsq/alias-var 'tuple-encoder #'qbits.alia.codec.tuple/encoder)
-
-;; for backward compat (should I? really...)
-(compile-if-ns-exists qbits.alia.async
-  (do (nsq/alias-var 'execute-chan #'qbits.alia.async/execute-chan)
-      (nsq/alias-var 'execute-chan-buffered #'qbits.alia.async/execute-chan-buffered)))
