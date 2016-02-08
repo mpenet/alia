@@ -39,20 +39,15 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 
 Alia runs on clojure >= 1.7 (we're using IReduceInit internally)
 
-The binary protocol server is not started with the default
-configuration file coming with Cassandra 1.2+
-In the cassandra.yaml file, you need to set:
-
-`start_native_transport: true`
-
-Then add this to your dependencies:
-
+Add one of the following to your dependencies:
 
 If you are running Cassandra 2.2+ to 3.*:
 `[cc.qbits/alia-all "3.1.0"]`
 
-This would include all the codec extensions and extra libraries. You
-can also pick and choose what you need from alia's [libs](https://github.com/mpenet/alia/tree/master/libs).
+This would include all the codec extensions and extra libraries.
+
+You can also pick and choose what you need from alia's
+[libs](https://github.com/mpenet/alia/tree/master/libs):
 
 * [cc.qbits/alia](https://github.com/mpenet/alia/tree/master/libs/alia) This
   is the main module with all the basic alia functions (required).
@@ -72,6 +67,16 @@ can also pick and choose what you need from alia's [libs](https://github.com/mpe
 * [cc.qbits/alia-nippy](https://github.com/mpenet/alia/tree/master/libs/alia-nippy):
   Alia codec with nippy serialisation (for blobs)
 
+### Hayt (the query DSL)
+
+If you wish to use Hayt you need to add it to your dependencies
+
+`[cc.qbits/hayt "3.0.0"]`
+
+Then `require`/`use` `qbits.hayt` and you're good to go.
+
+
+### Legacy
 
 If you are running Cassandra 2.0+ to 2.1.*:
 ```clojure
@@ -84,26 +89,13 @@ If you are running Cassandra 1.2:
 [cc.qbits/alia "1.10.2"]
 ```
 
-### Hayt (the query DSL)
-
-If you wish to use Hayt you need to add it to your dependencies
-
-`[cc.qbits/hayt "3.0.0"]`
-
-Then `require`/`use` `qbits.hayt` and you're good to go.
-
-
-Please check the
-[Changelog](https://github.com/mpenet/alia/blob/master/CHANGELOG.md)
-if you are upgrading.
-
 ## Documentation
 
 [codox generated documentation](http://mpenet.github.com/alia/#docs).
 
 ## Quickstart
 
-Simple query execution using alia+hayt would look like this:
+Simple query execution using alia with hayt would look like this:
 
 ```clojure
 (execute session (select :users
@@ -326,6 +318,6 @@ Do not hesitate to ask your questions there.
 
 ## License
 
-Copyright © 2013-2015 [Max Penet](https://twitter.com/mpenet)
+Copyright © 2013-2016 [Max Penet](https://twitter.com/mpenet)
 
 Distributed under the Eclipse Public License, the same as Clojure.
