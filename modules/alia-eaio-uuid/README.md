@@ -7,7 +7,7 @@ Adds support for http://stephenc.github.io/eaio-uuid/
 Add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia-eaio-uuid "3.1.2"]
+[cc.qbits/alia-eaio-uuid "3.1.3"]
 ```
 
 ## License

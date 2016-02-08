@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.3
+
+* kill stray qbits.alia file in qbits.alia.async causing major breakage
+
 ## 3.1.2
 
 * remove aliases to async functions since it acutally doesn't work

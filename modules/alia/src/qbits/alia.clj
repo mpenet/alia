@@ -204,8 +204,6 @@
   ([ex data]
    (ex->ex-info ex data "Query execution failed")))
 
-
-
 (defn bind
   "Takes a statement and a collection of values and returns a
   com.datastax.driver.core.BoundStatement instance to be used with
