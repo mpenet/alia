@@ -52,7 +52,7 @@ You can also pick and choose what you need from alia's
 * [cc.qbits/alia-async](https://github.com/mpenet/alia/tree/master/modules/alia-async):
   `clojure.core.async` interface to the core.async.
 
-* [cc.qbits/alia-manifold](https://github.com/mpenet/alia/tree/master/modules/manifold):
+* [cc.qbits/alia-manifold](https://github.com/mpenet/alia/tree/master/modules/alia-manifold):
   `manifold` interface to manifold.
 
 * [cc.qbits/alia-joda-time](https://github.com/mpenet/alia/tree/master/modules/alia-joda-time):
