@@ -52,7 +52,7 @@ If you are running Cassandra 2.2+ to 3.*:
 `[cc.qbits/alia-all "3.1.0"]`
 
 This would include all the codec extensions and extra libraries. You
-can also pick and choose what you need from alia's [libs](https://github.com/mpenet/alia/tree/libs) you need.:
+can also pick and choose what you need from alia's [libs](https://github.com/mpenet/alia/tree/libs).
 
 * [cc.qbits/alia](https://github.com/mpenet/alia/tree/libs/alia) This
   is the main module with all the basic alia functions (required).
