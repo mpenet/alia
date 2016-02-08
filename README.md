@@ -44,24 +44,24 @@ dependencies: `[cc.qbits/alia-all "3.1.0"]`.
 This would include all the codec extensions and extra libraries.
 
 You can also pick and choose what you need from alia's
-[libs](https://github.com/mpenet/alia/tree/master/libs):
+[modules](https://github.com/mpenet/alia/tree/master/modules):
 
-* [cc.qbits/alia](https://github.com/mpenet/alia/tree/master/libs/alia) This
+* [cc.qbits/alia](https://github.com/mpenet/alia/tree/master/modules/alia) This
   is the main module with all the basic alia functions (required).
 
-* [cc.qbits/alia-async](https://github.com/mpenet/alia/tree/master/libs/alia-async):
+* [cc.qbits/alia-async](https://github.com/mpenet/alia/tree/master/modules/alia-async):
   `clojure.core.async` interface to the core.async.
 
-* [cc.qbits/alia-manifold](https://github.com/mpenet/alia/tree/master/libs/manifold):
+* [cc.qbits/alia-manifold](https://github.com/mpenet/alia/tree/master/modules/manifold):
   `manifold` interface to manifold.
 
-* [cc.qbits/alia-joda-time](https://github.com/mpenet/alia/tree/master/libs/alia-joda-time):
+* [cc.qbits/alia-joda-time](https://github.com/mpenet/alia/tree/master/modules/alia-joda-time):
   Alia codec for joda-time types.
 
-* [cc.qbits/alia-eaio-uuid](https://github.com/mpenet/alia/tree/master/libs/alia-eaio-uui):
+* [cc.qbits/alia-eaio-uuid](https://github.com/mpenet/alia/tree/master/modules/alia-eaio-uui):
   Alia codec for eaio-uuid library.
 
-* [cc.qbits/alia-nippy](https://github.com/mpenet/alia/tree/master/libs/alia-nippy):
+* [cc.qbits/alia-nippy](https://github.com/mpenet/alia/tree/master/modules/alia-nippy):
   Alia codec with nippy serialisation (for blobs)
 
 ### Hayt (the query DSL)

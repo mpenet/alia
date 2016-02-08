@@ -23,7 +23,7 @@
     + `alia-joda-time`: joda-time codec extension
     + `alia-nippy`: the Nippy codec extension
 
-  They are located in [./libs](https://github.com/mpenet/alia/tree/master/libs).
+  They are located in [./modules](https://github.com/mpenet/alia/tree/master/libs).
   The version numbers will always match the core lib, `alia` to avoid confusions.
 
   A simple example, if you only want to use the core and the

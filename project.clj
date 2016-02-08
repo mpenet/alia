@@ -20,19 +20,19 @@
                                    [codox "0.9.1"]
                                    [manifold "0.1.2"]
                                    [org.slf4j/slf4j-log4j12 "1.7.3"]]}}
-  :sub ["libs/alia"
-        "libs/alia-manifold"
-        "libs/alia-async"
-        "libs/alia-joda-time"
-        "libs/alia-nippy"
-        "libs/alia-eaio-uuid"]
+  :sub ["modules/alia"
+        "modules/alia-manifold"
+        "modules/alia-async"
+        "modules/alia-joda-time"
+        "modules/alia-nippy"
+        "modules/alia-eaio-uuid"]
   :jar-exclusions [#"log4j.properties"]
   :codox {:source-uri "https://github.com/mpenet/alia/blob/master/{filepath}#L{line}"
           :metadata {:doc/format :markdown}
-          :source-paths ["libs/alia/src/"
-                         "libs/alia-manifold/src"
-                         "libs/alia-async/src"
-                         "libs/alia-joda-time/src"
-                         "libs/alia-eaio-uuid/src"
-                         "libs/alia-nippy/src"]}
+          :source-paths ["modules/alia/src/"
+                         "modules/alia-manifold/src"
+                         "modules/alia-async/src"
+                         "modules/alia-joda-time/src"
+                         "modules/alia-eaio-uuid/src"
+                         "modules/alia-nippy/src"]}
   :global-vars {*warn-on-reflection* true})
