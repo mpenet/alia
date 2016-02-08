@@ -52,24 +52,24 @@ If you are running Cassandra 2.2+ to 3.*:
 `[cc.qbits/alia-all "3.1.0"]`
 
 This would include all the codec extensions and extra libraries. You
-can also pick and choose what you need from alia's [libs](https://github.com/mpenet/alia/tree/libs).
+can also pick and choose what you need from alia's [libs](https://github.com/mpenet/alia/tree/master/libs).
 
-* [cc.qbits/alia](https://github.com/mpenet/alia/tree/libs/alia) This
+* [cc.qbits/alia](https://github.com/mpenet/alia/tree/master/libs/alia) This
   is the main module with all the basic alia functions (required).
 
-* [cc.qbits/alia-async](https://github.com/mpenet/alia/tree/libs/alia-async):
+* [cc.qbits/alia-async](https://github.com/mpenet/alia/tree/master/libs/alia-async):
 `clojure.core.async` interface to the core.async.
 
-* [cc.qbits/alia-manifold](https://github.com/mpenet/alia/tree/libs/manifold):
+* [cc.qbits/alia-manifold](https://github.com/mpenet/alia/tree/master/libs/manifold):
   `manifold` interface to manifold.
 
-* [cc.qbits/alia-joda-time](https://github.com/mpenet/alia/tree/libs/alia-joda-time):
+* [cc.qbits/alia-joda-time](https://github.com/mpenet/alia/tree/master/libs/alia-joda-time):
   Alia codec for joda-time types.
 
-* [cc.qbits/alia-eaio-uuid](https://github.com/mpenet/alia/tree/libs/alia-eaio-uui):
+* [cc.qbits/alia-eaio-uuid](https://github.com/mpenet/alia/tree/master/libs/alia-eaio-uui):
   Alia codec for eaio-uuid library.
 
-* [cc.qbits/alia-nippy](https://github.com/mpenet/alia/tree/libs/alia-nippy):
+* [cc.qbits/alia-nippy](https://github.com/mpenet/alia/tree/master/libs/alia-nippy):
   Alia codec with nippy serialisation (for blobs)
 
 
