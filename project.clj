@@ -4,7 +4,8 @@
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[cc.qbits/alia ~project-version]
+  :dependencies [[org.clojure/clojure "1.8.0"]
+                 [cc.qbits/alia ~project-version]
                  [cc.qbits/alia-manifold ~project-version]
                  [cc.qbits/alia-async ~project-version]
                  [cc.qbits/alia-joda-time ~project-version]
@@ -28,5 +29,10 @@
   :jar-exclusions [#"log4j.properties"]
   :codox {:source-uri "https://github.com/mpenet/alia/blob/master/{filepath}#L{line}"
           :metadata {:doc/format :markdown}
-          :namespaces :all}
+          :source-paths ["libs/alia/src/"
+                         "libs/alia-manifold/src"
+                         "libs/alia-async/src"
+                         "libs/alia-joda-time/src"
+                         "libs/alia-eaio-uuid/src"
+                         "libs/alia-nippy/src"]}
   :global-vars {*warn-on-reflection* true})

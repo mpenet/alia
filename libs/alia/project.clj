@@ -14,5 +14,4 @@
   :codox {:source-uri "https://github.com/mpenet/alia/blob/master/{filepath}#L{line}"
           :metadata {:doc/format :markdown}
           :namespaces :all}
-  :aot :all
   :global-vars {*warn-on-reflection* true})
