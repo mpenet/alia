@@ -39,8 +39,13 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 
 Alia runs on clojure >= 1.7 (we're using IReduceInit internally)
 
-If you are running Cassandra 2.2+ to 3.* add the following to your
-dependencies: `[cc.qbits/alia-all "3.1.3"]`.
+
+Add the following to your dependencies:
+
+```clojure
+[cc.qbits/alia-all "3.1.3"]
+```
+
 This would include all the codec extensions and extra libraries.
 
 You can also pick and choose what you need from alia's
@@ -71,20 +76,6 @@ If you wish to use Hayt you need to add it to your dependencies
 `[cc.qbits/hayt "3.0.0"]`
 
 Then `require`/`use` `qbits.hayt` and you're good to go.
-
-
-### Legacy
-
-If you are running Cassandra 2.0+ to 2.1.*:
-```clojure
-[cc.qbits/alia "2.12.1"]
-```
-
-If you are running Cassandra 1.2:
-
-```clojure
-[cc.qbits/alia "1.10.2"]
-```
 
 ## Documentation
 
