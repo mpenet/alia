@@ -233,7 +233,7 @@
 (defmethod set-cluster-option! :ssl-options
   [_ ^Cluster$Builder builder ssl-options]
   (.withSSL builder
-            (if (instance? ssl-options SSLOptions)
+            (if (instance? SSLOptions ssl-options)
               ssl-options
               (let [{:keys [keystore-path keystore-password cipher-suites]} ssl-options
                     keystore (KeyStore/getInstance "JKS")
@@ -247,14 +247,13 @@
                 (.init ssl-context
                        (.getKeyManagers keymanager)
                        (.getTrustManagers trustmanager) nil)
-                (doto (JdkSSLOptions/builder)
-                  (.build)
-                  (.withCipherSuites ^Builder (into-array String
-                                                          (if cipher-suites
-                                                            cipher-suites
-                                                            ["TLS_RSA_WITH_AES_128_CBC_SHA"
-                                                             "TLS_RSA_WITH_AES_256_CBC_SHA"])))
-                  (.withSSLContext ssl-context))))))
+                (.build (doto (JdkSSLOptions/builder)
+                          (.withCipherSuites ^Builder (into-array String
+                                                                  (if cipher-suites
+                                                                    cipher-suites
+                                                                    ["TLS_RSA_WITH_AES_128_CBC_SHA"
+                                                                     "TLS_RSA_WITH_AES_256_CBC_SHA"])))
+                          (.withSSLContext ssl-context)))))))
 
 (defmethod set-cluster-option! :timestamp-generator
   [_ ^Cluster$Builder builder ts-generator]
