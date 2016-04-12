@@ -43,7 +43,7 @@ Alia runs on clojure >= 1.7 (we're using IReduceInit internally)
 Add the following to your dependencies:
 
 ```clojure
-[cc.qbits/alia-all "3.1.3"]
+[cc.qbits/alia-all "3.1.4"]
 ```
 
 This would include all the codec extensions and extra libraries.

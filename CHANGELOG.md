@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.4
+
+* SSLOptions in `alia` main module: https://github.com/mpenet/alia/pull/55
+  @blak3mill3r fixed ssl options handling in cluster builder
+
 ## 3.1.3
 
 * kill stray qbits.alia file in qbits.alia.async causing major breakage
