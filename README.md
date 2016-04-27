@@ -151,9 +151,9 @@ keyspaces from the same cluster definition.
        :user_name "frodo"})
 
   ;; prepared statement with named parameter(s)
-  (def prepared-statement (alia/prepare session "select * from users where user_name= :name limit :limit;"))
+  (def prepared-statement (alia/prepare session "select * from users where user_name= :name limit :lmt;"))
 
-  (alia/execute session prepared-statement {:values {:name "frodo" :limit 1}})
+  (alia/execute session prepared-statement {:values {:name "frodo" :lmt 1}})
 
 
 ```
