@@ -1,4 +1,4 @@
-(defproject cc.qbits/alia-nippy "3.1.3"
+(defproject cc.qbits/alia-nippy "3.1.4"
   :description "Alia extension for joda-time codec"
   :url "https://github.com/mpenet/alia/alia-joda-time"
   :license {:name "Eclipse Public License"
