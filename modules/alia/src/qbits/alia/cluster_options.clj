@@ -258,7 +258,7 @@
 (defmethod set-cluster-option! :timestamp-generator
   [_ ^Cluster$Builder builder ts-generator]
   (.withTimestampGenerator builder
-                           (if (instance? TimestampGenerator)
+                           (if (instance? TimestampGenerator ts-generator)
                              ts-generator
                              (case ts-generator
                                :atomic-monotonic (tsg/atomic-monotonic)
@@ -269,7 +269,7 @@
 (defmethod set-cluster-option! :address-translator
   [_ ^Cluster$Builder builder at]
   (.withAddressTranslator builder
-                          (if (instance? AddressTranslator)
+                          (if (instance? AddressTranslator at)
                             at
                             (case at
                               :ec2-multi-region (at/ec2-multi-region-address-translator))))
