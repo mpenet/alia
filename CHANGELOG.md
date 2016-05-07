@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.6
+
+* Fix some cluster options errors with adresstranslator and timestampgenerator
+
 ## 3.1.5
 
 * Use java-driver 3.0.1 [driver-core/CHANGELOG](http://datastax.github.io/java-driver/changelog/#3-0-1)
