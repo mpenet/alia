@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [cc.qbits/alia "3.1.6"]
+                 [cc.qbits/alia "3.1.7"]
                  [cc.qbits/alia-manifold "3.1.3"]
                  [cc.qbits/alia-async "3.1.3"]
                  [cc.qbits/alia-joda-time "3.1.3"]
