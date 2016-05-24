@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.8
+
+* resolves #59 timestamps not binding appropriately for named parameters #60
+
 ## 3.1.7
 
 * Use java-driver 3.0.2 [driver-core/CHANGELOG](http://datastax.github.io/java-driver/changelog/#3-0-2)
