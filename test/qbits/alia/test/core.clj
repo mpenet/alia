@@ -2,6 +2,7 @@
   (:require
    [clojure.test :refer :all]
    [clojure.data :refer :all]
+   [clj-time.core :as t]
    [qbits.alia :refer :all]
    [qbits.alia.manifold :as ma]
    [qbits.alia.async :refer [execute-chan execute-chan-buffered]]
@@ -19,7 +20,7 @@
 (def ^:dynamic *session*)
 
 ;; some test data
-(def user-data-set [{:created nil
+(def user-data-set [{:created (t/date-time 2012 4 18 11 23 12 798)
                      :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
                      :last_name "Penet",
                      :emails #{"m@p.com" "ma@pe.com"},
@@ -32,7 +33,7 @@
                      :user_name "mpenet"
                      :tup ["a", "b"]
                      :udt {:foo "f" :bar 100}}
-                    {:created nil
+                    {:created (t/date-time 2012 4 18 11 23 12 798)
                      :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
                      :last_name "Baggins",
                      :emails #{"baggins@gmail.com" "f@baggins.com"},
@@ -47,6 +48,8 @@
                      :udt {:foo "f" :bar 100}}])
 
 ;; helpers
+
+(def sort-result (partial sort-by :user_name))
 
 (use-fixtures
   :once
@@ -85,10 +88,10 @@
               );")
         (execute *session* "CREATE INDEX ON users (birth_year);")
 
-        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt)
-       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], 1f84b56b-5481-4ee4-8236-8a3831ee5892, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'),  {foo: 'f', bar: 100});")
-        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt)
-       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'), {foo: 'f', bar: 100});")
+        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt, created)
+       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], 1f84b56b-5481-4ee4-8236-8a3831ee5892, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'),  {foo: 'f', bar: 100}, '2012-04-18T11:23:12.798-00:00');")
+        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt, created)
+       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'), {foo: 'f', bar: 100}, '2012-04-18T11:23:12.798-00:00');")
 
 
         (execute *session* "CREATE TABLE items (
@@ -163,7 +166,7 @@
     (is (= user-data-set (execute *session* s-simple)))
     (is (= [(first user-data-set)] (execute *session* (h/select :users (h/where {:user_name h/?}))
                                             {:values ["mpenet"]})))
-    (is (= user-data-set (execute *session* s-parameterized-in {:values [["mpenet" "frodo"]]})))
+    (is (= (sort-result user-data-set) (sort-result (execute *session* s-parameterized-in {:values [["mpenet" "frodo"]]}))))
     (is (= [(first user-data-set)]
            (execute *session* s-parameterized-simple {:values ["mpenet"]})))
     ;; manually  bound
@@ -180,6 +183,36 @@
                                                            #{"foo" "bar"}
                                                            {"foo" 123}]})))
     (let [delete-q "delete from users where user_name = 'foobar';"]
+      (is (= ()
+             (execute *session* (batch (repeat 3 delete-q))))))
+
+
+    (is (= [] (try (execute *session* s-prepare-types {:values {:user_name "barfoo"
+                                                            :birth_year 0
+                                                            :auuid #uuid "b474e171-7757-449a-87be-d2797d1336e3"
+                                                            :tuuid (qbits.tardis/to-uuid "e34288d0-7617-11e2-9243-0024d70cf6c4")
+                                                            :created (java.util.Date.)
+                                                            :valid false
+                                                            :tags [1 2 3 4]
+                                                            :emails  #{"foo" "bar"}
+                                                            :amap {"foo" 123}}})
+                   (catch Exception e (.printStackTrace e)))))
+    (let [delete-q "delete from users where user_name = 'barfoo';"]
+      (is (= ()
+             (execute *session* (batch (repeat 3 delete-q))))))
+
+    (is (= [] (try (execute *session* s-prepare-types {:values {:user_name "ffoooobbaarr"
+                                                            :birth_year 0
+                                                            :auuid #uuid "b474e171-7757-449a-87be-d2797d1336e3"
+                                                            :tuuid (qbits.tardis/to-uuid "e34288d0-7617-11e2-9243-0024d70cf6c4")
+                                                            :created (t/now)
+                                                            :valid false
+                                                            :tags [1 2 3 4]
+                                                            :emails  #{"foo" "bar"}
+                                                            :amap {"foo" 123}}})
+                   (catch Exception e (.printStackTrace e)))))
+
+    (let [delete-q "delete from users where user_name = 'ffoooobbaarr';"]
       (is (= ()
              (execute *session* (batch (repeat 3 delete-q))))))))
 

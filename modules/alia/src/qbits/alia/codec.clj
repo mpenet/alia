@@ -165,7 +165,7 @@
 
   Date
   (-set-named-parameter! [val settable name]
-    (.setDate ^SettableByNameData settable name val))
+    (.setTimestamp ^SettableByNameData settable name val))
 
   Float
   (-set-named-parameter! [val settable name]
