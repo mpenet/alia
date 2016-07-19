@@ -14,7 +14,8 @@
    [qbits.tardis :refer :all]
    [clojure.core.async :as async])
   (:import
-   (com.datastax.driver.core Statement UDTValue)))
+    (com.datastax.driver.core Statement UDTValue ConsistencyLevel Cluster)))
+
 
 (def ^:dynamic *cluster*)
 (def ^:dynamic *session*)
@@ -119,6 +120,27 @@
         (try (execute *session* "DROP KEYSPACE alia;") (catch Exception _ nil))
         (shutdown *session*)
         (shutdown *cluster*)))))
+
+(deftest test-cluster-query-options
+  (let [cluster (.init ^Cluster (cluster {:contact-points ["127.0.0.1"]
+                                          :query-options  {:consistency        :local-quorum
+                                                           :serial-consistency :three
+                                                           :fetch-size         12345}}))]
+
+    (is (= ConsistencyLevel/LOCAL_QUORUM (.getConsistencyLevel
+                                           (.getQueryOptions
+                                             (.getConfiguration
+                                               cluster)))))
+
+    (is (= ConsistencyLevel/THREE (.getSerialConsistencyLevel
+                                    (.getQueryOptions
+                                      (.getConfiguration
+                                        cluster)))))
+
+    (is (= 12345 (.getFetchSize
+                   (.getQueryOptions
+                     (.getConfiguration
+                       cluster)))))))
 
 (deftest test-sync-execute
   (is (= user-data-set

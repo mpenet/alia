@@ -175,29 +175,15 @@
   [^Cluster$Builder builder]
   (-> builder .getConfiguration .getQueryOptions))
 
-(defmethod set-cluster-option! :fetch-size
-  [_ ^Cluster$Builder builder fetch-size]
-  (-> builder query-options (.setFetchSize (int fetch-size)))
-  builder)
-
-(defmethod set-cluster-option! :consistency
-  [_ ^Cluster$Builder builder consistency]
-  (-> builder query-options (.setConsistencyLevel (enum/consistency-level consistency)))
-  builder)
-
-(defmethod set-cluster-option! :serial-consistency
-  [_ ^Cluster$Builder builder serial-consistency]
-  (-> builder query-options (.setSerialConsistencyLevel (enum/consistency-level serial-consistency)))
-  builder)
-
-
 (defmethod set-cluster-option! :query-options
   [_ ^Cluster$Builder builder {:keys [fetch-size
                                       consistency
-                                      serial-consistency]
-                               :as query-options}]
-  (doseq [[opt x] query-options]
-    (set-cluster-option! opt builder x))
+                                      serial-consistency]}]
+  (let [query-options (QueryOptions.)]
+    (some->> fetch-size int (.setFetchSize query-options))
+    (some->> consistency enum/consistency-level (.setConsistencyLevel query-options))
+    (some->> serial-consistency enum/consistency-level (.setSerialConsistencyLevel query-options))
+    (.withQueryOptions builder query-options))
   builder)
 
 (defmethod set-cluster-option! :metrics?
