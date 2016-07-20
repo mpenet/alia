@@ -81,19 +81,19 @@
 
 ;; pooling opts
 
-(create-ns 'qbits.alia.cluster-options.pooling-option)
-(s/def :qbits.alia.cluster-options.pooling-option
+(s/def ::cluster-options/pooling-option
   (s/+ (s/cat :distance ::enum/host-distance
               :value pos-int?)))
 
 (create-ns 'qbits.alia.cluster-options.pooling-options)
+(alias 'cluster-options.pooling-options 'qbits.alia.cluster-options.pooling-options)
 (s/def ::cluster-options.pooling-options/core-connections-per-host
-  ::cluster-options.pooling-option)
+  ::cluster-options/pooling-option)
 
 (s/def ::cluster-options.pooling-options/max-connections-per-host
-  ::cluster-options.pooling-option)
+  ::cluster-options/pooling-option)
 (s/def ::cluster-options.pooling-options/connectoin-thresholds
-  ::cluster-options.pooling-option)
+  ::cluster-options/pooling-option)
 
 (s/def ::cluster-options/pooling-options
   (s/keys :opt-un
@@ -101,13 +101,9 @@
            ::cluster-options.pooling-options/max-connections-per-host
            ::cluster-options.pooling-options/connection-thresholds]))
 
-;; credentials
-(create-ns 'qbits.alia.cluster-options.credentials)
-(s/def ::cluster-options.pooling-options.credentials/user string?)
-(s/def ::cluster-options.pooling-options.credentials/password string?)
-
 ;; socket options
 (create-ns 'qbits.alia.cluster-options.socket-options)
+(alias 'cluster-options.socket-options 'qbits.alia.cluster-options.socket-options)
 (s/def ::cluster-options.socket-options/read-timeout pos-int?)
 (s/def ::cluster-options.socket-options/read-timeout pos-int?)
 (s/def ::cluster-options.socket-options/receive-buffer-size pos-int?)
@@ -129,6 +125,7 @@
 
 ;; query opts
 (create-ns 'qbits.alia.cluster-options.query-options)
+(alias 'cluster-options.query-options 'qbits.alia.cluster-options.query-options)
 (s/def ::cluster-options.query-options/fetch-size pos-int?)
 (s/def ::cluster-options.query-options/consitency
   (enum-pred enum/consistency-level))
@@ -143,20 +140,27 @@
 
 (s/def ::cluster-options/metrics? boolean?)
 (s/def ::cluster-options/jmx-reporting? boolean?)
+
+;; credentials
+(create-ns 'qbits.alia.cluster-options.credentials)
+(alias 'cluster-options.credentials 'qbits.alia.cluster-options.credentials)
+(s/def ::cluster-options.credentials/user string?)
+(s/def ::cluster-options.credentials/password string?)
 (s/def ::cluster-options/credentials
   (s/keys :req-un
-          [::cluster-options.pooling-options.credentials/user
-           ::cluster-options.pooling-options.credentials/password]))
+          [::cluster-options.credentials/user
+           ::cluster-options.credentials/password]))
 
 (s/def ::cluster-options/kerberos? boolean?)
 (s/def ::cluster-options/compression :qbits.alia.enum/compression)
 (s/def ::cluster-options/ssl? boolean?)
 
 ;; ssl options
-(create-ns ':qbits.alia.ssl-options)
-(s/def :qbits.alia.ssl-options/keystore-path string?)
-(s/def :qbits.alia.ssl-options/keystore-password string?)
-(s/def :qbits.alia.ssl-options/cipher-suites (s/coll-of string? :min-count 1))
+(create-ns 'qbits.alia.cluster-options.ssl-options)
+(alias 'cluster-options.ssl-options 'qbits.alia.cluster-options.ssl-options)
+(s/def ::cluster-options.ssl-options/keystore-path string?)
+(s/def ::cluster-options.ssl-options/keystore-password string?)
+(s/def ::cluster-options.ssl-options/cipher-suites (s/coll-of string? :min-count 1))
 
 (s/def ::cluster-options/ssl-options
   (s/or :ssl-options-instance (instance-pred SSLOptions)
@@ -177,7 +181,7 @@
 
 (create-ns 'qbits.alia.cluster-options.pooling-options)
 
-(s/def :cluster-options
+(s/def ::cluster-options
   (s/keys :req-un
           [::cluster-options/contact-points
            ::cluster-options/port
