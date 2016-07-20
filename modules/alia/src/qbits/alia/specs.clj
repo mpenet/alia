@@ -179,10 +179,8 @@
 (s/def ::cluster-options/max-schema-agreement-wait-seconds pos-int?)
 (s/def ::cluster-options/cluster-name string?)
 
-(create-ns 'qbits.alia.cluster-options.pooling-options)
-
 (s/def ::cluster-options
-  (s/keys :req-un
+  (s/keys :opt-un
           [::cluster-options/contact-points
            ::cluster-options/port
            ::cluster-options/load-balancing-policy
@@ -205,3 +203,6 @@
            ::cluster-options/netty-options
            ::cluster-options/max-schema-agreement-wait-seconds
            ::cluster-options/cluster-name]))
+
+
+;; (s/valid? ::cluster-options {:port 2000})
