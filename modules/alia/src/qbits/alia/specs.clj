@@ -84,7 +84,7 @@
 (create-ns 'qbits.alia.cluster-options.pooling-option)
 (s/def :qbits.alia.cluster-options.pooling-option
   (s/+ (s/cat :distance ::enum/host-distance
-              :value number?)))
+              :value pos-int?)))
 
 (create-ns 'qbits.alia.cluster-options.pooling-options)
 (s/def ::cluster-options.pooling-options/core-connections-per-host
@@ -108,11 +108,11 @@
 
 ;; socket options
 (create-ns 'qbits.alia.cluster-options.socket-options)
-(s/def ::cluster-options.socket-options/read-timeout number?)
-(s/def ::cluster-options.socket-options/read-timeout number?)
-(s/def ::cluster-options.socket-options/receive-buffer-size number?)
-(s/def ::cluster-options.socket-options/send-buffer-size number?)
-(s/def ::cluster-options.socket-options/so-linger number?)
+(s/def ::cluster-options.socket-options/read-timeout pos-int?)
+(s/def ::cluster-options.socket-options/read-timeout pos-int?)
+(s/def ::cluster-options.socket-options/receive-buffer-size pos-int?)
+(s/def ::cluster-options.socket-options/send-buffer-size pos-int?)
+(s/def ::cluster-options.socket-options/so-linger pos-int?)
 (s/def ::cluster-options.socket-options/tcp-no-delay? boolean?)
 (s/def ::cluster-options.socket-options/reuse-address? boolean?)
 (s/def ::cluster-options.socket-options/keep-alive? boolean?)
@@ -129,7 +129,7 @@
 
 ;; query opts
 (create-ns 'qbits.alia.cluster-options.query-options)
-(s/def ::cluster-options.query-options/fetch-size number?)
+(s/def ::cluster-options.query-options/fetch-size pos-int?)
 (s/def ::cluster-options.query-options/consitency
   (enum-pred enum/consistency-level))
 (s/def ::cluster-options.query-options/serial-consistency
@@ -172,7 +172,7 @@
   (instance-pred AddressTranslator))
 (s/def ::cluster-options/netty-options
   (instance-pred NettyOptions))
-(s/def ::cluster-options/max-schema-agreement-wait-seconds number?)
+(s/def ::cluster-options/max-schema-agreement-wait-seconds pos-int?)
 (s/def ::cluster-options/cluster-name string?)
 
 (create-ns 'qbits.alia.cluster-options.pooling-options)
