@@ -83,8 +83,7 @@
 ;; pooling opts
 
 (s/def ::cluster-options/pooling-option
-  (s/+ (s/cat :distance ::enum/host-distance
-              :value pos-int?)))
+  (s/+ (s/tuple ::enum/host-distance pos-int?)))
 
 (create-ns 'qbits.alia.cluster-options.pooling-options)
 (alias 'cluster-options.pooling-options 'qbits.alia.cluster-options.pooling-options)
@@ -215,7 +214,7 @@
 (s/def ::alia.statement-options/idempotent? boolean?)
 
 (s/def ::alia.statement-options/consistency (enum-pred enum/consistency-level))
-::alia.statement-options/serial-consitency (enum-pred enum/consistency-level)
+(s/def ::alia.statement-options/serial-consistency (enum-pred enum/consistency-level))
 (s/def ::alia.statement-options/fetch-size pos-int?)
 (s/def ::alia.statement-options/timesamp pos-int?)
 (s/def ::alia.statement-options/paging-state (instance-pred PagingState))
@@ -228,10 +227,24 @@
            ::alia.statement-options/tracing?
            ::alia.statement-options/idempotent?
            ::alia.statement-options/consistency
-           ::alia.statement-options/serial-consitency
+           ::alia.statement-options/serial-consistency
            ::alia.statement-options/fetch-size
            ::alia.statement-options/timesamp
            ::alia.statement-options/paging-state
            ::alia.statement-options/read-timeout]))
+
+
+(create-ns 'qbits.alia.execute-opts)
+(alias 'alia.execute-opts 'qbits.alia.execute-opts)
+
+(s/def ::alia.execute-opts/values
+  (s/or :named-values (s/map-of keyword? any? :min-count 1)
+        :positional-values (s/+ any?)))
+
+(s/def ::alia/execute-opts-common
+  (s/keys :opts-un
+          [::alia.execute-opts/values
+           ::alia.execute-opts/result-set-fn
+           ::alia.execute-opts/key-fn]))
 
 ;; instrumentation
