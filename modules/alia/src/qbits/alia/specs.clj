@@ -16,6 +16,7 @@
     LatencyTracker
     PreparedStatement
     NettyOptions
+    PagingState
     Statement
     ResultSet
     ResultSetFuture
@@ -158,6 +159,7 @@
 ;; ssl options
 (create-ns 'qbits.alia.cluster-options.ssl-options)
 (alias 'cluster-options.ssl-options 'qbits.alia.cluster-options.ssl-options)
+
 (s/def ::cluster-options.ssl-options/keystore-path string?)
 (s/def ::cluster-options.ssl-options/keystore-password string?)
 (s/def ::cluster-options.ssl-options/cipher-suites (s/coll-of string? :min-count 1))
@@ -204,5 +206,32 @@
            ::cluster-options/max-schema-agreement-wait-seconds
            ::cluster-options/cluster-name]))
 
+;; execute & co
+(create-ns 'qbits.alia.statement-options)
+(alias 'alia.statement-options 'qbits.alia.statement-options)
+(s/def ::alia.statement-options/routing-key (instance-pred ByteBuffer))
+(s/def ::alia.statement-options/retry-policy (instance-pred RetryPolicy))
+(s/def ::alia.statement-options/tracing boolean?)
+(s/def ::alia.statement-options/idempotent? boolean?)
 
-;; (s/valid? ::cluster-options {:port 2000})
+(s/def ::alia.statement-options/consistency (enum-pred enum/consistency-level))
+::alia.statement-options/serial-consitency (enum-pred enum/consistency-level)
+(s/def ::alia.statement-options/fetch-size pos-int?)
+(s/def ::alia.statement-options/timesamp pos-int?)
+(s/def ::alia.statement-options/paging-state (instance-pred PagingState))
+(s/def ::alia.statement-options/read-timeout pos-int?)
+
+(s/def ::alia/statement-options
+  (s/keys :opts-un
+          [::alia.statement-options/routing-key
+           ::alia.statement-options/retry-policy
+           ::alia.statement-options/tracing?
+           ::alia.statement-options/idempotent?
+           ::alia.statement-options/consistency
+           ::alia.statement-options/serial-consitency
+           ::alia.statement-options/fetch-size
+           ::alia.statement-options/timesamp
+           ::alia.statement-options/paging-state
+           ::alia.statement-options/read-timeout]))
+
+;; instrumentation
