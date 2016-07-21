@@ -294,8 +294,8 @@
         :ret ::alia/prepared-statement)
 
 (s/fdef qbits.alia/batch
-        :args (s/cat ::statements (s/+ ::alia/query)
-                     ::type (s/? ::enum/batch-statement-type))
+        :args (s/cat :statements (s/+ ::alia/query)
+                     :type (s/? ::enum/batch-statement-type))
         :ret (instance-pred BatchStatement))
 
 (s/fdef qbits.alia/execute
