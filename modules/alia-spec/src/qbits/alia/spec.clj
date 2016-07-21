@@ -287,7 +287,7 @@
 
 (s/fdef qbits.alia/bind
         :args (s/cat :statement ::alia/prepared-statement
-                     :values ::alia.execute-opts/values)
+                     :values (s/nilable ::alia.execute-opts/values))
         :ret (instance-pred BoundStatement))
 
 (s/fdef qbits.alia/prepare
@@ -295,11 +295,11 @@
                      :query ::alia/query)
         :ret ::alia/prepared-statement)
 
-(s/fdef qbits.alia/batch
-        :args (s/cat :statements (s/+ ::alia/query)
-                     :type (s/? (enum-pred enum/batch-statement-type)))
-        :ret (instance-pred BatchStatement))
-
+;; (s/fdef qbits.alia/batch
+;;         :args (s/cat ::statements (s/+ ::alia/query)
+;;                      ::type (s/? ::enum/batch-statement-type))
+;;         :ret (instance-pred BatchStatement)
+;;         )
 (s/fdef qbits.alia/execute
         :args (s/cat :session ::alia/session
                      :query ::alia/query
