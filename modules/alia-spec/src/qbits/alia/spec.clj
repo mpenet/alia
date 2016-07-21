@@ -234,7 +234,6 @@
   (s/or :named-values (s/map-of keyword? (satisfies-pred codec/PCodec) :min-count 1)
         :positional-values (s/+ (satisfies-pred codec/PCodec))))
 
-
 ;; TODO refine this one
 (s/def ::alia.execute-opts/result-set-fn fn?)
 
@@ -294,7 +293,7 @@
         :ret ::alia/prepared-statement)
 
 (s/fdef qbits.alia/batch
-        :args (s/cat :statements (s/+ ::alia/query)
+        :args (s/cat :statements (s/spec (s/+ ::alia/query))
                      :type (s/? ::enum/batch-statement-type))
         :ret (instance-pred BatchStatement))
 
