@@ -271,8 +271,8 @@
 ;; functions
 
 (s/fdef qbits.alia/cluster
-  :args (s/cat :cluster-options ::alia/cluster-options)
-  :ret ::alia/cluster)
+        :args (s/cat :cluster-options ::alia/cluster-options)
+        :ret ::alia/cluster)
 
 (s/fdef qbits.alia/connect
         :args (s/cat :cluster ::alia/cluster
