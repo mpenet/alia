@@ -70,6 +70,9 @@ You can also pick and choose what you need from alia's
 * [cc.qbits/alia-nippy](https://github.com/mpenet/alia/tree/master/modules/alia-nippy):
   Alia codec with nippy serialisation (for blobs)
 
+* [cc.qbits/alia-spec](https://github.com/mpenet/alia/tree/master/modules/alia-spec):
+  Early work on clojure.spec for alia
+
 ### Hayt (the query DSL)
 
 If you wish to use Hayt you need to add it to your dependencies

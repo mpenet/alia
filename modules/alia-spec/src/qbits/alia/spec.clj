@@ -1,5 +1,5 @@
-(ns qbits.alia.specs
-  "clj/specs for alia
+(ns qbits.alia.spec
+  "clj/spec for alia
   TODO : * aliases
          * move to separate module"
   (:require
