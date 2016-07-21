@@ -311,5 +311,3 @@
                      :query ::alia/query
                      :options (s/? ::alia/execute-async-opts))
         :ret (instance-pred ResultSetFuture))
-
-(s/valid? (s/? string?) [""])
