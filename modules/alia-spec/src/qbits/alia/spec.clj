@@ -281,7 +281,8 @@
 
 (s/fdef qbits.alia/shutdown
         :args (s/cat :cluster-or-session
-                     (s/or ::alia/cluster ::alia/session))
+                     (s/or :cluster ::alia/cluster
+                           :session ::alia/session))
         :ret (instance-pred CloseFuture))
 
 (s/fdef qbits.alia/bind
@@ -310,3 +311,5 @@
                      :query ::alia/query
                      :options (s/? ::alia/execute-async-opts))
         :ret (instance-pred ResultSetFuture))
+
+(s/valid? (s/? string?) [""])
