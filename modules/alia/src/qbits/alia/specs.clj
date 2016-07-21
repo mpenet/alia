@@ -45,7 +45,11 @@
   (fn [x]
     (try
       (enum-fn x)
-      (catch clojure.lang.ExceptionInfo ei false))))
+      (catch clojure.lang.ExceptionInfo ei
+        (case (some-> ei ex-data :type)
+          :qbits.commons.enum/invalid-enum-value false
+          (throw ei))
+        false))))
 
 (s/def ::alia/cluster (instance-pred Cluster))
 (s/def ::alia/session (instance-pred Session))
