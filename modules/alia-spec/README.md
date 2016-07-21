@@ -1,13 +1,13 @@
-# alia-specs
+# alia-spec
 
-Adds `clojure.specs` for alia core
+Adds `clojure.spec` for alia core
 
 ## Installation
 
 Add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia-specs "3.1.9"]
+[cc.qbits/alia-spec "3.1.9"]
 ```
 
 ## License
