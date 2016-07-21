@@ -123,10 +123,8 @@
 (create-ns 'qbits.alia.cluster-options.query-options)
 (alias 'cluster-options.query-options 'qbits.alia.cluster-options.query-options)
 (s/def ::cluster-options.query-options/fetch-size pos-int?)
-(s/def ::cluster-options.query-options/consitency
-  (enum-pred enum/consistency-level))
-(s/def ::cluster-options.query-options/serial-consistency
-  (enum-pred enum/consistency-level))
+(s/def ::cluster-options.query-options/consitency ::enum/consistency-level)
+(s/def ::cluster-options.query-options/serial-consistency ::enum/consistency-level)
 
 (s/def ::cluster-options/query-options
   (s/keys :opt-un
@@ -209,8 +207,8 @@
 (s/def ::alia.statement-options/tracing boolean?)
 (s/def ::alia.statement-options/idempotent? boolean?)
 
-(s/def ::alia.statement-options/consistency (enum-pred enum/consistency-level))
-(s/def ::alia.statement-options/serial-consistency (enum-pred enum/consistency-level))
+(s/def ::alia.statement-options/consistency ::enum/consistency-level)
+(s/def ::alia.statement-options/serial-consistency ::enum/consistency-level)
 (s/def ::alia.statement-options/fetch-size pos-int?)
 (s/def ::alia.statement-options/timesamp pos-int?)
 (s/def ::alia.statement-options/paging-state (instance-pred PagingState))
@@ -295,11 +293,11 @@
                      :query ::alia/query)
         :ret ::alia/prepared-statement)
 
-;; (s/fdef qbits.alia/batch
-;;         :args (s/cat ::statements (s/+ ::alia/query)
-;;                      ::type (s/? ::enum/batch-statement-type))
-;;         :ret (instance-pred BatchStatement)
-;;         )
+(s/fdef qbits.alia/batch
+        :args (s/cat ::statements (s/+ ::alia/query)
+                     ::type (s/? ::enum/batch-statement-type))
+        :ret (instance-pred BatchStatement))
+
 (s/fdef qbits.alia/execute
         :args (s/cat :session ::alia/session
                      :query ::alia/query
