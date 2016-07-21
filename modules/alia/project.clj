@@ -4,6 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0-alpha10"]
+                 [org.clojure/test.check "0.9.0"]
                  [cc.qbits/commons "0.4.5"]
                  [com.datastax.cassandra/cassandra-driver-core "3.0.3"
                   :classifier "shaded"

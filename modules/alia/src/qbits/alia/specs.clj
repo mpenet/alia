@@ -6,7 +6,9 @@
    [clojure.spec :as s]
    [qbits.alia :as alia]
    [qbits.alia.cluster-options :as cluster-options]
-   [qbits.alia.enum :as enum])
+   [qbits.alia.enum :as enum]
+   [qbits.alia.codec :as codec]
+   )
   ;; TODO copy pasta -> cleanup
   (:import
    (com.datastax.driver.core
@@ -37,9 +39,10 @@
     Futures
     FutureCallback)
    (java.nio ByteBuffer)
-   (java.util Map)))
+   (java.util.concurrent Executor)))
 
 (def instance-pred #(partial instance? %))
+(def satisfies-pred #(partial satisfies? %))
 
 (defn enum-pred [enum-fn]
   (fn [x]
@@ -237,13 +240,20 @@
            ::alia.statement-options/paging-state
            ::alia.statement-options/read-timeout]))
 
-
 (create-ns 'qbits.alia.execute-opts)
 (alias 'alia.execute-opts 'qbits.alia.execute-opts)
 
 (s/def ::alia.execute-opts/values
-  (s/or :named-values (s/map-of keyword? any? :min-count 1)
-        :positional-values (s/+ any?)))
+  (s/or :named-values (s/map-of keyword? (satisfies-pred codec/PCodec) :min-count 1)
+        :positional-values (s/+ (satisfies-pred codec/PCodec))))
+
+
+;; TODO refine this one
+(s/def ::alia.execute-opts/result-set-fn fn?)
+
+(s/def ::alia.execute-opts/key-fn
+  (s/fspec :args (s/cat :column string?)
+           :ret any?))
 
 (s/def ::alia/execute-opts-common
   (s/keys :opts-un
@@ -251,4 +261,24 @@
            ::alia.execute-opts/result-set-fn
            ::alia.execute-opts/key-fn]))
 
+(s/def ::alia/execute-opts
+  (s/merge ::alia/execute-opts-common
+           ::alia/statement-options))
+
+(create-ns 'qbits.alia.execute-async)
+(alias 'alia.execute-async 'qbits.alia.execute-async)
+(s/def ::alia.execute-async/executor (instance-pred Executor))
+;; TODO refine these 2
+(s/def ::alia.execute-async/success fn?)
+(s/def ::alia.execute-async/error fn?)
+
+(s/def ::alia/execute-async-opts
+  (s/merge ::alia/execute-opts
+           (s/keys :opt-un [::alia.execute-async/success
+                            ::alia.execute-async/error
+                            ::alia.execute-async/executor])))
+
+
 ;; instrumentation
+
+;; (s/conform (s/map-of #{:foo :bar} string?) {:foo ""})
