@@ -234,8 +234,9 @@
   (s/or :named-values (s/map-of keyword? (satisfies-pred codec/PCodec) :min-count 1)
         :positional-values (s/+ (satisfies-pred codec/PCodec))))
 
-;; TODO refine this one
-(s/def ::alia.execute-opts/result-set-fn fn?)
+(s/def ::alia.execute-opts/result-set-fn
+  (s/fspec :args (s/cat :result-set any?)
+           :ret any?))
 
 (s/def ::alia.execute-opts/key-fn
   (s/fspec :args (s/cat :column string?)
@@ -254,9 +255,13 @@
 (create-ns 'qbits.alia.execute-async)
 (alias 'alia.execute-async 'qbits.alia.execute-async)
 (s/def ::alia.execute-async/executor (instance-pred Executor))
-;; TODO refine these 2
-(s/def ::alia.execute-async/success fn?)
-(s/def ::alia.execute-async/error fn?)
+
+(s/def ::alia.execute-async/success
+  (s/fspec :args (s/cat :result-set any?)))
+
+(s/def ::alia.execute-async/error
+  (s/fspec :args (s/cat :err (instance-pred clojure.lang.ExceptionInfo))
+           :ret any?))
 
 (s/def ::alia/execute-async-opts
   (s/merge ::alia/execute-opts
