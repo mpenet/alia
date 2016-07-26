@@ -21,7 +21,8 @@
   (require 'clojure.spec.test)
   ((resolve 'clojure.spec.test/instrument))
   (println "Instrumenting qbits.alia with clojure.spec")
-  (catch Exception _ nil))
+  (catch Exception e
+    (.printStackTrace e)))
 
 (def ^:dynamic *cluster*)
 (def ^:dynamic *session*)

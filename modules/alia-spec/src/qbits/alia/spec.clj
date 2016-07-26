@@ -19,7 +19,9 @@
     Session
     SSLOptions
     Statement
-    TimestampGenerator)
+    TimestampGenerator
+    UserType
+    TupleType)
    (com.datastax.driver.core.policies
     AddressTranslator
     LoadBalancingPolicy
@@ -31,6 +33,7 @@
 
 (def instance-pred #(partial instance? %))
 (def satisfies-pred #(partial satisfies? %))
+(def string-or-named? #(or (string? %) (instance? clojure.lang.Named %)))
 
 (defn enum-pred [enum-fn]
   (fn [x]
@@ -256,19 +259,24 @@
 (alias 'alia.execute-async 'qbits.alia.execute-async)
 (s/def ::alia.execute-async/executor (instance-pred Executor))
 
-(s/def ::alia.execute-async/success
-  (s/fspec :args (s/cat :result-set any?)))
+;; TODO fix when we can avoid to run gen on instrument
+(comment
+  (s/def ::alia.execute-async/success
+    (s/fspec :args (s/cat :result-set any?)
+             :ret any?))
 
-(s/def ::alia.execute-async/error
-  (s/fspec :args (s/cat :err (instance-pred clojure.lang.ExceptionInfo))
-           :ret any?))
+  (s/def ::alia.execute-async/error
+    (s/fspec :args (s/cat :err (instance-pred clojure.lang.ExceptionInfo))
+             :ret any?)))
+
+(s/def ::alia.execute-async/success fn?)
+(s/def ::alia.execute-async/error fn?)
 
 (s/def ::alia/execute-async-opts
   (s/merge ::alia/execute-opts
            (s/keys :opt-un [::alia.execute-async/success
                             ::alia.execute-async/error
                             ::alia.execute-async/executor])))
-
 
 ;; functions
 
@@ -313,3 +321,14 @@
                      :query ::alia/query
                      :options (s/? ::alia/execute-async-opts))
         :ret (instance-pred ResultSetFuture))
+
+(s/fdef qbits.alia/udt-encoder
+        :args (s/cat :session ::alia/session
+                     :keyspace (s/? string-or-named?)
+                     :udt-type string-or-named?))
+
+(s/fdef qbits.alia/tuple-encoder
+        :args (s/cat :session ::alia/session
+                     :keyspace (s/? string-or-named?)
+                     :table string-or-named?
+                     :column string-or-named?))
