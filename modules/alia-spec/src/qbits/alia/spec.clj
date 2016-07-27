@@ -1,6 +1,7 @@
 (ns qbits.alia.spec
   (:require
    [clojure.spec :as s]
+   [qbits.spex :as x]
    [qbits.alia :as alia]
    [qbits.alia.cluster-options :as cluster-options]
    [qbits.alia.enum :as enum]
@@ -31,8 +32,6 @@
    (java.nio ByteBuffer)
    (java.util.concurrent Executor)))
 
-(def instance-pred #(partial instance? %))
-(def satisfies-pred #(partial satisfies? %))
 (def string-or-named? #(or (string? %) (instance? clojure.lang.Named %)))
 
 (defn enum-pred [enum-fn]
@@ -45,10 +44,10 @@
           (throw ei))
         false))))
 
-(s/def ::alia/cluster (instance-pred Cluster))
-(s/def ::alia/session (instance-pred Session))
-(s/def ::alia/query (satisfies-pred alia/PStatement))
-(s/def ::alia/prepared-statement (instance-pred PreparedStatement))
+(s/def ::alia/cluster (x/instance-of Cluster))
+(s/def ::alia/session (x/instance-of Session))
+(s/def ::alia/query (x/satisfies alia/PStatement))
+(s/def ::alia/prepared-statement (x/instance-of PreparedStatement))
 
 ;; enums
 (s/def ::enum/host-distance (enum-pred enum/host-distance))
@@ -69,23 +68,23 @@
 (s/def ::cluster-options/port #(s/int-in-range? 1024 65535 %))
 
 (s/def ::cluster-options/load-balancing-policy
-  (instance-pred LoadBalancingPolicy))
+  (x/instance-of LoadBalancingPolicy))
 (s/def ::cluster-options/reconnection-policy
-  (instance-pred ReconnectionPolicy))
+  (x/instance-of ReconnectionPolicy))
 
 (s/def ::cluster-options/retry-policy
-  (instance-pred RetryPolicy))
+  (x/instance-of RetryPolicy))
 
 (s/def ::cluster-options/speculative-execution-policy
-  (instance-pred SpeculativeExecutionPolicy))
+  (x/instance-of SpeculativeExecutionPolicy))
 
 ;; pooling opts
 
 (s/def ::cluster-options/pooling-option
   (s/+ (s/tuple ::enum/host-distance pos-int?)))
 
-(create-ns 'qbits.alia.cluster-options.pooling-options)
-(alias 'cluster-options.pooling-options 'qbits.alia.cluster-options.pooling-options)
+(x/ns-as 'qbits.alia.cluster-options.pooling-options
+         'cluster-options.pooling-options)
 (s/def ::cluster-options.pooling-options/core-connections-per-host
   ::cluster-options/pooling-option)
 
@@ -101,8 +100,8 @@
            ::cluster-options.pooling-options/connection-thresholds]))
 
 ;; socket options
-(create-ns 'qbits.alia.cluster-options.socket-options)
-(alias 'cluster-options.socket-options 'qbits.alia.cluster-options.socket-options)
+(x/ns-as 'qbits.alia.cluster-options.socket-options
+         'cluster-options.socket-options)
 (s/def ::cluster-options.socket-options/read-timeout pos-int?)
 (s/def ::cluster-options.socket-options/read-timeout pos-int?)
 (s/def ::cluster-options.socket-options/receive-buffer-size pos-int?)
@@ -123,8 +122,8 @@
            ::cluster-options.socket-options/keep-alive?]))
 
 ;; query opts
-(create-ns 'qbits.alia.cluster-options.query-options)
-(alias 'cluster-options.query-options 'qbits.alia.cluster-options.query-options)
+(x/ns-as 'qbits.alia.cluster-options.query-options
+         'cluster-options.query-options)
 (s/def ::cluster-options.query-options/fetch-size pos-int?)
 (s/def ::cluster-options.query-options/consitency ::enum/consistency-level)
 (s/def ::cluster-options.query-options/serial-consistency ::enum/consistency-level)
@@ -139,8 +138,8 @@
 (s/def ::cluster-options/jmx-reporting? boolean?)
 
 ;; credentials
-(create-ns 'qbits.alia.cluster-options.credentials)
-(alias 'cluster-options.credentials 'qbits.alia.cluster-options.credentials)
+(x/ns-as 'qbits.alia.cluster-options.credentials
+         'cluster-options.credentials)
 (s/def ::cluster-options.credentials/user string?)
 (s/def ::cluster-options.credentials/password string?)
 (s/def ::cluster-options/credentials
@@ -153,15 +152,14 @@
 (s/def ::cluster-options/ssl? boolean?)
 
 ;; ssl options
-(create-ns 'qbits.alia.cluster-options.ssl-options)
-(alias 'cluster-options.ssl-options 'qbits.alia.cluster-options.ssl-options)
-
+(x/ns-as 'qbits.alia.cluster-options.ssl-options
+       'cluster-options.ssl-options)
 (s/def ::cluster-options.ssl-options/keystore-path string?)
 (s/def ::cluster-options.ssl-options/keystore-password string?)
 (s/def ::cluster-options.ssl-options/cipher-suites (s/coll-of string? :min-count 1))
 
 (s/def ::cluster-options/ssl-options
-  (s/or :ssl-options-instance (instance-pred SSLOptions)
+  (s/or :ssl-options-instance (x/instance-of SSLOptions)
         :ssl-options-map
         (s/keys :opt-un
                 [:qbits.alia.ssl-options/keystore-path
@@ -169,11 +167,11 @@
                  :qbits.alia.ssl-options/cipher-suites])))
 
 (s/def ::cluster-options/timestamp-generator
-  (instance-pred TimestampGenerator))
+  (x/instance-of TimestampGenerator))
 (s/def ::cluster-options/address-translator
-  (instance-pred AddressTranslator))
+  (x/instance-of AddressTranslator))
 (s/def ::cluster-options/netty-options
-  (instance-pred NettyOptions))
+  (x/instance-of NettyOptions))
 (s/def ::cluster-options/max-schema-agreement-wait-seconds pos-int?)
 (s/def ::cluster-options/cluster-name string?)
 
@@ -205,8 +203,8 @@
 ;; execute & co
 (create-ns 'qbits.alia.statement-options)
 (alias 'alia.statement-options 'qbits.alia.statement-options)
-(s/def ::alia.statement-options/routing-key (instance-pred ByteBuffer))
-(s/def ::alia.statement-options/retry-policy (instance-pred RetryPolicy))
+(s/def ::alia.statement-options/routing-key (x/instance-of ByteBuffer))
+(s/def ::alia.statement-options/retry-policy (x/instance-of RetryPolicy))
 (s/def ::alia.statement-options/tracing boolean?)
 (s/def ::alia.statement-options/idempotent? boolean?)
 
@@ -214,7 +212,7 @@
 (s/def ::alia.statement-options/serial-consistency ::enum/consistency-level)
 (s/def ::alia.statement-options/fetch-size pos-int?)
 (s/def ::alia.statement-options/timesamp pos-int?)
-(s/def ::alia.statement-options/paging-state (instance-pred PagingState))
+(s/def ::alia.statement-options/paging-state (x/instance-of PagingState))
 (s/def ::alia.statement-options/read-timeout pos-int?)
 
 (s/def ::alia/statement-options
@@ -234,8 +232,8 @@
 (alias 'alia.execute-opts 'qbits.alia.execute-opts)
 
 (s/def ::alia.execute-opts/values
-  (s/or :named-values (s/map-of keyword? (satisfies-pred codec/PCodec) :min-count 1)
-        :positional-values (s/+ (satisfies-pred codec/PCodec))))
+  (s/or :named-values (s/map-of keyword? (x/satisfies codec/PCodec) :min-count 1)
+        :positional-values (s/+ (x/satisfies codec/PCodec))))
 
 (s/def ::alia.execute-opts/result-set-fn
   (s/fspec :args (s/cat :result-set any?)
@@ -257,7 +255,7 @@
 
 (create-ns 'qbits.alia.execute-async)
 (alias 'alia.execute-async 'qbits.alia.execute-async)
-(s/def ::alia.execute-async/executor (instance-pred Executor))
+(s/def ::alia.execute-async/executor (x/instance-of Executor))
 
 ;; TODO fix when we can avoid to run gen on instrument
 (comment
@@ -266,7 +264,7 @@
              :ret any?))
 
   (s/def ::alia.execute-async/error
-    (s/fspec :args (s/cat :err (instance-pred clojure.lang.ExceptionInfo))
+    (s/fspec :args (s/cat :err (x/instance-of clojure.lang.ExceptionInfo))
              :ret any?)))
 
 (s/def ::alia.execute-async/success fn?)
@@ -293,12 +291,12 @@
         :args (s/cat :cluster-or-session
                      (s/or :cluster ::alia/cluster
                            :session ::alia/session))
-        :ret (instance-pred CloseFuture))
+        :ret (x/instance-of CloseFuture))
 
 (s/fdef qbits.alia/bind
         :args (s/cat :statement ::alia/prepared-statement
                      :values (s/nilable ::alia.execute-opts/values))
-        :ret (instance-pred BoundStatement))
+        :ret (x/instance-of BoundStatement))
 
 (s/fdef qbits.alia/prepare
         :args (s/cat :session ::alia/session
@@ -308,7 +306,7 @@
 (s/fdef qbits.alia/batch
         :args (s/cat :statements (s/spec (s/+ ::alia/query))
                      :type (s/? ::enum/batch-statement-type))
-        :ret (instance-pred BatchStatement))
+        :ret (x/instance-of BatchStatement))
 
 (s/fdef qbits.alia/execute
         :args (s/cat :session ::alia/session
@@ -320,7 +318,7 @@
         :args (s/cat :session ::alia/session
                      :query ::alia/query
                      :options (s/? ::alia/execute-async-opts))
-        :ret (instance-pred ResultSetFuture))
+        :ret (x/instance-of ResultSetFuture))
 
 (s/fdef qbits.alia/udt-encoder
         :args (s/cat :session ::alia/session
