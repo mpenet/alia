@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.10
+
+* Use java-driver 3.1.0 [driver-core/CHANGELOG](http://datastax.github.io/java-driver/changelog/#3-1-0)
+
 ## 3.1.9
 
 * Use java-driver 3.0.3 [driver-core/CHANGELOG](http://datastax.github.io/java-driver/changelog/#3-0-3)
