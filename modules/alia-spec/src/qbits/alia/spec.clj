@@ -2,6 +2,7 @@
   (:require
    [clojure.spec :as s]
    [qbits.spex :as x]
+   [qbits.spex.networking :as xn]
    [qbits.alia :as alia]
    [qbits.alia.cluster-options :as cluster-options]
    [qbits.alia.enum :as enum]
@@ -61,11 +62,11 @@
 ;; cluster opts
 
 (s/def ::cluster-options/contact-points
-  (s/or :host string?
-        :hosts (s/coll-of string?
+  (s/or :host ::xn/hostname
+        :hosts (s/coll-of ::xn/hostname
                           :min-count 1)))
 
-(s/def ::cluster-options/port #(s/int-in-range? 1024 65535 %))
+(s/def ::cluster-options/port ::xn/port)
 
 (s/def ::cluster-options/load-balancing-policy
   (x/instance-of LoadBalancingPolicy))
