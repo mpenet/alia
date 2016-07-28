@@ -1,4 +1,4 @@
-(defproject cc.qbits/alia-spec "3.1.9"
+(defproject cc.qbits/alia-spec "3.1.10"
   :description "clojure.spec for Alia"
   :url "https://github.com/mpenet/alia/alia-joda-time"
   :license {:name "Eclipse Public License"
@@ -6,5 +6,5 @@
   :dependencies [[org.clojure/clojure "1.9.0-alpha10"]
                  [org.clojure/test.check "0.9.0"]
                  [cc.qbits/spex "0.1.1"]
-                 [cc.qbits/alia "3.1.9" :exclude [org.clojure/clojure]]]
+                 [cc.qbits/alia "3.1.10" :exclude [org.clojure/clojure]]]
   :global-vars {*warn-on-reflection* true})

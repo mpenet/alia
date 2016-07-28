@@ -57,14 +57,10 @@
 (s/def ::enum/compression (enum-pred enum/compression))
 (s/def ::enum/batch-statement-type (enum-pred enum/batch-statement-type))
 
-(s/def ::string string?)
-
 ;; cluster opts
 
 (s/def ::cluster-options/contact-points
-  (s/or :host ::xn/hostname
-        :hosts (s/coll-of ::xn/hostname
-                          :min-count 1)))
+  (s/coll-of ::xn/hostname :min-count 1))
 
 (s/def ::cluster-options/port ::xn/port)
 
