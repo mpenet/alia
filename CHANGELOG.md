@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.1.11
+
+* alia-manifold: execute-chan-buffered will now work like with
+  alia-async version, respect buffer size and handle backpressure
+  accordingly. Thanks @mccraigmccraig for spotting the issue and
+  providing the fix.
+* depends on alia-manifold 3.1.4
+
 ## 3.1.10
 
 * Use java-driver 3.1.0 [driver-core/CHANGELOG](http://datastax.github.io/java-driver/changelog/#3-1-0)
