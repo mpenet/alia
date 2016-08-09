@@ -91,16 +91,10 @@
              rs-future
              (reify FutureCallback
                (onSuccess [_ result]
-                 (try
-                   (loop [rows (codec/result-set->maps (.get rs-future)
-                                                       result-set-fn
-                                                       key-fn)]
-                     (when-let [row (first rows)]
-                       (when (s/put! stream row)
-                         (recur (rest rows)))))
-                   (catch Exception err
-                     (s/put! stream (ex->ex-info err {:query statement :values values}))))
-                 (s/close! stream))
+                 (let [rows (codec/result-set->maps (.get rs-future)
+                                                    result-set-fn
+                                                    key-fn)]
+                   (s/connect rows stream)))
                (onFailure [_ ex]
                  (s/put! stream (ex->ex-info ex {:query statement :values values}))
                  (s/close! stream)))
