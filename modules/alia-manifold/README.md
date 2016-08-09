@@ -7,7 +7,7 @@ Adds [manifold](https://github.com/ztellman/manifold) support to alia
 Add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia-manifold "3.1.3"]
+[cc.qbits/alia-manifold "3.1.4"]
 ```
 
 ## License
