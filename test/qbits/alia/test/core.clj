@@ -16,6 +16,13 @@
   (:import
     (com.datastax.driver.core Statement UDTValue ConsistencyLevel Cluster)))
 
+(try
+  (require 'qbits.alia.spec)
+  (require 'clojure.spec.test)
+  ((resolve 'clojure.spec.test/instrument))
+  (println "Instrumenting qbits.alia with clojure.spec")
+  (catch Exception e
+    (.printStackTrace e)))
 
 (def ^:dynamic *cluster*)
 (def ^:dynamic *session*)
@@ -144,7 +151,7 @@
 
 (deftest test-sync-execute
   (is (= user-data-set
-         (execute *session* "select * from users;")))
+         (qbits.alia/execute *session* "select * from users;")))
 
   (is (= user-data-set
          (execute *session* (h/select :users)))))

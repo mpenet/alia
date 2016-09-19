@@ -35,7 +35,7 @@
   [_ builder hosts]
   (.addContactPoints ^Cluster$Builder builder
                      ^"[Ljava.lang.String;"
-                     (into-array (if (sequential? hosts) hosts [hosts]))))
+                     (into-array hosts)))
 
 (defmethod set-cluster-option! :port
   [_ builder port]
