@@ -10,7 +10,7 @@
                  [cc.qbits/alia-joda-time "3.1.3"]
                  [cc.qbits/alia-nippy "3.1.4"]
                  [cc.qbits/alia-eaio-uuid "3.1.3"]
-                 [cc.qbits/alia-spec "3.1.9"]]
+                 [cc.qbits/alia-spec "3.1.10"]]
   :profiles {:dev  {:dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
                                    [cc.qbits/hayt "3.0.1"]
                                    [net.jpountz.lz4/lz4 "1.2.0"]
