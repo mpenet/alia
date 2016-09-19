@@ -1,4 +1,6 @@
 (ns qbits.alia.spec
+  "Basic specs for validation/instrumentation, atm this doesn't
+  include gen in most cases, not sure it ever will"
   (:require
    [clojure.spec :as s]
    [qbits.spex :as x]
@@ -6,6 +8,7 @@
    [qbits.alia :as alia]
    [qbits.alia.cluster-options :as cluster-options]
    [qbits.alia.enum :as enum]
+   [qbits.commons.enum :as ce]
    [qbits.alia.codec :as codec])
   (:import
    (com.datastax.driver.core
@@ -23,7 +26,13 @@
     Statement
     TimestampGenerator
     UserType
-    TupleType)
+    TupleType
+    ;; enums
+    BatchStatement$Type
+    ConsistencyLevel
+    HostDistance
+    ProtocolOptions$Compression
+    WriteType)
    (com.datastax.driver.core.policies
     AddressTranslator
     LoadBalancingPolicy
@@ -35,27 +44,18 @@
 
 (def string-or-named? #(or (string? %) (instance? clojure.lang.Named %)))
 
-(defn enum-pred [enum-fn]
-  (fn [x]
-    (try
-      (enum-fn x)
-      (catch clojure.lang.ExceptionInfo ei
-        (case (some-> ei ex-data :type)
-          :qbits.commons.enum/invalid-enum-value false
-          (throw ei))
-        false))))
-
 (s/def ::alia/cluster (x/instance-of Cluster))
 (s/def ::alia/session (x/instance-of Session))
 (s/def ::alia/query (x/satisfies alia/PStatement))
 (s/def ::alia/prepared-statement (x/instance-of PreparedStatement))
 
 ;; enums
-(s/def ::enum/host-distance (enum-pred enum/host-distance))
-(s/def ::enum/write-type (enum-pred enum/write-type))
-(s/def ::enum/consistency-level (enum-pred enum/consistency-level))
-(s/def ::enum/compression (enum-pred enum/compression))
-(s/def ::enum/batch-statement-type (enum-pred enum/batch-statement-type))
+(letfn [(enum-key-set [enum] (-> enum ce/enum->map keys set))]
+  (s/def ::enum/host-distance (enum-key-set HostDistance))
+  (s/def ::enum/write-type (enum-key-set WriteType))
+  (s/def ::enum/consistency-level (enum-key-set ConsistencyLevel))
+  (s/def ::enum/compression (enum-key-set ProtocolOptions$Compression))
+  (s/def ::enum/batch-statement-type (enum-key-set BatchStatement$Type)))
 
 ;; cluster opts
 
