@@ -7,7 +7,7 @@ Adds `clojure.spec` for alia core
 Add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia-spec "3.1.9"]
+[cc.qbits/alia-spec "3.1.10"]
 ```
 
 ## License
