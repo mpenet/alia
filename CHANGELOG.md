@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.2.0
+
+* Merged alia-spec into master and added instrumentation to tests
+
 ## 3.1.11
 
 * alia-manifold: execute-chan-buffered will now work like with
