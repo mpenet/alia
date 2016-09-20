@@ -2,6 +2,7 @@
 
 ## 3.2.0
 
+* depends on clojure 1.9.0-alpha12
 * Merged alia-spec into master and added instrumentation to tests
 
 ## 3.1.11
