@@ -7,7 +7,7 @@ Core of the driver
 Add this to your dependencies:
 
 ```clojure
-[cc.qbits/alia "3.1.10"]
+[cc.qbits/alia "3.1.11"]
 ```
 
 ## License

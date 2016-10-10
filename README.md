@@ -44,7 +44,7 @@ if you are upgrading. Alia runs on Clojure >= 1.7 (we're using IReduceInit inter
 Add the following to your dependencies:
 
 ```clojure
-[cc.qbits/alia-all "3.2.0"]
+[cc.qbits/alia-all "3.2.1"]
 ```
 
 This would include all the codec extensions and extra libraries.
