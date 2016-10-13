@@ -2,6 +2,49 @@
 
 ## 3.3.0
 
+* Add support for "custom row generators": If you don't care about
+  having rows returned as keywordized maps you can skip what comes
+  next.
+
+  All "execute" calls in alia's API can now take an additional option:
+  `row-generator`
+  We now have a `qbits.alia.codec/RowGenerator` protocol that opens how
+  rows are decoded per query.
+
+  ```clojure
+  (defprotocol RowGenerator
+      (init-row [this] "Constructs a row base")
+      (conj-row [this r k v] "Adds a entry/col to a row")
+      (finalize-row [this r] "\"completes\" the row"))
+  ```
+
+  You can this way generate rows as vectors, or records or deftype
+  instances or anything you'd like really. It kind of follows the way
+  transient work, it's a 3 operation definition ("setup" row bag,
+  "add" row to bag, "close" bag of rows).
+
+  By default there are 3 generators defined:
+  * `qbits.alia.codec/row-gen->map` (the default)
+  * `qbits.alia.codec/row-gen->`
+  * `qbits.alia.codec/row-gen->record` (that one is a function that
+    takes a map->foo like constructor).
+
+  And feel free to implement your own.
+
+  As a result the `key-fn` option has been removed, but I don't think
+  anybody used it (at least in OSS). But that's easy to restore via a
+  custom generator if you need to (it's a copy of row-gen->map without
+  a keyword call):
+
+  ```clj
+  (def row-gen->map
+  "Row Generator that stringy map instances"
+  (reify RowGenerator
+    (init-row [_] (transient {}))
+    (conj-row [_ row k v] (assoc! row k v))
+    (finalize-row [_ row] (persistent! row))))
+  ```
+
 ## 3.2.0
 
 * depends on clojure 1.9.0-alpha12
