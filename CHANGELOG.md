@@ -24,10 +24,10 @@
   "add" col to row bag, "close" row bag).
 
   By default there are 3 generators defined:
-  * `qbits.alia.codec/row-gen->map` (the default)
-  * `qbits.alia.codec/row-gen->`
-  * `qbits.alia.codec/row-gen->record` (that one is a function that
-    takes a map->foo like constructor).
+  * `qbits.alia.codec/row-gen->map`: the default
+  * `qbits.alia.codec/row-gen->vector`: builds a vector of values
+  * `qbits.alia.codec/row-gen->record`: that one is a function that
+    takes a map->foo like constructor.
 
   And feel free to implement your own.
 
