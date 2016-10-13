@@ -290,7 +290,7 @@ Alia supports hayt query direct execution, if you pass a non-compiled
 query to `execute` or `execute-async`, it will be compiled and cached on a LU cache with a threshold of
 100 (the cache function is user settable), so to be used carefully. The same is true with `prepare`.
 
-Ex:
+Ex
 ```clojure
 (execute session (select :users (where {:name :foo})))
 ```
