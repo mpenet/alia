@@ -329,7 +329,6 @@
 * `:routing-key` : ByteBuffer
 * `:retry-policy` : one of qbits.alia.policy.retry/*
 * `:tracing?` : Bool, toggles query tracing (available via query result metadata)
-* `:key-fn` : fn applied on keys (they are keyword by default)
 * `:fetch-size` : Number, sets query fetching size
 * `:timestamp` : Number, sets the timestamp for query (if not specified in CQL)
 * `:idempotent?` : Whether this statement is idempotent, i.e. whether
@@ -348,6 +347,9 @@
   no intermediary seq and potentially better performance. This can be
   very powerfull when used right (for instance with transducers
   `#(into [] xform %))`.
+* `:row-generator`: implements alia.codec/RowGenerator, Defaults to
+  `alia.codec/row-gen->map`. A RowGenerator dicts how we construct
+  rows.
 * `:read-timeout` : Read timeout in milliseconds
 
   Possible values for consistency:
@@ -356,7 +358,7 @@
 :serial :three :two"
   ([^Session session query {:keys [consistency serial-consistency
                                    routing-key retry-policy
-                                   result-set-fn key-fn
+                                   result-set-fn row-generator
                                    tracing? idempotent? paging-state
                                    fetch-size values timestamp
                                    read-timeout]}]
@@ -366,9 +368,9 @@
                              consistency serial-consistency fetch-size
                              timestamp paging-state read-timeout)
      (try
-       (codec/result-set->maps (.execute session statement)
-                               result-set-fn
-                               key-fn)
+       (codec/result-set (.execute session statement)
+                         result-set-fn
+                         row-generator)
        (catch Exception err
          (throw (ex->ex-info err {:query statement :values values}))))))
   ;; to support old syle api with unrolled args
@@ -380,9 +382,10 @@
   callback functions via options. For options refer to
   `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy result-set-fn
+                                   routing-key retry-policy
+                                   result-set-fn row-generator
                                    tracing? idempotent?
-                                   key-fn fetch-size values timestamp
+                                   fetch-size values timestamp
                                    paging-state read-timeout
                                    success error]}]
    (try
@@ -398,9 +401,9 @@
             (onSuccess [_ result]
               (when success
                 (try
-                  (success (codec/result-set->maps (.get rs-future)
-                                                   result-set-fn
-                                                   key-fn))
+                  (success (codec/result-set (.get rs-future)
+                                             result-set-fn
+                                             row-generator))
                   (catch Exception err
                     (error (ex->ex-info err {:query statement :values values}))))))
             (onFailure [_ ex]

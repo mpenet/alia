@@ -236,15 +236,13 @@
   (s/fspec :args (s/cat :result-set any?)
            :ret any?))
 
-(s/def ::alia.execute-opts/key-fn
-  (s/fspec :args (s/cat :column string?)
-           :ret any?))
+(s/def ::alia.execute-opts/row-generator (x/satisfies codec/RowGenerator))
 
 (s/def ::alia/execute-opts-common
   (s/keys :opts-un
           [::alia.execute-opts/values
            ::alia.execute-opts/result-set-fn
-           ::alia.execute-opts/key-fn]))
+           ::alia.execute-opts/row-generator]))
 
 (s/def ::alia/execute-opts
   (s/merge ::alia/execute-opts-common

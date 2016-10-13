@@ -94,53 +94,81 @@
   (execution-info [this]))
 
 (defn lazy-result-set-
-  [^ResultSet result-set]
-  (when-let [row (.one result-set)]
-    (lazy-seq (cons row (lazy-result-set- result-set)))))
+  [^ResultSet rs]
+  (when-let [row (.one rs)]
+    (lazy-seq (cons row (lazy-result-set- rs)))))
 
 (defn lazy-result-set
-  [^ResultSet result-set]
-  (lazy-seq (lazy-result-set- result-set)))
+  [^ResultSet rs]
+  (lazy-seq (lazy-result-set- rs)))
+
+;; Shamelessly inspired from https://github.com/ghadishayban/squee's
+;; monoid'ish appoach
+(defprotocol RowGenerator
+  (init-row [this] "Constructs a row base")
+  (conj-row [this r k v] "Adds a entry/col to a row")
+  (finalize-row [this r] "\"completes\" the row"))
+
+(def row-gen->map
+  "Row Generator that map instances"
+  (reify RowGenerator
+    (init-row [_] (transient {}))
+    (conj-row [_ row k v] (assoc! row (keyword k) v))
+    (finalize-row [_ row] (persistent! row))))
+
+(def row-gen->vector
+  "Row Generator that builds vector instances"
+  (reify RowGenerator
+    (init-row [_] (transient []))
+    (conj-row [_ row _ v] (conj! row v))
+    (finalize-row [_ row] (persistent! row))))
+
+(defn row-gen->record
+  "Row Generator that builds record instances"
+  [record-ctor]
+  (reify RowGenerator
+    (init-row [_] (transient {}))
+    (conj-row [_ row k v] (assoc! row k v))
+    (finalize-row [_ row] (-> row persistent! record-ctor))))
 
 (defn decode-row
-  [^Row row key-fn]
+  [^Row row rg]
   (let [cdef (.getColumnDefinitions row)
         len (.size cdef)]
     (loop [idx (int 0)
-           row-map (transient {})]
+           r (init-row rg)]
       (if (= idx len)
-        (persistent! row-map)
+        (finalize-row rg r)
         (recur (unchecked-inc-int idx)
-               (assoc! row-map
-                       (key-fn (.getName cdef idx))
-                       (deserialize row idx)))))))
+               (conj-row rg r
+                         (.getName cdef idx)
+                         (deserialize row idx)))))))
 
 (defn ->result-set
-  [^ResultSet result-set key-fn]
-  (reify ResultSet
-    PResultSet
-    (execution-info [this]
-      (.getAllExecutionInfo result-set))
-    clojure.lang.Seqable
-    (seq [this]
-      (let [key-fn (or key-fn keyword)]
-        (map #(decode-row % key-fn)
-             (lazy-result-set result-set))))
+  [^ResultSet rs row-generator]
+  (let [row-generator (or row-generator row-gen->map)]
+    (reify ResultSet
+      PResultSet
+      (execution-info [this]
+        (.getAllExecutionInfo rs))
+      clojure.lang.Seqable
+      (seq [this]
+        (map #(decode-row % row-generator)
+             (lazy-result-set rs)))
 
-    clojure.lang.IReduceInit
-    (reduce [this f init]
-      (let [key-fn (or key-fn keyword)]
+      clojure.lang.IReduceInit
+      (reduce [this f init]
         (loop [ret init]
-          (if-let [row (.one result-set)]
-            (let [ret (f ret (decode-row row key-fn))]
+          (if-let [row (.one rs)]
+            (let [ret (f ret (decode-row row row-generator))]
               (if (reduced? ret)
                 @ret
                 (recur ret)))
             ret))))))
 
-(defn result-set->maps
-  [^ResultSet result-set result-set-fn key-fn]
-  ((or result-set-fn seq) (->result-set result-set key-fn)))
+(defn result-set
+  [^ResultSet rs result-set-fn row-generator]
+  ((or result-set-fn seq) (->result-set rs row-generator)))
 
 (defprotocol PNamedBinding
   "Bind the val onto Settable by name"

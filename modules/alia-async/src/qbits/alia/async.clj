@@ -25,7 +25,7 @@
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key retry-policy result-set-fn
                                    tracing? idempotent?
-                                   key-fn fetch-size values timestamp
+                                   row-generator fetch-size values timestamp
                                    paging-state read-timeout]}]
    (let [ch (async/promise-chan)]
      (try
@@ -39,20 +39,20 @@
             (reify FutureCallback
               (onSuccess [_ result]
                 (try
-                  (async/put! ch (codec/result-set->maps (.get rs-future)
-                                                         result-set-fn
-                                                         key-fn))
+                  (async/put! ch (codec/result-set (.get rs-future)
+                                                   result-set-fn
+                                                   row-generator))
                   (catch Exception err
                     (async/put! ch
                                 (ex->ex-info err
-                                                  {:query statement
-                                                   :values values}))))
+                                             {:query statement
+                                              :values values}))))
                 (async/close! ch))
               (onFailure [_ ex]
                 (async/put! ch
                             (ex->ex-info ex
-                                              {:query statement
-                                               :values values}))))
+                                         {:query statement
+                                          :values values}))))
             (get-executor executor))))
        (catch Throwable t
          (async/put! ch t)))
@@ -75,7 +75,8 @@
   responsability to handle these how you deem appropriate. For options
   refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy result-set-fn key-fn
+                                   routing-key retry-policy
+                                   result-set-fn row-generator
                                    tracing? idempotent?
                                    fetch-size values timestamp channel
                                    paging-state read-timeout]}]
@@ -97,23 +98,23 @@
               (onSuccess [_ result]
                 (async/go
                   (try
-                    (loop [rows (codec/result-set->maps
+                    (loop [rows (codec/result-set
                                  (.get ^ResultSetFuture rs-future)
                                  result-set-fn
-                                 key-fn)]
+                                 row-generator)]
                       (when-let [row (first rows)]
                         (when (async/>! ch row)
                           (recur (rest rows)))))
                     (catch Exception err
                       (async/put! ch
                                   (ex->ex-info err
-                                                    {:query statement
-                                                     :values values}))))
+                                               {:query statement
+                                                :values values}))))
                   (async/close! ch)))
               (onFailure [_ ex]
                 (async/put! ch (ex->ex-info ex
-                                                 {:query statement
-                                                  :values values}))
+                                            {:query statement
+                                             :values values}))
                 (async/close! ch)))
             (get-executor executor))))
        (catch Throwable t

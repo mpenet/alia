@@ -23,8 +23,9 @@
 
   For other options refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [success error executor consistency
-                                   serial-consistency routing-key result-set-fn
-                                   retry-policy tracing? key-fn idempotent?
+                                   serial-consistency routing-key
+                                   result-set-fn row-generator
+                                   retry-policy tracing? idempotent?
                                    fetch-size timestamp values paging-state
                                    read-timeout]}]
    (let [deferred (d/deferred)]
@@ -42,9 +43,9 @@
                (onSuccess [_ result]
                  (try
                    (d/success! deferred
-                               (codec/result-set->maps (.get rs-future)
-                                                       result-set-fn
-                                                       key-fn))
+                               (codec/result-set (.get rs-future)
+                                                  result-set-fn
+                                                  row-generator))
                    (catch Exception err
                      (d/error! deferred
                                (ex->ex-info err {:query statement :values values})))))
@@ -72,7 +73,7 @@
   refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key result-set-fn retry-policy tracing?
-                                   key-fn idempotent? fetch-size values
+                                   row-generator idempotent? fetch-size values
                                    stream timestamp paging-state
                                    read-timeout]}]
    (let [stream (or stream
@@ -92,9 +93,9 @@
              (reify FutureCallback
                (onSuccess [_ result]
                  (try
-                   (let [rows (codec/result-set->maps (.get rs-future)
+                   (let [rows (codec/result-set (.get rs-future)
                                                       result-set-fn
-                                                      key-fn)]
+                                                      row-generator)]
                      (s/connect rows stream))
                    (catch Exception err
                      (s/put! stream (ex->ex-info err {:query statement :values values}))
