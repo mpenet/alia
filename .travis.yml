@@ -22,7 +22,7 @@ before_install:
   - sudo gpg --keyserver keyserver.kjsl.com --recv-keys 0353B12C
   - sudo gpg --export --armor 0353B12C | sudo apt-key add -
   - sudo apt-get update
-  - sudo apt-get -o Dpkg::Options::="--force-confnew" install -y cassandra --force yes
+  - sudo apt-get -o Dpkg::Options::="--force-confnew" install -y cassandra --force-yes
   - sudo rm -rf /var/lib/cassandra/*
   - sudo sh -c "echo 'JVM_OPTS=\"\${JVM_OPTS} -Djava.net.preferIPv4Stack=false\"' >> /etc/cassandra/cassandra-env.sh"
   - sudo service cassandra start
