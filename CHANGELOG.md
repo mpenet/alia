@@ -21,7 +21,7 @@
   You can this way generate rows as vectors, or records or deftype
   instances or anything you'd like really. It kind of follows the way
   transient work, it's a 3 operation definition ("setup" row bag,
-  "add" row to bag, "close" bag of rows).
+  "add" col to row bag, "close" row bag).
 
   By default there are 3 generators defined:
   * `qbits.alia.codec/row-gen->map` (the default)
