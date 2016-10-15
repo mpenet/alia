@@ -79,6 +79,7 @@ You can also pick and choose what you need from alia's
 
 * [cc.qbits/alia-nippy](https://github.com/mpenet/alia/tree/master/modules/alia-nippy):
   Alia codec with nippy serialisation (for blobs)
+
   [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-nippy.svg)](https://clojars.org/cc.qbits/alia-nippy)
 
 * [cc.qbits/alia-spec](https://github.com/mpenet/alia/tree/master/modules/alia-spec):
