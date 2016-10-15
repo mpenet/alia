@@ -52,38 +52,38 @@ This would include all the codec extensions and extra libraries.
 You can also pick and choose what you need from alia's
 [modules](https://github.com/mpenet/alia/tree/master/modules):
 
-* [cc.qbits/alia](https://github.com/mpenet/alia/tree/master/modules/alia) This
-  is the main module with all the basic alia functions (required).
+* [cc.qbits/alia](https://github.com/mpenet/alia/tree/master/modules/alia)
+  Main module with all the basic alia functions (required).
 
   [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia.svg)](https://clojars.org/cc.qbits/alia)
 
 * [cc.qbits/alia-async](https://github.com/mpenet/alia/tree/master/modules/alia-async):
-  `clojure.core.async` core.async interface: query as streamed rows over channel, query as promise-chan
+  core.async interface: query as streamed rows over channel, query as promise-chan
 
   [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-async.svg)](https://clojars.org/cc.qbits/alia-async)
 
 * [cc.qbits/alia-manifold](https://github.com/mpenet/alia/tree/master/modules/alia-manifold):
-  `manifold` manifold interface: query as streamed rows over manifold stream, query as deferred, etc
+  Manifold interface: query as streamed rows over manifold stream, query as deferred, etc
 
   [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-manifold.svg)](https://clojars.org/cc.qbits/alia-manifold)
 
 * [cc.qbits/alia-joda-time](https://github.com/mpenet/alia/tree/master/modules/alia-joda-time):
-  Alia codec for joda-time types.
+  Codec for joda-time types.
 
   [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-joda-time.svg)](https://clojars.org/cc.qbits/alia-joda-time)
 
 * [cc.qbits/alia-eaio-uuid](https://github.com/mpenet/alia/tree/master/modules/alia-eaio-uui):
-  Alia codec for eaio-uuid library.
+  Codec for eaio-uuid library.
 
   [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-eaio-uuid.svg)](https://clojars.org/cc.qbits/alia-eaio-uuid)
 
 * [cc.qbits/alia-nippy](https://github.com/mpenet/alia/tree/master/modules/alia-nippy):
-  Alia codec with nippy serialisation (for blobs)
+  Codec with nippy serialisation (for blobs)
 
   [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-nippy.svg)](https://clojars.org/cc.qbits/alia-nippy)
 
 * [cc.qbits/alia-spec](https://github.com/mpenet/alia/tree/master/modules/alia-spec):
-  Early work on clojure.spec for alia
+  clojure.spec for alia
 
   [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-spec.svg)](https://clojars.org/cc.qbits/alia-spec)
 
