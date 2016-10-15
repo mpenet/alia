@@ -6,9 +6,7 @@ Adds support for http://stephenc.github.io/eaio-uuid/
 
 Add this to your dependencies:
 
-```clojure
-[cc.qbits/alia-eaio-uuid "3.1.3"]
-```
+[![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-eaio-uuid.svg)](https://clojars.org/cc.qbits/alia-eaio-uuid)
 
 ## License
 

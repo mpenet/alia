@@ -6,9 +6,7 @@ Adds Joda Time support to alia
 
 Add this to your dependencies:
 
-```clojure
-[cc.qbits/alia-joda-time "3.1.3"]
-```
+[![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-joda-time.svg)](https://clojars.org/cc.qbits/alia-joda-time)
 
 ## License
 

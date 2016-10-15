@@ -43,9 +43,9 @@ if you are upgrading. Alia runs on Clojure >= 1.7 (we're using IReduceInit inter
 
 Add the following to your dependencies:
 
-```clojure
-[cc.qbits/alia-all "3.3.0"]
-```
+
+[![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-all.svg)](https://clojars.org/cc.qbits/alia-all)
+
 
 This would include all the codec extensions and extra libraries.
 
@@ -55,29 +55,43 @@ You can also pick and choose what you need from alia's
 * [cc.qbits/alia](https://github.com/mpenet/alia/tree/master/modules/alia) This
   is the main module with all the basic alia functions (required).
 
+  [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia.svg)](https://clojars.org/cc.qbits/alia)
+
 * [cc.qbits/alia-async](https://github.com/mpenet/alia/tree/master/modules/alia-async):
-  `clojure.core.async` interface to the core.async.
+  `clojure.core.async` core.async interface: query as streamed rows over channel, query as promise-chan
+
+  [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-async.svg)](https://clojars.org/cc.qbits/alia-async)
 
 * [cc.qbits/alia-manifold](https://github.com/mpenet/alia/tree/master/modules/alia-manifold):
-  `manifold` interface to manifold.
+  `manifold` manifold interface: query as streamed rows over manifold stream, query as deferred, etc
+
+  [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-manifold.svg)](https://clojars.org/cc.qbits/alia-manifold)
 
 * [cc.qbits/alia-joda-time](https://github.com/mpenet/alia/tree/master/modules/alia-joda-time):
   Alia codec for joda-time types.
 
+  [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-joda-time.svg)](https://clojars.org/cc.qbits/alia-joda-time)
+
 * [cc.qbits/alia-eaio-uuid](https://github.com/mpenet/alia/tree/master/modules/alia-eaio-uui):
   Alia codec for eaio-uuid library.
 
+  [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-eaio-uuid.svg)](https://clojars.org/cc.qbits/alia-eaio-uuid)
+
 * [cc.qbits/alia-nippy](https://github.com/mpenet/alia/tree/master/modules/alia-nippy):
   Alia codec with nippy serialisation (for blobs)
+  [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-nippy.svg)](https://clojars.org/cc.qbits/alia-nippy)
 
 * [cc.qbits/alia-spec](https://github.com/mpenet/alia/tree/master/modules/alia-spec):
   Early work on clojure.spec for alia
+
+  [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-spec.svg)](https://clojars.org/cc.qbits/alia-spec)
 
 ### Hayt (the query DSL)
 
 If you wish to use Hayt you need to add it to your dependencies
 
-`[cc.qbits/hayt "3.0.1"]`
+[![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/hayt.svg)](https://clojars.org/cc.qbits/hayt)
+
 
 Then `require`/`use` `qbits.hayt` and you're good to go.
 

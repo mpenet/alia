@@ -6,9 +6,7 @@ Adds `clojure.core.async` support to alia
 
 Add this to your dependencies:
 
-```clojure
-[cc.qbits/alia-async "3.2.0"]
-```
+[![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-async.svg)](https://clojars.org/cc.qbits/alia-async)
 
 ## License
 

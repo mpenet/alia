@@ -6,9 +6,7 @@ Adds `nippy` support to alia
 
 Add this to your dependencies:
 
-```clojure
-[cc.qbits/alia-nippy "3.1.3"]
-```
+[![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-nippy.svg)](https://clojars.org/cc.qbits/alia-nippy)
 
 ## License
 
