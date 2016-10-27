@@ -147,12 +147,12 @@
            ::cluster-options.credentials/password]))
 
 (s/def ::cluster-options/kerberos? boolean?)
-(s/def ::cluster-options/compression :qbits.alia.enum/compression)
+(s/def ::cluster-options/compression ::enum/compression)
 (s/def ::cluster-options/ssl? boolean?)
 
 ;; ssl options
 (x/ns-as 'qbits.alia.cluster-options.ssl-options
-       'cluster-options.ssl-options)
+         'cluster-options.ssl-options)
 (s/def ::cluster-options.ssl-options/keystore-path string?)
 (s/def ::cluster-options.ssl-options/keystore-password string?)
 (s/def ::cluster-options.ssl-options/cipher-suites (s/coll-of string? :min-count 1))
@@ -161,9 +161,9 @@
   (s/or :ssl-options-instance (x/instance-of SSLOptions)
         :ssl-options-map
         (s/keys :opt-un
-                [:qbits.alia.ssl-options/keystore-path
-                 :qbits.alia.ssl-options/keystore-password
-                 :qbits.alia.ssl-options/cipher-suites])))
+                [::cluster-options.ssl-options/keystore-path
+                 ::cluster-options.ssl-options/keystore-password
+                 ::cluster-options.ssl-options/cipher-suites])))
 
 (s/def ::cluster-options/timestamp-generator
   (x/instance-of TimestampGenerator))
