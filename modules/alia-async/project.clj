@@ -1,4 +1,4 @@
-(defproject cc.qbits/alia-async "3.2.0"
+(defproject cc.qbits/alia-async "4.0.0-SNAPSHOT"
   :description "core.async interface for Alia"
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"

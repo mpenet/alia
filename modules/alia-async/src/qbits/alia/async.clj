@@ -3,6 +3,7 @@
    [qbits.alia :refer [ex->ex-info query->statement set-statement-options!
                        get-executor]]
    [qbits.alia.codec :as codec]
+   [qbits.alia.codec.default :as default-codec]
    [clojure.core.async :as async])
   (:import
    (com.datastax.driver.core
@@ -23,13 +24,14 @@
 
   For options refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy result-set-fn
+                                   routing-key retry-policy result-set-fn codec
                                    tracing? idempotent?
                                    row-generator fetch-size values timestamp
                                    paging-state read-timeout]}]
    (let [ch (async/promise-chan)]
      (try
-       (let [^Statement statement (query->statement query values)]
+       (let [codec (or codec default-codec/codec)
+             ^Statement statement (query->statement query values codec)]
          (set-statement-options! statement routing-key retry-policy tracing? idempotent?
                                  consistency serial-consistency fetch-size
                                  timestamp paging-state read-timeout)
@@ -41,7 +43,8 @@
                 (try
                   (async/put! ch (codec/result-set (.get rs-future)
                                                    result-set-fn
-                                                   row-generator))
+                                                   row-generator
+                                                   codec))
                   (catch Exception err
                     (async/put! ch
                                 (ex->ex-info err
@@ -76,7 +79,7 @@
   refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key retry-policy
-                                   result-set-fn row-generator
+                                   result-set-fn row-generator codec
                                    tracing? idempotent?
                                    fetch-size values timestamp channel
                                    paging-state read-timeout]}]
@@ -86,7 +89,8 @@
                                                        .getQueryOptions
                                                        .getFetchSize))))]
      (try
-       (let [^Statement statement (query->statement query values)]
+       (let [codec (or codec default-codec/codec)
+             ^Statement statement (query->statement query values codec)]
          (set-statement-options! statement routing-key retry-policy
                                  tracing? idempotent?
                                  consistency serial-consistency fetch-size
@@ -101,7 +105,8 @@
                     (loop [rows (codec/result-set
                                  (.get ^ResultSetFuture rs-future)
                                  result-set-fn
-                                 row-generator)]
+                                 row-generator
+                                 codec)]
                       (when-let [row (first rows)]
                         (when (async/>! ch row)
                           (recur (rest rows)))))

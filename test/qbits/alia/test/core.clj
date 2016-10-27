@@ -7,6 +7,8 @@
    [qbits.alia.manifold :as ma]
    [qbits.alia.async :refer [execute-chan execute-chan-buffered]]
    [qbits.alia.codec :refer :all]
+   [qbits.alia.codec.default :refer :all]
+   [qbits.alia.codec.udt-aware]
    [qbits.alia.codec.joda-time :refer :all]
    [qbits.alia.codec.eaio-uuid :refer :all]
    [qbits.alia.codec.nippy :refer :all]
@@ -383,7 +385,7 @@
         an-id (int 100)]
 
     (is (= []
-           (execute *session* prep-write {:values {:id   an-id
+           (execute *session* prep-write {:values {:id an-id
                                                    :text "inserted via named bindings"}})))
 
     (is (= [{:id an-id
@@ -394,7 +396,6 @@
              :text "inserted via named bindings"}]
            (execute *session* "SELECT * FROM simple WHERE id = :id;"
                     {:values {:id an-id}})))))
-
 
 (deftest test-udt-encoder
   (let [encoder (udt-encoder *session* :udt)
@@ -421,3 +422,26 @@
   (is (instance? clojure.lang.LazySeq (execute *session* "select * from items;")))
   (is (instance? clojure.lang.PersistentVector (execute *session* "select * from items;"
                                                         {:result-set-fn #(into [] %)}))))
+
+(defrecord Foo [foo bar])
+(deftest test-udt-registry
+  (let [codec qbits.alia.codec.udt-aware/codec]
+    (qbits.alia.codec.udt-aware/register-udt! codec *session* :udt Foo)
+    (is
+     (= Foo
+        (-> (execute *session* "select * from users limit 1"
+                     {:codec codec})
+            first
+            :udt
+            type)))
+    (qbits.alia.codec.udt-aware/deregister-udt! codec *session* :udt Foo)))
+
+(deftest test-custom-codec
+  (is (-> (execute *session* "select * from users limit 1"
+                   {:codec {:decoder (constantly 42)
+                            :encoder identity}})
+          first
+          :valid
+          (= 42)))
+    ;; todo test encoder
+  )

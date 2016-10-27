@@ -3,6 +3,7 @@
    [manifold.deferred :as d]
    [manifold.stream :as s]
    [qbits.alia.codec :as codec]
+   [qbits.alia.codec.default :as default-codec]
    [qbits.alia :refer [ex->ex-info query->statement set-statement-options!
                        get-executor]])
   (:import
@@ -24,13 +25,14 @@
   For other options refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [success error executor consistency
                                    serial-consistency routing-key
-                                   result-set-fn row-generator
+                                   result-set-fn row-generator codec
                                    retry-policy tracing? idempotent?
                                    fetch-size timestamp values paging-state
                                    read-timeout]}]
    (let [deferred (d/deferred)]
      (try
-       (let [^Statement statement (query->statement query values)]
+       (let [codec (or codec default-codec/codec)
+             ^Statement statement (query->statement query values codec)]
          (set-statement-options! statement routing-key retry-policy
                                  tracing? idempotent?
                                  consistency serial-consistency fetch-size
@@ -45,7 +47,8 @@
                    (d/success! deferred
                                (codec/result-set (.get rs-future)
                                                   result-set-fn
-                                                  row-generator))
+                                                  row-generator
+                                                  codec))
                    (catch Exception err
                      (d/error! deferred
                                (ex->ex-info err {:query statement :values values})))))
@@ -73,7 +76,7 @@
   refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key result-set-fn retry-policy tracing?
-                                   row-generator idempotent? fetch-size values
+                                   row-generator codec idempotent? fetch-size values
                                    stream timestamp paging-state
                                    read-timeout]}]
    (let [stream (or stream
@@ -82,7 +85,8 @@
                                                  .getQueryOptions
                                                  .getFetchSize))))]
      (try
-       (let [^Statement statement (query->statement query values)]
+       (let [codec (or codec default-codec/codec)
+             ^Statement statement (query->statement query values codec)]
          (set-statement-options! statement routing-key retry-policy
                                  tracing? idempotent?
                                  consistency serial-consistency fetch-size
@@ -95,7 +99,8 @@
                  (try
                    (let [rows (codec/result-set (.get rs-future)
                                                       result-set-fn
-                                                      row-generator)]
+                                                      row-generator
+                                                      codec)]
                      (s/connect rows stream))
                    (catch Exception err
                      (s/put! stream (ex->ex-info err {:query statement :values values}))

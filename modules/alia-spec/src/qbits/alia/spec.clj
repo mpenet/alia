@@ -3,6 +3,7 @@
   include gen in most cases, not sure it ever will"
   (:require
    [clojure.spec :as s]
+   [clojure.spec.gen :as sg]
    [qbits.spex :as x]
    [qbits.spex.networking :as xn]
    [qbits.alia :as alia]
@@ -56,6 +57,7 @@
   (s/def ::enum/consistency-level (enum-key-set ConsistencyLevel))
   (s/def ::enum/compression (enum-key-set ProtocolOptions$Compression))
   (s/def ::enum/batch-statement-type (enum-key-set BatchStatement$Type)))
+
 
 ;; cluster opts
 
@@ -228,9 +230,27 @@
 (create-ns 'qbits.alia.execute-opts)
 (alias 'alia.execute-opts 'qbits.alia.execute-opts)
 
+(s/def ::encodable (s/spec any?
+                         :gen (fn [] (sg/return identity))))
+(s/def ::decodable (s/spec any?
+                         :gen (fn [] (sg/return identity))))
+
+(s/def ::codec/encoder
+  (s/spec (s/fspec :args (s/cat :value ::encodable)
+                   :ret any?)
+          :gen (sg/return identity)))
+
+(s/def ::codec/decoder
+  (s/spec (s/fspec :args (s/cat :value ::decodable)
+                   :ret any?)
+          :gen (fn [] (sg/return identity))))
+
+(s/def ::alia.execute-opts/codec (s/keys :req-un [::codec/encoder
+                                                  ::codec/decoder]))
+
 (s/def ::alia.execute-opts/values
-  (s/or :named-values (s/map-of keyword? (x/satisfies codec/PCodec) :min-count 1)
-        :positional-values (s/+ (x/satisfies codec/PCodec))))
+  (s/or :named-values (s/map-of keyword? ::encodable :min-count 1)
+        :positional-values (s/+ ::encodable)))
 
 (s/def ::alia.execute-opts/result-set-fn
   (s/fspec :args (s/cat :result-set any?)
@@ -241,6 +261,7 @@
 (s/def ::alia/execute-opts-common
   (s/keys :opts-un
           [::alia.execute-opts/values
+           ::alia.execute-opts/codec
            ::alia.execute-opts/result-set-fn
            ::alia.execute-opts/row-generator]))
 
@@ -290,7 +311,8 @@
 
 (s/fdef qbits.alia/bind
         :args (s/cat :statement ::alia/prepared-statement
-                     :values (s/nilable ::alia.execute-opts/values))
+                     :values (s/nilable ::alia.execute-opts/values)
+                     :codec (s/? ::alia.execute-opts/codec))
         :ret (x/instance-of BoundStatement))
 
 (s/fdef qbits.alia/prepare
@@ -300,7 +322,8 @@
 
 (s/fdef qbits.alia/batch
         :args (s/cat :statements (s/spec (s/+ ::alia/query))
-                     :type (s/? ::enum/batch-statement-type))
+                     :type (s/? ::enum/batch-statement-type)
+                     :codec (s/? ::alia.execute-opts/codec))
         :ret (x/instance-of BatchStatement))
 
 (s/fdef qbits.alia/execute

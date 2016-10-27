@@ -3,7 +3,7 @@
   encoding/decoding are optional. You need to add a nippy dependency
   manually. It only works for prepared statements (write time)"
   (:require
-   [qbits.alia.codec :as codec]
+   [qbits.alia.codec.default :as codec]
    [taoensso.nippy :as nippy])
   (:import
    (com.datastax.driver.core.utils Bytes)
@@ -16,7 +16,7 @@
   and it's encoder"
   ([] (set-nippy-collection-encoder! nil))
   ([opts]
-   (extend-protocol codec/PCodec
+   (extend-protocol codec/Encoder
      clojure.lang.IPersistentCollection
      (encode [coll]
        (ByteBuffer/wrap (nippy/freeze coll opts))))))
@@ -27,9 +27,8 @@
   to thaw at decoding time."
   ([] (set-nippy-decoder! nil))
   ([opts]
-   (extend-protocol codec/PCodec
+   (extend-protocol codec/Decoder
      java.nio.ByteBuffer
-     (encode [x] x)
      (decode [bb]
        (nippy/thaw (Bytes/getArray bb) opts)))))
 
@@ -42,12 +41,10 @@ calling serializable! on them. Takes a map or nippy options to be passed
   to thaw/freeze."
   ([] (set-nippy-serializable-encoder! nil))
   ([opts]
-   (extend-protocol codec/PCodec
+   (extend-protocol codec/Decoder
      java.nio.ByteBuffer
-     (encode [x] x)
      (decode [bb]
        (nippy/thaw (Bytes/getArray bb) opts))
-
      NippySerializable
      (encode [x]
        (ByteBuffer/wrap (nippy/freeze (.data x) opts))))))
