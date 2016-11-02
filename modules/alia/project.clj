@@ -8,10 +8,11 @@
                  [com.datastax.cassandra/cassandra-driver-core "3.1.1"
                   :classifier "shaded"
                   :exclusions [io.netty/*]]
-                 [com.datastax.cassandra/cassandra-driver-dse "3.0.0-rc1"
-                  :exclusions [com.datastax.cassandra/cassandra-driver-core]]]
+                 [com.datastax.cassandra/dse-driver "1.1.0"
+                  :exclusions [com.datastax.cassandra/cassandra-driver-core]]]]
   :jar-exclusions [#"log4j.properties"]
   :codox {:source-uri "https://github.com/mpenet/alia/blob/master/{filepath}#L{line}"
           :metadata {:doc/format :markdown}
           :namespaces :all}
+  :jvm-opts ^:replace ["-server"]
   :global-vars {*warn-on-reflection* true})
