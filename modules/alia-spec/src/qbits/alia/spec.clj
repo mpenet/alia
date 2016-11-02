@@ -13,6 +13,7 @@
    [qbits.alia.codec :as codec])
   (:import
    (com.datastax.driver.core
+    AuthProvider
     BatchStatement
     BoundStatement
     CloseFuture
@@ -146,6 +147,7 @@
           [::cluster-options.credentials/user
            ::cluster-options.credentials/password]))
 
+(s/def ::cluster-options/auth-provider (x/instance-of AuthProvider))
 (s/def ::cluster-options/kerberos? boolean?)
 (s/def ::cluster-options/compression ::enum/compression)
 (s/def ::cluster-options/ssl? boolean?)
@@ -188,6 +190,7 @@
             ::cluster-options/metrics?
             ::cluster-options/jmx-reporting?
             ::cluster-options/credentials
+            ::cluster-options/auth-provider
             ::cluster-options/kerberos?
             ::cluster-options/compression
             ::cluster-options/ssl?
