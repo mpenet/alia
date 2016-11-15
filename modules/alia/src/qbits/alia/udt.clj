@@ -1,4 +1,4 @@
-(ns qbits.alia.codec.udt
+(ns qbits.alia.udt
   (:import
    (com.datastax.driver.core
     Session
@@ -99,12 +99,12 @@
   [u k x]
   (-set-field! x u k))
 
-(defn udt-encoder
+(defn encoder
   "Takes a Session, optionaly keyspace name, UDT name and returns a
   function that can be used to encode a map into a UDTValue suitable
   to be used in PreparedStatements"
   ([^Session session type codec]
-   (udt-encoder session (.getLoggedKeyspace session) type codec))
+   (encoder session (.getLoggedKeyspace session) type codec))
   ([^Session session ks type codec]
    (let [t (some-> session
                    .getCluster

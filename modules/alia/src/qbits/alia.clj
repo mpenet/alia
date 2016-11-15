@@ -2,8 +2,8 @@
   (:require
    [qbits.alia.codec :as codec]
    [qbits.alia.codec.default :as default-codec]
-   [qbits.alia.codec.udt :as udt]
-   [qbits.alia.codec.tuple :as tuple]
+   [qbits.alia.udt :as udt]
+   [qbits.alia.tuple :as tuple]
    [qbits.commons.ns :as nsq]
    [qbits.alia.enum :as enum]
    [qbits.alia.cluster-options :as copt])
@@ -467,16 +467,16 @@
 
 (defn udt-encoder
   ([session type]
-   (udt/udt-encoder session type default-codec/codec))
+   (udt/encoder session type default-codec/codec))
   ([session ks type]
-   (udt/udt-encoder session ks type default-codec/codec))
+   (udt/encoder session ks type default-codec/codec))
   ([session ks type codec]
-   (udt/udt-encoder session ks type codec)))
+   (udt/encoder session ks type codec)))
 
 (defn tuple-encoder
   ([session table column]
-   (tuple/tuple-encoder session table column default-codec/codec))
+   (tuple/encoder session table column default-codec/codec))
   ([session ks table column]
-   (tuple/tuple-encoder session ks table column default-codec/codec))
+   (tuple/encoder session ks table column default-codec/codec))
   ([session ks table column codec]
-   (tuple/tuple-encoder session ks table column codec)))
+   (tuple/encoder session ks table column codec)))

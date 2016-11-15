@@ -1,4 +1,4 @@
-(ns qbits.alia.codec.tuple
+(ns qbits.alia.tuple
   (:import
    (com.datastax.driver.core
     Session
@@ -100,12 +100,12 @@
   [u k x]
   (-set-field! x u k))
 
-(defn tuple-encoder
+(defn encoder
   "Takes a Session, optionaly keyspace name, table name and column
   name and returns a function that can be used to encode a collection into
   a TupleValue suitable to be used in PreparedStatements"
   ([^Session session table column codec]
-   (tuple-encoder session (.getLoggedKeyspace session) table column codec))
+   (encoder session (.getLoggedKeyspace session) table column codec))
   ([^Session session ks table column codec]
    (let [^TupleType t (some-> session
                               .getCluster
