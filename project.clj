@@ -12,7 +12,7 @@
                  [cc.qbits/alia-eaio-uuid "4.0.0-beta1"]
                  [cc.qbits/alia-spec "4.0.0-beta1"]]
   :profiles {:dev  {:dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
-                                   [cc.qbits/hayt "3.3.0"]
+                                   [cc.qbits/hayt "4.0.0-beta5"]
                                    [net.jpountz.lz4/lz4 "1.2.0"]
                                    [clj-time "0.11.0"]
                                    [com.taoensso/nippy "2.9.0"]
