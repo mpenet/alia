@@ -1,8 +1,9 @@
 (ns qbits.alia
   (:require
    [qbits.alia.codec :as codec]
-   [qbits.alia.codec.udt]
-   [qbits.alia.codec.tuple]
+   [qbits.alia.codec.default :as default-codec]
+   [qbits.alia.udt :as udt]
+   [qbits.alia.tuple :as tuple]
    [qbits.commons.ns :as nsq]
    [qbits.alia.enum :as enum]
    [qbits.alia.cluster-options :as copt])
@@ -212,46 +213,50 @@
    Where values:
      Map: for named bindings       (i.e. INSERT INTO table (id, date) VALUES (:id :date))
      List: for positional bindings (i.e. INSERT INTO table (id, date) VALUES (?, ?))"
-  [^PreparedStatement statement values]
-  (try
-    (if (map? values)
-      (let [bound (.bind statement)]
-        (doseq [[k x] values]
-          (codec/set-named-parameter! bound
-                                      (name k)
-                                      (codec/encode x)))
-        bound)
-      (.bind statement (to-array (map codec/encode values))))
-    (catch Exception ex
-      (throw (ex->ex-info ex {:query statement
-                              :type ::bind-error
-                              :values values}
-                          "Query binding failed")))))
+  ([^PreparedStatement statement values]
+   (bind statement values default-codec/codec))
+  ([^PreparedStatement statement values {:keys [encoder]}]
+   (try
+     (if (map? values)
+       (let [bound (.bind statement)]
+         (doseq [[k x] values]
+           (codec/set-named-parameter! bound
+                                       (name k)
+                                       (encoder x)))
+         bound)
+       (.bind statement (to-array (map encoder values))))
+     (catch Exception ex
+       (throw (ex->ex-info ex {:query statement
+                               :type ::bind-error
+                               :values values}
+                           "Query binding failed"))))))
 
 (defprotocol ^:no-doc PStatement
   (^:no-doc query->statement
-   [q values] "Encodes input into a Statement instance"))
+   [q values codec] "Encodes input into a Statement instance"))
 
 (extend-protocol PStatement
   Statement
-  (query->statement [q _] q)
+  (query->statement [q _ codec] q)
 
   PreparedStatement
-  (query->statement [q values]
-    (bind q values))
+  (query->statement [q values codec]
+    (bind q values codec))
 
   String
-  (query->statement [q values]
-    (if (map? values)
-      (SimpleStatement. q
-                        ^Map (reduce-kv (fn [m k v]
-                                          (assoc m (name k) (codec/encode v)))
-                                        {}
-                                        values))
-      (SimpleStatement. q (to-array (map codec/encode values)))))
+  (query->statement [q values codec]
+    (let [encode (:encoder codec)]
+      (if (map? values)
+        (SimpleStatement. q
+                          ^Map (reduce-kv (fn [m k v]
+                                            (assoc m (name k) (encode v)))
+                                          {}
+                                          values))
+        (SimpleStatement. q (to-array (map encode values))))))
+
 
   BatchStatement
-  (query->statement [bs values]
+  (query->statement [bs values codec]
     (when values
       (throw (ex-info {:type ::bind-error}
                       "You cannot bind values to batch statements directly,
@@ -266,7 +271,7 @@
   will be compiled with qbits.hayt/->raw internaly
   ex: (prepare session (select :foo (where {:bar ?})))"
   [^Session session query]
-  (let [q (query->statement query nil)]
+  (let [q (query->statement query nil nil)]
     (try
       (.prepare session ^RegularStatement q)
       (catch Exception ex
@@ -281,9 +286,11 @@
   an optional second argument to control the type"
   ([qs] (batch qs :logged))
   ([qs type]
+   (batch qs :logged default-codec/codec))
+  ([qs type codec]
    (let [bs (BatchStatement. (enum/batch-statement-type type))]
      (doseq [q qs]
-       (.add bs (query->statement q nil)))
+       (.add bs (query->statement q nil codec)))
      bs)))
 
 (defn ^:no-doc set-statement-options!
@@ -361,8 +368,9 @@
                                    result-set-fn row-generator
                                    tracing? idempotent? paging-state
                                    fetch-size values timestamp
-                                   read-timeout]}]
-   (let [^Statement statement (query->statement query values)]
+                                   read-timeout codec]}]
+   (let [codec (or codec default-codec/codec)
+         ^Statement statement (query->statement query values codec)]
      (set-statement-options! statement routing-key retry-policy
                              tracing? idempotent?
                              consistency serial-consistency fetch-size
@@ -370,7 +378,8 @@
      (try
        (codec/result-set (.execute session statement)
                          result-set-fn
-                         row-generator)
+                         row-generator
+                         codec)
        (catch Exception err
          (throw (ex->ex-info err {:query statement :values values}))))))
   ;; to support old syle api with unrolled args
@@ -383,13 +392,14 @@
   `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
                                    routing-key retry-policy
-                                   result-set-fn row-generator
+                                   result-set-fn row-generator codec
                                    tracing? idempotent?
                                    fetch-size values timestamp
                                    paging-state read-timeout
                                    success error]}]
    (try
-     (let [^Statement statement (query->statement query values)]
+     (let [codec (or codec default-codec/codec)
+           ^Statement statement (query->statement query values codec)]
        (set-statement-options! statement routing-key retry-policy
                                tracing? idempotent?
                                consistency serial-consistency fetch-size
@@ -403,7 +413,8 @@
                 (try
                   (success (codec/result-set (.get rs-future)
                                              result-set-fn
-                                             row-generator))
+                                             row-generator
+                                             codec))
                   (catch Exception err
                     (error (ex->ex-info err {:query statement :values values}))))))
             (onFailure [_ ex]
@@ -454,6 +465,18 @@
   [^Cluster cluster ^LatencyTracker latency-tracker]
   (.unregister cluster latency-tracker))
 
-;; custom encoders
-(nsq/alias-var 'udt-encoder #'qbits.alia.codec.udt/encoder)
-(nsq/alias-var 'tuple-encoder #'qbits.alia.codec.tuple/encoder)
+(defn udt-encoder
+  ([session type]
+   (udt/encoder session type default-codec/codec))
+  ([session ks type]
+   (udt/encoder session ks type default-codec/codec))
+  ([session ks type codec]
+   (udt/encoder session ks type codec)))
+
+(defn tuple-encoder
+  ([session table column]
+   (tuple/encoder session table column default-codec/codec))
+  ([session ks table column]
+   (tuple/encoder session ks table column default-codec/codec))
+  ([session ks table column codec]
+   (tuple/encoder session ks table column codec)))

@@ -8,87 +8,16 @@
     ResultSet
     Row
     UserType$Field
+    Session
     SettableByNameData
     UDTValue
+    TupleType
     TupleValue)
    (java.util UUID List Map Set Date)
    (java.net InetAddress)))
 
-(defprotocol PCodec
-  (decode [x]
-    "Decodes raw deserialzed values returned by java-driver into clj
-  friendly types")
-  (encode [x]
-    "Encodes clj value into a valid cassandra value for prepared
-    statements (usefull for external libs such as joda time)"))
-
-(declare decode-xform)
-
-(defn deserialize [^GettableByIndexData x idx]
+(defn deserialize [^GettableByIndexData x idx decode]
   (decode (.getObject x idx)))
-
-(extend-protocol PCodec
-
-  (Class/forName "[B")
-  (encode [x] (ByteBuffer/wrap x))
-  (decode [x] x)
-
-  Map
-  (encode [x] x)
-  (decode [x]
-    (->> x
-         (reduce (fn [m [k v]]
-                   (assoc! m k (decode v)))
-                 (transient {}))
-         persistent!))
-
-  Set
-  (encode [x] x)
-  (decode [x]
-    (into #{} decode-xform x))
-
-  List
-  (encode [x] x)
-  (decode [x]
-    (into [] decode-xform x))
-
-  UDTValue
-  (encode [x] x)
-  (decode [udt-value]
-    (let [udt-type (.getType udt-value)
-          udt-type-iter (.iterator udt-type)
-          len (.size udt-type)]
-      (loop [udt (transient {})
-             idx' 0]
-        (if (= idx' len)
-          (persistent! udt)
-          (let [^UserType$Field type (.next udt-type-iter)]
-            (recur (assoc! udt
-                           (-> type .getName keyword)
-                           (deserialize udt-value idx'))
-                   (unchecked-inc-int idx')))))))
-
-  TupleValue
-  (encode [x] x)
-  (decode [tuple-value]
-    (let [len (.size (.getComponentTypes (.getType tuple-value)))]
-      (loop [tuple (transient [])
-             idx' 0]
-        (if (= idx' len)
-          (persistent! tuple)
-          (recur (conj! tuple
-                        (deserialize tuple-value idx'))
-                 (unchecked-inc-int idx'))))))
-
-  Object
-  (encode [x] x)
-  (decode [x] x)
-
-  nil
-  (decode [x] x)
-  (encode [x] x))
-
-(def ^:no-doc decode-xform (map decode))
 
 (defprotocol PResultSet
   (execution-info [this]))
@@ -132,7 +61,7 @@
     (finalize-row [_ row] (-> row persistent! record-ctor))))
 
 (defn decode-row
-  [^Row row rg]
+  [^Row row rg decode]
   (let [cdef (.getColumnDefinitions row)
         len (.size cdef)]
     (loop [idx (int 0)
@@ -142,33 +71,34 @@
         (recur (unchecked-inc-int idx)
                (conj-row rg r
                          (.getName cdef idx)
-                         (deserialize row idx)))))))
+                         (deserialize row idx decode)))))))
 
 (defn ->result-set
-  [^ResultSet rs row-generator]
-  (let [row-generator (or row-generator row-gen->map)]
+  [^ResultSet rs row-generator codec]
+  (let [row-generator (or row-generator row-gen->map)
+        decode (:decoder codec)]
     (reify ResultSet
       PResultSet
       (execution-info [this]
         (.getAllExecutionInfo rs))
       clojure.lang.Seqable
       (seq [this]
-        (map #(decode-row % row-generator)
+        (map #(decode-row % row-generator decode)
              (lazy-result-set rs)))
 
       clojure.lang.IReduceInit
       (reduce [this f init]
         (loop [ret init]
           (if-let [row (.one rs)]
-            (let [ret (f ret (decode-row row row-generator))]
+            (let [ret (f ret (decode-row row row-generator decode))]
               (if (reduced? ret)
                 @ret
                 (recur ret)))
             ret))))))
 
 (defn result-set
-  [^ResultSet rs result-set-fn row-generator]
-  ((or result-set-fn seq) (->result-set rs row-generator)))
+  [^ResultSet rs result-set-fn row-generator codec]
+  ((or result-set-fn seq) (->result-set rs row-generator codec)))
 
 (defprotocol PNamedBinding
   "Bind the val onto Settable by name"

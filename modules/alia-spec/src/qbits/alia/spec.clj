@@ -3,6 +3,7 @@
   include gen in most cases, not sure it ever will"
   (:require
    [clojure.spec :as s]
+   [clojure.spec.gen :as sg]
    [qbits.spex :as x]
    [qbits.spex.networking :as xn]
    [qbits.alia :as alia]
@@ -12,6 +13,7 @@
    [qbits.alia.codec :as codec])
   (:import
    (com.datastax.driver.core
+    AuthProvider
     BatchStatement
     BoundStatement
     CloseFuture
@@ -56,6 +58,7 @@
   (s/def ::enum/consistency-level (enum-key-set ConsistencyLevel))
   (s/def ::enum/compression (enum-key-set ProtocolOptions$Compression))
   (s/def ::enum/batch-statement-type (enum-key-set BatchStatement$Type)))
+
 
 ;; cluster opts
 
@@ -144,13 +147,14 @@
           [::cluster-options.credentials/user
            ::cluster-options.credentials/password]))
 
+(s/def ::cluster-options/auth-provider (x/instance-of AuthProvider))
 (s/def ::cluster-options/kerberos? boolean?)
-(s/def ::cluster-options/compression :qbits.alia.enum/compression)
+(s/def ::cluster-options/compression ::enum/compression)
 (s/def ::cluster-options/ssl? boolean?)
 
 ;; ssl options
 (x/ns-as 'qbits.alia.cluster-options.ssl-options
-       'cluster-options.ssl-options)
+         'cluster-options.ssl-options)
 (s/def ::cluster-options.ssl-options/keystore-path string?)
 (s/def ::cluster-options.ssl-options/keystore-password string?)
 (s/def ::cluster-options.ssl-options/cipher-suites (s/coll-of string? :min-count 1))
@@ -159,9 +163,9 @@
   (s/or :ssl-options-instance (x/instance-of SSLOptions)
         :ssl-options-map
         (s/keys :opt-un
-                [:qbits.alia.ssl-options/keystore-path
-                 :qbits.alia.ssl-options/keystore-password
-                 :qbits.alia.ssl-options/cipher-suites])))
+                [::cluster-options.ssl-options/keystore-path
+                 ::cluster-options.ssl-options/keystore-password
+                 ::cluster-options.ssl-options/cipher-suites])))
 
 (s/def ::cluster-options/timestamp-generator
   (x/instance-of TimestampGenerator))
@@ -186,6 +190,7 @@
             ::cluster-options/metrics?
             ::cluster-options/jmx-reporting?
             ::cluster-options/credentials
+            ::cluster-options/auth-provider
             ::cluster-options/kerberos?
             ::cluster-options/compression
             ::cluster-options/ssl?
@@ -228,9 +233,27 @@
 (create-ns 'qbits.alia.execute-opts)
 (alias 'alia.execute-opts 'qbits.alia.execute-opts)
 
+(s/def ::encodable (s/spec any?
+                         :gen (fn [] (sg/return identity))))
+(s/def ::decodable (s/spec any?
+                         :gen (fn [] (sg/return identity))))
+
+(s/def ::codec/encoder
+  (s/spec (s/fspec :args (s/cat :value ::encodable)
+                   :ret any?)
+          :gen (sg/return identity)))
+
+(s/def ::codec/decoder
+  (s/spec (s/fspec :args (s/cat :value ::decodable)
+                   :ret any?)
+          :gen (fn [] (sg/return identity))))
+
+(s/def ::alia.execute-opts/codec (s/keys :req-un [::codec/encoder
+                                                  ::codec/decoder]))
+
 (s/def ::alia.execute-opts/values
-  (s/or :named-values (s/map-of keyword? (x/satisfies codec/PCodec) :min-count 1)
-        :positional-values (s/+ (x/satisfies codec/PCodec))))
+  (s/or :named-values (s/map-of keyword? ::encodable :min-count 1)
+        :positional-values (s/+ ::encodable)))
 
 (s/def ::alia.execute-opts/result-set-fn
   (s/fspec :args (s/cat :result-set any?)
@@ -241,6 +264,7 @@
 (s/def ::alia/execute-opts-common
   (s/keys :opts-un
           [::alia.execute-opts/values
+           ::alia.execute-opts/codec
            ::alia.execute-opts/result-set-fn
            ::alia.execute-opts/row-generator]))
 
@@ -290,7 +314,8 @@
 
 (s/fdef qbits.alia/bind
         :args (s/cat :statement ::alia/prepared-statement
-                     :values (s/nilable ::alia.execute-opts/values))
+                     :values (s/nilable ::alia.execute-opts/values)
+                     :codec (s/? ::alia.execute-opts/codec))
         :ret (x/instance-of BoundStatement))
 
 (s/fdef qbits.alia/prepare
@@ -300,7 +325,8 @@
 
 (s/fdef qbits.alia/batch
         :args (s/cat :statements (s/spec (s/+ ::alia/query))
-                     :type (s/? ::enum/batch-statement-type))
+                     :type (s/? ::enum/batch-statement-type)
+                     :codec (s/? ::alia.execute-opts/codec))
         :ret (x/instance-of BatchStatement))
 
 (s/fdef qbits.alia/execute

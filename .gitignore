@@ -18,3 +18,4 @@ pom.xml
 *.iml
 .idea
 .lein-env
+/bench.clj

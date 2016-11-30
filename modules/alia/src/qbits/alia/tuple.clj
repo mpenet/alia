@@ -1,5 +1,4 @@
-(ns qbits.alia.codec.tuple
-  (:require [qbits.alia.codec :as codec])
+(ns qbits.alia.tuple
   (:import
    (com.datastax.driver.core
     Session
@@ -15,10 +14,10 @@
    (java.net InetAddress)
    (java.nio ByteBuffer)))
 
-(defprotocol PEncoder
+(defprotocol Encoder
   (-set-field! [x u i]))
 
-(extend-protocol PEncoder
+(extend-protocol Encoder
 
   BigInteger
   (-set-field! [b u i]
@@ -105,16 +104,17 @@
   "Takes a Session, optionaly keyspace name, table name and column
   name and returns a function that can be used to encode a collection into
   a TupleValue suitable to be used in PreparedStatements"
-  ([^Session session table column]
-   (encoder session (.getLoggedKeyspace session) table column))
-  ([^Session session ks table column]
+  ([^Session session table column codec]
+   (encoder session (.getLoggedKeyspace session) table column codec))
+  ([^Session session ks table column codec]
    (let [^TupleType t (some-> session
                               .getCluster
                               .getMetadata
                               (.getKeyspace (name ks))
                               (.getTable (name table))
                               (.getColumn (name column))
-                              (.getType))]
+                              (.getType))
+         encode (:encoder codec)]
      (when-not t
        (throw (ex-info (format "Tuple Column '%s' not found on Keyspace '%s'"
                                (name column)
@@ -125,6 +125,6 @@
          (loop [i 0
                 coll coll]
            (if-let [x (first coll)]
-             (set-field! ttv i (codec/encode x))
+             (set-field! ttv i (encode x))
              (recur (inc i) (rest coll))))
          ttv)))))

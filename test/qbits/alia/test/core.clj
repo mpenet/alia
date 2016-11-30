@@ -7,6 +7,8 @@
    [qbits.alia.manifold :as ma]
    [qbits.alia.async :refer [execute-chan execute-chan-buffered]]
    [qbits.alia.codec :refer :all]
+   [qbits.alia.codec.default :refer :all]
+   [qbits.alia.codec.udt-aware]
    [qbits.alia.codec.joda-time :refer :all]
    [qbits.alia.codec.eaio-uuid :refer :all]
    [qbits.alia.codec.nippy :refer :all]
@@ -383,7 +385,7 @@
         an-id (int 100)]
 
     (is (= []
-           (execute *session* prep-write {:values {:id   an-id
+           (execute *session* prep-write {:values {:id an-id
                                                    :text "inserted via named bindings"}})))
 
     (is (= [{:id an-id
@@ -395,7 +397,6 @@
            (execute *session* "SELECT * FROM simple WHERE id = :id;"
                     {:values {:id an-id}})))))
 
-
 (deftest test-udt-encoder
   (let [encoder (udt-encoder *session* :udt)
         encoder-ct (udt-encoder *session* :udtct)
@@ -404,15 +405,15 @@
     (is (instance? UDTValue (encoder {:foo nil "bar" 100})))
     (is (instance? UDTValue (encoder {:foo nil "bar" 100})))
     (is (instance? UDTValue (encoder-ct {:foo "f" :tup (tup ["a" "b"])})))
-    (is (= :qbits.alia.codec.udt/type-not-found
+    (is (= :qbits.alia.udt/type-not-found
            (-> (try (udt-encoder *session* :invalid-type) (catch Exception e e))
                ex-data
                :type)))
-    (is (= :qbits.alia.codec.tuple/type-not-found
+    (is (= :qbits.alia.tuple/type-not-found
            (-> (try (tuple-encoder *session* :users :invalid-type) (catch Exception e e))
                ex-data
                :type)))
-    (is (= :qbits.alia.codec.tuple/type-not-found
+    (is (= :qbits.alia.tuple/type-not-found
            (-> (try (tuple-encoder *session* :invalid-col :invalid-type) (catch Exception e e))
                ex-data
                :type)))))
@@ -421,3 +422,26 @@
   (is (instance? clojure.lang.LazySeq (execute *session* "select * from items;")))
   (is (instance? clojure.lang.PersistentVector (execute *session* "select * from items;"
                                                         {:result-set-fn #(into [] %)}))))
+
+(defrecord Foo [foo bar])
+(deftest test-udt-registry
+  (let [codec qbits.alia.codec.udt-aware/codec]
+    (qbits.alia.codec.udt-aware/register-udt! codec *session* :udt Foo)
+    (is
+     (= Foo
+        (-> (execute *session* "select * from users limit 1"
+                     {:codec codec})
+            first
+            :udt
+            type)))
+    (qbits.alia.codec.udt-aware/deregister-udt! codec *session* :udt Foo)))
+
+(deftest test-custom-codec
+  (is (-> (execute *session* "select * from users limit 1"
+                   {:codec {:decoder (constantly 42)
+                            :encoder identity}})
+          first
+          :valid
+          (= 42)))
+    ;; todo test encoder
+  )

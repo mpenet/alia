@@ -1,5 +1,4 @@
-(ns qbits.alia.codec.udt
-  (:require [qbits.alia.codec :as codec])
+(ns qbits.alia.udt
   (:import
    (com.datastax.driver.core
     Session
@@ -14,10 +13,10 @@
    (java.net InetAddress)
    (java.nio ByteBuffer)))
 
-(defprotocol PEncoder
+(defprotocol Encoder
   (-set-field! [x u k]))
 
-(extend-protocol PEncoder
+(extend-protocol Encoder
 
   BigInteger
   (-set-field! [b u k]
@@ -104,14 +103,15 @@
   "Takes a Session, optionaly keyspace name, UDT name and returns a
   function that can be used to encode a map into a UDTValue suitable
   to be used in PreparedStatements"
-  ([^Session session type]
-   (encoder session (.getLoggedKeyspace session) type))
-  ([^Session session ks type]
+  ([^Session session type codec]
+   (encoder session (.getLoggedKeyspace session) type codec))
+  ([^Session session ks type codec]
    (let [t (some-> session
                    .getCluster
                    .getMetadata
-                   (.getKeyspace (name ks))
-                   (.getUserType (name type)))]
+                   (.getKeyspace (name (or ks (.getLoggedKeyspace session))))
+                   (.getUserType (name type)))
+         encode (:encoder codec)]
      (when-not t
        (throw (ex-info (format "User Type '%s' not found on Keyspace '%s'"
                                (name type)
@@ -120,6 +120,5 @@
      (fn [x]
        (let [utv (.newValue t)]
          (doseq [[k v] x]
-           (set-field! utv (name k) (codec/encode v)))
+           (set-field! utv (name k) (encode v)))
          utv)))))
-;; https://github.com/pyr/cyanite/issues/113

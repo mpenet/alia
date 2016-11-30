@@ -22,7 +22,9 @@
     ReconnectionPolicy
     RetryPolicy
     SpeculativeExecutionPolicy)
-   (com.datastax.driver.auth DseAuthProvider)
+   (com.datastax.driver.dse.auth
+    ;; DsePlainTextAuthProvider
+    DseGSSAPIAuthProvider)
    (javax.net.ssl
     TrustManagerFactory
     KeyManagerFactory
@@ -134,10 +136,14 @@
   [_ ^Cluster$Builder builder {:keys [user password]}]
   (.withCredentials builder user password))
 
+(defmethod set-cluster-option! :auth-provider
+  [_ ^Cluster$Builder builder auth-provider]
+  (.withAuthProvider builder auth-provider))
+
 (defmethod set-cluster-option! :kerberos?
   [_ ^Cluster$Builder builder kerberos?]
   (when kerberos?
-    (.withAuthProvider builder (DseAuthProvider.)))
+    (.withAuthProvider builder (DseGSSAPIAuthProvider.)))
   builder)
 
 (defmethod set-cluster-option! :compression
@@ -167,11 +173,12 @@
                        (.getKeyManagers keymanager)
                        (.getTrustManagers trustmanager) nil)
                 (.build (doto (JdkSSLOptions/builder)
-                          (.withCipherSuites ^Builder (into-array String
-                                                                  (if cipher-suites
-                                                                    cipher-suites
-                                                                    ["TLS_RSA_WITH_AES_128_CBC_SHA"
-                                                                     "TLS_RSA_WITH_AES_256_CBC_SHA"])))
+                          (.withCipherSuites ^Builder
+                                             (into-array String
+                                                         (if cipher-suites
+                                                           cipher-suites
+                                                           ["TLS_RSA_WITH_AES_128_CBC_SHA"
+                                                            "TLS_RSA_WITH_AES_256_CBC_SHA"])))
                           (.withSSLContext ssl-context)))))))
 
 (defmethod set-cluster-option! :timestamp-generator
