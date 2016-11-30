@@ -3,7 +3,7 @@
    [clojure.reflect :as reflect]
    [qbits.alia.codec :as codec]
    [qbits.alia.codec.default :as default-codec]
-   [qbits.alia.codec.udt :as udt])
+   [qbits.alia.udt :as udt])
   (:import
    (java.nio ByteBuffer)
    (com.datastax.driver.core
@@ -95,9 +95,9 @@
             (name udt-name) (record-map-ctor record-ctor)
             ;; record-type -> udtencoder
             record-ctor
-            (udt/udt-encoder session
-                             udt-name
-                             codec)))
+            (udt/encoder session
+                         udt-name
+                         codec)))
   (get-udt-codec [this udt-name-or-rec-type]
     (get @udt-registry udt-name-or-rec-type)))
 
