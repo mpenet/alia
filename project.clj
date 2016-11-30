@@ -1,16 +1,16 @@
-(defproject cc.qbits/alia-all "4.0.0-SNAPSHOT"
+(defproject cc.qbits/alia-all "4.0.0-beta1"
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.9.0-alpha12"]
-                 [cc.qbits/alia "4.0.2-SNAPSHOT"]
-                 [cc.qbits/alia-manifold "4.0.0-SNAPSHOT"]
-                 [cc.qbits/alia-async "4.0.0-SNAPSHOT"]
-                 [cc.qbits/alia-joda-time "4.0.0-SNAPSHOT"]
-                 [cc.qbits/alia-nippy "4.0.0-SNAPSHOT"]
-                 [cc.qbits/alia-eaio-uuid "4.0.0-SNAPSHOT"]
-                 [cc.qbits/alia-spec "4.0.0-SNAPSHOT"]]
+  :dependencies [[org.clojure/clojure "1.9.0-alpha14"]
+                 [cc.qbits/alia "4.0.0-beta1"]
+                 [cc.qbits/alia-manifold "4.0.0-beta1"]
+                 [cc.qbits/alia-async "4.0.0-beta1"]
+                 [cc.qbits/alia-joda-time "4.0.0-beta1"]
+                 [cc.qbits/alia-nippy "4.0.0-beta1"]
+                 [cc.qbits/alia-eaio-uuid "4.0.0-beta1"]
+                 [cc.qbits/alia-spec "4.0.0-beta1"]]
   :profiles {:dev  {:dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
                                    [cc.qbits/hayt "3.3.0"]
                                    [net.jpountz.lz4/lz4 "1.2.0"]

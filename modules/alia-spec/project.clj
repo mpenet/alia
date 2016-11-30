@@ -1,4 +1,4 @@
-(defproject cc.qbits/alia-spec "4.0.0-SNAPSHOT"
+(defproject cc.qbits/alia-spec "4.0.0-beta1"
   :description "clojure.spec for Alia"
   :url "https://github.com/mpenet/alia/alia-joda-time"
   :license {:name "Eclipse Public License"

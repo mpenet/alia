@@ -9,7 +9,7 @@
                   :classifier "shaded"
                   :exclusions [io.netty/*]]
                  [com.datastax.cassandra/dse-driver "1.1.0"
-                  :exclusions [com.datastax.cassandra/cassandra-driver-core]]]]
+                  :exclusions [com.datastax.cassandra/cassandra-driver-core]]]
   :jar-exclusions [#"log4j.properties"]
   :codox {:source-uri "https://github.com/mpenet/alia/blob/master/{filepath}#L{line}"
           :metadata {:doc/format :markdown}
