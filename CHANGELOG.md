@@ -31,10 +31,10 @@
   causing performance degradation because you are doing something
   fancy in your codec.
 
-  We will include by default such custom implementation additinaly to
-  the default, an UDT aware codec that does just what I described
-  before: translating UDT values to record instance of chosen type at
-  decoding time.
+  We will include by default one such custom implementation (other
+  than the default), an UDT aware codec that does just what I
+  described before: translating UDT values to record instance of
+  chosen type at decoding time.
 
   https://github.com/mpenet/alia/blob/feature/codec-alt/modules/alia/src/qbits/alia/codec/udt_aware.clj
 
