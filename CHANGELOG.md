@@ -1,5 +1,71 @@
 # Changelog
 
+## 4.0.0-beta1
+
+  ** Breaking changes **
+
+  The way the internal codec works has changed. Previously we had one
+  protocol, `qbits.alia/PCodec` that included both decoding and
+  encoding function. Now "Codecs" are first class, they can be passed
+  a `:codec` option to execute/bind functions and can have custom
+  behavior/state, as a result we are no longer bound to one global
+  codec registry and can allow multiple strategies.
+
+  A codec is now a map/record that contains 2 fields/keys, `:decoder`
+  `:encoder`, that have functions as values. The
+  `qbits.alia.codec/default` codec for instance, which is the port of
+  the old one, is a record implementing a protocol with the equivalent
+  of the previous strategies.  You can see it here:
+  https://github.com/mpenet/alia/blob/feature/codec-alt/modules/alia/src/qbits/alia/codec/default.clj
+
+  It can also serve as a base to compose other codecs using the same
+  functions, using clojure.core/extend for instance (more on this
+  later).
+
+  So why doing this? This opens the door to new codecs with new
+  behavior with potentially state. That way we can for instance
+  implement specialised codecs that will know how to automaticaly
+  decode/encode keyspace bound UDTs as record instance, or as a
+  deftype, or whatever you'd like really. And mix and match these
+  codecs in your app, in the same jvm without causing clashes or
+  causing performance degradation because you are doing something
+  fancy in your codec.
+
+  We will include by default such custom implementation additinaly to
+  the default, an UDT aware codec that does just what I described
+  before: translating UDT values to record instance of chosen type at
+  decoding time.
+
+  https://github.com/mpenet/alia/blob/feature/codec-alt/modules/alia/src/qbits/alia/codec/udt_aware.clj
+
+  For most users who extended PCodec before, the changes should be
+  minimal: You just need to extend the default codec protocols (with
+  an S, we separated encoding decoding, to avoid creating "identity"
+  functions for nothing when you just care about one or the other)
+  with your functions/types
+
+  Here is an example with joda-time
+  https://github.com/mpenet/alia/blob/feature/codec-alt/modules/alia-joda-time/src/qbits/alia/codec/joda_time.clj
+
+  Another nice thing this allows us to do is to create high
+  performance codecs that do the minimum `{:encoder identity :decoder
+  identity}`), or create specialized ones where everything is inlined
+  (ex in defrecord body) but closed.
+
+  In terms of performance the default codec is identical as the old
+  one, since it's essentially the same code.
+
+  ** Non Breaking changes **
+
+  * Updated specs to match new api
+  * Backported some of Datastax changes to the ssl cluster options
+  * Updgrade to latest dse
+
+  ** Hayt **
+
+  If you're using it, upgrade to the latest version, the performance
+  improved significantly in the latest releases.
+
 ## 3.3.0
 
 * Add support for "custom row generators": If you don't care about
