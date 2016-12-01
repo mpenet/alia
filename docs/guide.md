@@ -445,15 +445,99 @@ Here is an example that is provided for supporting joda-time.
 
 ```clojure
 (ns qbits.alia.codec.joda-time
-  (:require [qbits.alia.codec :as codec]))
+  (:require [qbits.alia.codec.default :as default-codec]))
 
-(extend-protocol codec/PCodec
+(extend-protocol default-codec/Encode
   org.joda.time.DateTime
   (encode [x]
     (.toDate x)))
 ```
 
+You can do the same via `default-codec/Encode`
 Decoding is automatic for any cql type, including tuples and UDTs.
+
+### Custom Codecs
+
+This is using the default codec Alia comes bundled with, but you can
+easily create your own specialized codec and use it with/without the
+default one. The default does the "right" thing in most cases: it will
+properly handle collections types, decode udt/tuples and do all this
+in a recursive manner (a map of udts with tuple values will be decoded
+nicely).
+
+A codec is simply a map or record of :encoder/:decoder functions that
+can be passed to `execute`/`bind`/`batch`. By default alia will get
+deserialized values from java-driver, which is fine in most cases but
+UDT/Tuple and other composite types are a bit non-clojure friendly.
+
+The simplest Codec would be:
+
+```clojure
+(def id-codec {:encoder identity :decoder identity})
+```
+
+Which could in turned be used:
+
+```clojure
+(alia/execute session "select * from foo;" {:codec id-codec})
+```
+
+
+Another Codec that comes with alia is `qbits.alia.codec.udt-aware/codec`. It
+allows you to register Record instances to cassandra UDTs:
+
+```clojure
+(require '[qbits.alia.codec.udt-aware :as udt-aware])
+
+(defrecord Foo [a b])
+(defrecord Bar [a b])
+
+(udt-aware/register-udt! udt-aware/codec Foo)
+(udt-aware/register-udt! udt-aware/codec Bar)
+
+(alia/execute session "select foo, bar from "foo-table" limit 1" {:codec udt-aware/codec})
+
+=> [{:foo #user.Foo{:a "Something" :b "Else"
+     :bar #user.Bar{:a "Meh" :b "Really"}}]
+```
+
+This is done at decoding time, so there's no iteration involved, and
+this can be applied on streaming queries just fine as a result.
+
+You hopefully get the idea by now.
+
+
+## Row Generators
+
+Row generators allow you to control how Row values are accumulated
+into a single unit. By default alia will create one (transient) map
+per row, but you might like vectors intead, or you could want to apply
+some computation at this level, this is just what they enable.
+
+The default Generator is defined as follows:
+
+```clojure
+  (reify qbits.alia.codec/RowGenerator
+    (init-row [_] (transient {}))
+    (conj-row [_ row k v] (assoc! row (keyword k) v))
+    (finalize-row [_ row] (persistent! row)))
+```
+
+We also supply 2 other Generators, one that creates vector pairs instead of maps:
+
+`qbits.alia.codec/row-gen->vector`
+
+``` clojure
+(alia/execute session "select * from foo" {:row-generator row-gen->vector})
+```
+
+and another one that creates Records from Rows instead of maps
+
+`qbits.alia.codec/row-gen->record`
+
+``` clojure
+(alia/execute session "select * from foo" {:row-generator (row-gen->record map->Foo)})
+```
 
 ## Hayt: Query DSL
 
