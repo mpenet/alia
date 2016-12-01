@@ -212,7 +212,9 @@
 
    Where values:
      Map: for named bindings       (i.e. INSERT INTO table (id, date) VALUES (:id :date))
-     List: for positional bindings (i.e. INSERT INTO table (id, date) VALUES (?, ?))"
+     List: for positional bindings (i.e. INSERT INTO table (id, date) VALUES (?, ?))
+
+  It also accepts an optional third argument, codec instance (see `execute`)"
   ([^PreparedStatement statement values]
    (bind statement values default-codec/codec))
   ([^PreparedStatement statement values {:keys [encoder]}]
@@ -282,8 +284,9 @@
 
 (defn batch
   "Takes a sequence of statements to be executed in batch.
-  By default LOGGED, you can specify :logged :unlogged :counter as
-  an optional second argument to control the type"
+  By default LOGGED, you can specify :logged :unlogged :counter as an
+  optional second argument to control the type.  It also accepts an
+  optional third argument, codec instance (see `execute`)"
   ([qs] (batch qs :logged))
   ([qs type]
    (batch qs :logged default-codec/codec))
@@ -357,6 +360,9 @@
 * `:row-generator`: implements alia.codec/RowGenerator, Defaults to
   `alia.codec/row-gen->map`. A RowGenerator dicts how we construct
   rows.
+* `:codec`: map of :encoder :decoder functions that control how to
+  apply extra modifications on data sent/received (defaults to
+  `qbits.alia.codec/default`.
 * `:read-timeout` : Read timeout in milliseconds
 
   Possible values for consistency:
