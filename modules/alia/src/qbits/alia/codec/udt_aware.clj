@@ -34,11 +34,11 @@
     function"))
 
 (defprotocol UDTRegistry
-  (register-udt! [this session udt-name record-map-constructor]
+  (register-udt! [this session udt-name record-constructor]
     "Allows to register an udtencoder at codec level, when the
     specified record typed is passed it will automatically be encoded
     in the appropriate UDTValue")
-  (deregister-udt! [this session udt-name record-map-constructor]
+  (deregister-udt! [this session udt-name record-constructor]
     "Allows to register an udtencoder at codec level, when the
     specified record typed is passed it will automatically be encoded
     in the appropriate UDTValue")
