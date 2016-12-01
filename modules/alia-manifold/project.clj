@@ -5,5 +5,4 @@
   :dependencies [[org.clojure/clojure ~clj-version]
                  [cc.qbits/alia ~alia-version]
                  [manifold "0.1.5"]]
-  :plugins [[lein-modules "0.3.11"]]
   :global-vars {*warn-on-reflection* true})
