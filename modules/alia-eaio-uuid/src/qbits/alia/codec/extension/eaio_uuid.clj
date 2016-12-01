@@ -1,4 +1,4 @@
-(ns qbits.alia.codec.eaio-uuid
+(ns qbits.alia.codec.extension.eaio-uuid
   "Codec that adds encoding support for com.eaio.uuid.UUID instances"
   (:require
    [qbits.alia.codec.default :as codec]))

@@ -1,4 +1,4 @@
-(ns qbits.alia.codec.joda-time
+(ns qbits.alia.codec.extension.joda-time
   "Codec that adds encoding support for org.joda.time.DateTime instances"
   (:require
    [qbits.alia.codec.default :as codec]

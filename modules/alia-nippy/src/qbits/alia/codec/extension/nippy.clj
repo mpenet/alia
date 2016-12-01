@@ -1,4 +1,4 @@
-(ns qbits.alia.codec.nippy
+(ns qbits.alia.codec.extension.nippy
   "Codec that adds encoding support for nippy serialized data. Both
   encoding/decoding are optional. You need to add a nippy dependency
   manually. It only works for prepared statements (write time)"

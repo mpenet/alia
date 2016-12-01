@@ -9,9 +9,9 @@
    [qbits.alia.codec :refer :all]
    [qbits.alia.codec.default :refer :all]
    [qbits.alia.codec.udt-aware]
-   [qbits.alia.codec.joda-time :refer :all]
-   [qbits.alia.codec.eaio-uuid :refer :all]
-   [qbits.alia.codec.nippy :refer :all]
+   [qbits.alia.codec.extension.joda-time :refer :all]
+   [qbits.alia.codec.extension.eaio-uuid :refer :all]
+   [qbits.alia.codec.extension.nippy :refer :all]
    [qbits.hayt :as h]
    [qbits.tardis :refer :all]
    [clojure.core.async :as async])

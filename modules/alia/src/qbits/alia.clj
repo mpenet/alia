@@ -357,12 +357,11 @@
   no intermediary seq and potentially better performance. This can be
   very powerfull when used right (for instance with transducers
   `#(into [] xform %))`.
-* `:row-generator`: implements alia.codec/RowGenerator, Defaults to
-  `alia.codec/row-gen->map`. A RowGenerator dicts how we construct
-  rows.
-* `:codec`: map of :encoder :decoder functions that control how to
+* `:row-generator` : implements alia.codec/RowGenerator, Defaults to
+  `alia.codec/row-gen->map` : A RowGenerator dicts how we construct rows.
+* `:codec` : map of `:encoder` `:decoder` functions that control how to
   apply extra modifications on data sent/received (defaults to
-  `qbits.alia.codec/default`.
+  `qbits.alia.codec/default`).
 * `:read-timeout` : Read timeout in milliseconds
 
   Possible values for consistency:
