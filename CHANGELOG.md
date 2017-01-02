@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.0.0-beta3
+
+Remove all traces of blocking IO in `execute-chan-buffered`,
+it now pages manually as the consumer takes values from the chan.
+
+You can also now interup streaming/paging by `async/close!`ing the
+channel returned by `execute-chan-buffered`.
+
 ## 4.0.0-beta1
 
   ** Breaking changes **
