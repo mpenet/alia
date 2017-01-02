@@ -8,6 +8,7 @@
   (:import
    (com.datastax.driver.core
     Statement
+    ResultSet
     ResultSetFuture
     Session
     Statement)
@@ -90,7 +91,10 @@
                                                        .getFetchSize))))]
      (try
        (let [codec (or codec default-codec/codec)
-             ^Statement statement (query->statement query values codec)]
+             ^Statement statement (query->statement query values codec)
+             decode (:decoder codec)
+             row-generator (or row-generator
+                               codec/row-gen->map)]
          (set-statement-options! statement routing-key retry-policy
                                  tracing? idempotent?
                                  consistency serial-consistency fetch-size
@@ -99,23 +103,48 @@
            (Futures/addCallback
             rs-future
             (reify FutureCallback
-              (onSuccess [_ result]
-                (async/go
-                  (try
-                    (loop [rows (codec/result-set
-                                 (.get ^ResultSetFuture rs-future)
-                                 result-set-fn
-                                 row-generator
-                                 codec)]
-                      (when-let [row (first rows)]
-                        (when (async/>! ch row)
-                          (recur (rest rows)))))
-                    (catch Exception err
-                      (async/put! ch
-                                  (ex->ex-info err
-                                               {:query statement
-                                                :values values}))))
-                  (async/close! ch)))
+              (onSuccess [_ _rs]
+                (let [^ResultSet rs (.get rs-future)
+                      rows (.iterator rs)]
+                  (async/go
+                    (try
+                      (loop []
+                        (let [avail (.getAvailableWithoutFetching rs)
+                              ch-state
+                              (loop [avail avail]
+                                (if (pos? avail)
+                                  ;; we must make sure the parent chan
+                                  ;; is (still) open as the user might
+                                  ;; have interupted streaming closing
+                                  ;; the chan returned.
+                                  (if (async/>! ch
+                                                (codec/decode-row (.next rows)
+                                                                  row-generator
+                                                                  decode))
+                                    (recur (unchecked-dec-int avail))
+                                    ::closed)
+                                  ::open))]
+                          (when (and (= ch-state ::open)
+                                     (not (.isFullyFetched rs)))
+                            (if (zero? avail)
+                              (let [p (async/promise-chan)]
+                                (-> (.fetchMoreResults rs)
+                                    (Futures/addCallback
+                                     (reify FutureCallback
+                                       (onSuccess [_ r] (async/put! p [::success r]))
+                                       (onFailure [_ ex] (async/put! p [::error ex])))))
+                                (let [[state v] (async/<! p)]
+                                  ;; on paging error interup streaming
+                                  (case state
+                                    ::error (throw v)
+                                    ::success (recur))))
+                              (recur)))))
+                      (catch Exception err
+                        (async/put! ch
+                                    (ex->ex-info err
+                                                 {:query statement
+                                                  :values values}))))
+                    (async/close! ch))))
               (onFailure [_ ex]
                 (async/put! ch (ex->ex-info ex
                                             {:query statement

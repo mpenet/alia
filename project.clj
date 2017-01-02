@@ -1,4 +1,4 @@
-(def alia-version "4.0.0-beta2")
+(def alia-version "4.0.0-beta3")
 (def clj-version "1.9.0-alpha14")
 (defproject cc.qbits/alia-all alia-version
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
@@ -23,6 +23,7 @@
                              [com.taoensso/nippy "2.9.0"]
                              [cc.qbits/tardis "1.0.0"]
                              [manifold "0.1.5"]
+                             [org.clojure/tools.logging "0.2.6"]
                              [org.slf4j/slf4j-log4j12 "1.7.3"]]}}
   :modules {:dirs ["modules/alia"
                    "modules/alia-manifold"
