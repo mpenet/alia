@@ -155,7 +155,7 @@ described in detail:
 A session holds connections to a Cassandra cluster, allowing to query
 it. Each session will maintain multiple connections to the cluster
 nodes, and provides policies to choose which node to use for each
-query (round-robin on all nodes of the cluster by default), handles
+query (token-aware by default), handles
 retries for failed query (when it makes sense), etc...
 
 Session instances are thread-safe and usually a single instance is
