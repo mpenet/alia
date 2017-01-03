@@ -76,15 +76,23 @@
   responsability to handle these how you deem appropriate. For options
   refer to `qbits.alia/execute` doc"
   ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key result-set-fn retry-policy tracing?
-                                   row-generator codec idempotent? fetch-size values
-                                   stream timestamp paging-state
-                                   read-timeout]}]
+                                   routing-key retry-policy
+                                   result-set-fn row-generator codec
+                                   tracing? idempotent?
+                                   fetch-size buffer-size stream
+                                   values timestamp
+                                   paging-state read-timeout]}]
    (let [stream (or stream
-                    (s/stream (or fetch-size (-> session .getCluster
-                                                 .getConfiguration
-                                                 .getQueryOptions
-                                                 .getFetchSize))))]
+                    (s/stream (or buffer-size
+                                  ;; page-ahead buffering - fetches the next
+                                  ;; page as soon as processing this page starts
+                                  ;; which is a simple delay-avoiding heuristic
+                                  (dec (or fetch-size
+                                           (-> session
+                                               .getCluster
+                                               .getConfiguration
+                                               .getQueryOptions
+                                               .getFetchSize))))))]
      (try
        (let [codec (or codec default-codec/codec)
              ^Statement statement (query->statement query values codec)
@@ -135,7 +143,6 @@
                                  (Futures/addCallback
                                   (reify FutureCallback
                                     (onSuccess [_ r]
-                                      (prn "fetched!")
                                       (d/success! p [::success r]))
                                     (onFailure [_ ex] (d/success! p [::error ex])))))
                              (d/chain
@@ -165,6 +172,6 @@
        (catch Throwable t
          (s/close! stream)
          (throw t)))
-     stream))
+     (s/source-only stream)))
   ([^Session session query]
    (execute-buffered session query {})))
