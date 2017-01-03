@@ -9,6 +9,7 @@
   (:import
    (com.datastax.driver.core
     Statement
+    ResultSet
     ResultSetFuture
     Session
     Statement)
@@ -86,32 +87,84 @@
                                                  .getFetchSize))))]
      (try
        (let [codec (or codec default-codec/codec)
-             ^Statement statement (query->statement query values codec)]
+             ^Statement statement (query->statement query values codec)
+             decode (:decoder codec)
+             row-generator (or row-generator
+                               codec/row-gen->map)
+
+             stuff-available-records
+             (fn [^ResultSet rs]
+               (d/loop []
+                 (d/chain
+                  (d/success-deferred true)
+                  (fn [_]
+                    (if (> (.getAvailableWithoutFetching rs) 0)
+                      (s/put! stream (codec/decode-row (.one rs)
+                                                       row-generator
+                                                       decode))
+                      false))
+                  (fn [ok?]
+                    (if ok?
+                      (d/recur)
+                      rs)))))]
+
          (set-statement-options! statement routing-key retry-policy
                                  tracing? idempotent?
                                  consistency serial-consistency fetch-size
                                  timestamp paging-state read-timeout)
          (let [^ResultSetFuture rs-future (.executeAsync session statement)]
            (Futures/addCallback
-             rs-future
-             (reify FutureCallback
-               (onSuccess [_ result]
-                 (try
-                   (let [rows (codec/result-set (.get rs-future)
-                                                      result-set-fn
-                                                      row-generator
-                                                      codec)]
-                     (s/connect rows stream))
-                   (catch Exception err
-                     (s/put! stream (ex->ex-info err {:query statement :values values}))
-                     (s/close! stream))))
-               (onFailure [_ ex]
-                 (s/put! stream (ex->ex-info ex {:query statement :values values}))
-                 (s/close! stream)))
-             (get-executor executor))))
+            rs-future
+            (reify FutureCallback
+              (onSuccess [_ rs]
+                (d/catch
+
+                    (d/loop []
+
+                      (d/chain
+
+                       (d/success-deferred rs)
+
+                       stuff-available-records
+
+                       (fn [^ResultSet rs]
+                         (if (and (not (s/closed? stream))
+                                  (not (.isFullyFetched rs)))
+                           (let [p (d/deferred)]
+                             (-> (.fetchMoreResults rs)
+                                 (Futures/addCallback
+                                  (reify FutureCallback
+                                    (onSuccess [_ r]
+                                      (prn "fetched!")
+                                      (d/success! p [::success r]))
+                                    (onFailure [_ ex] (d/success! p [::error ex])))))
+                             (d/chain
+                              p
+                              (fn [[k v]]
+                                (if (= ::success k)
+                                  (d/recur)
+                                  (do
+                                    (s/put! stream (ex->ex-info
+                                                    v
+                                                    {:query statement
+                                                     :values values}))
+                                    (s/close! stream))))))
+                           (do
+                             (s/close! stream))))))
+
+                    Exception
+                  (fn [ex]
+                    (s/put! stream (ex->ex-info ex
+                                                {:query statement
+                                                 :values values}))
+                    (s/close! stream))))
+              (onFailure [_ ex]
+                (s/put! stream (ex->ex-info ex {:query statement :values values}))
+                (s/close! stream)))
+            (get-executor executor))))
        (catch Throwable t
-         (s/put! stream t)
-         (s/close! stream)))
+         (s/close! stream)
+         (throw t)))
      stream))
   ([^Session session query]
-     (execute-buffered session query {})))
+   (execute-buffered session query {})))
