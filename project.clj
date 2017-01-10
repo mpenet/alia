@@ -17,7 +17,7 @@
              {:plugins [[codox "0.10.2"]
                         [lein-modules "0.3.11"]]
               :dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
-                             [cc.qbits/hayt "4.0.0-beta5"]
+                             [cc.qbits/hayt "4.0.0-beta6"]
                              [net.jpountz.lz4/lz4 "1.2.0"]
                              [clj-time "0.11.0"]
                              [com.taoensso/nippy "2.9.0"]
