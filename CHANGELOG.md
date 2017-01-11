@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.0.0-beta4
+
+Remove all traces of blocking IO in
+`qbits.alia-manifold/execute-buffered`. It now pages manually as the
+consumer takes values from the stream (as long as the stream is open).
+
+Thanks to @mccraigmccraig this.
+
 ## 4.0.0-beta3
 
 Remove all traces of blocking IO in `execute-chan-buffered`,
