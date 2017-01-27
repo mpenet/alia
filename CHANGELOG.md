@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.0-beta5
+
+codec: simplify handing out to map->Record constructors #73 - Thanks
+to @pyr for the fix
+
 ## 4.0.0-beta4
 
 Remove all traces of blocking IO in
