@@ -57,7 +57,7 @@
   [record-ctor]
   (reify RowGenerator
     (init-row [_] (transient {}))
-    (conj-row [_ row k v] (assoc! row k v))
+    (conj-row [_ row k v] (assoc! row (keyword k) v))
     (finalize-row [_ row] (-> row persistent! record-ctor))))
 
 (defn decode-row
