@@ -188,18 +188,18 @@ also available.
 ### Async using function "callbacks"
 
 ```clojure
-(execute-chan session
-              "select * from users;"
-              {:success (fn [rows] ...)
-               :error (fn [e] ...)})
+(execute-async session
+               "select * from users;"
+               {:success (fn [rows] ...)
+                :error (fn [e] ...)})
 ```
 
 #### Async using clojure/core.async
 
 
-`alia/execute-chan` has the same signature as the other execute
-functions and as the name implies returns a clojure/core.async
-promise-chan that will contain a list of rows at some point or an exception
+`qbits.alia.async/execute-chan` has the same signature as the other execute
+functions and as the name implies returns a `clojure/core.async`
+`promise-chan` that will contain a list of rows at some point or an exception
 instance.
 
 Once you run it you have a couple of options to pull data from it.
