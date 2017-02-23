@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.0-beta6
+
+* Use java-driver 3.1.4 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/tree/3.1.x/changelog)
+* alia-async: depend on core.async 0.3.436
+
 ## 4.0.0-beta5
 
 codec: simplify handing out to map->Record constructors #73 - Thanks
