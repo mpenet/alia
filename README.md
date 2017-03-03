@@ -227,9 +227,11 @@ and a callback as second:
 (let [merged (async/merge [(alia/execute-chan session (select :foo))
                            (alia/execute-chan session (select :bar))
                            (alia/execute-chan session (select :baz))])]
-  (go (loop []
-      (println (<! merged))
-       (recur))))
+  (go
+    (loop []
+      (when-let [result (<! merged)]
+        (println result)
+        (recur)))))
 ```
 
 It also include `execute-chan-buffered`, which allows to run a single
