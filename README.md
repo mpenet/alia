@@ -220,31 +220,16 @@ and a callback as second:
 (def rows-or-exception (<!! (execute-chan session "select * from users;")))
 ```
 
-+ using `clojure.core.async/go` block, and potentially using
-  `clojure.core.async/alt!`.
++ using `clojure.core.async/merge` you can run a list of queries in
+  parallel and have the results fed to a single output chan:
 
 ```clojure
-(go
- (loop [;;the list of queries remaining
-        queries [(alia/execute-chan session (select :foo))
-                 (alia/execute-chan session (select :bar))
-                 (alia/execute-chan session (select :baz))]
-        ;; where we'll store our results
-        query-results '()]
-   ;; If we are done with our queries return them, it's the exit clause
-   (if (empty? queries)
-     query-results
-     ;; else wait for one query to complete (first completed first served)
-     (let [[result channel] (alts! queries)]
-       (println "Received result: "  result " from channel: " channel)
-       (recur
-        ;; we remove the channel that just completed from our
-        ;; pending queries collection
-        (remove #{channel} queries)
-
-        ;; and finally we add the result of this query to our
-        ;; bag of results
-        (conj query-results result))))))
+(let [merged (async/merge [(alia/execute-chan session (select :foo))
+                           (alia/execute-chan session (select :bar))
+                           (alia/execute-chan session (select :baz))])]
+  (go (loop []
+      (println (<! merged))
+       (recur))))
 ```
 
 It also include `execute-chan-buffered`, which allows to run a single
