@@ -1,6 +1,6 @@
 # Changelog
 
-## 4.0.0-beta7
+## 4.0.0-beta8
 
 * Use java-driver 3.2.0 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/tree/3.2.x/changelog)
 * alia-async: depend on core.async 0.3.442
