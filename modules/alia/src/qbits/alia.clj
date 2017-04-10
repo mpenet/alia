@@ -48,19 +48,83 @@
 * `:load-balancing-policy` : Configure the
   [Load Balancing Policy](http://mpenet.github.io/alia/qbits.alia.policy.load-balancing.html)
   to use for the new cluster.
+  Can be `LoadBalancingPolicy`,
+         `:default`,
+         `:round-robin`,
+         `:token-aware/round-robin`,
+         `:latency-aware/round-robin` or
+  a map of
+    - `:type`       `:white-list` or `:token-aware/white-list`
+    - `:child`      Keyword or map (other load balancing policy configuration)
+    - `:white-list` Seq of maps of `:hostname` String
+                                   `:port`    int
+                                or `:ip`       String
+                                   `:port`     int
+                                or `:port`     int
+  or
+    - `:type`                `:latency-aware/white-list`
+    - `:child`               Same as above
+    - `:white-list`          Same as above
+    - `:exclusion-threshold` double
+    - `:min-measure`         int
+    - `:retry-period`        [long (time-unit Keyword)]
+    - `:scale`               [long (time-unit Keyword)]
+    - `:update-rate`         [long (time-unit Keyword)]
+  or
+    - `:type`       `:dc-aware-round-robin`, `:token-aware/dc-aware-round-robin`
+    - `:data-centre`              String
+    - `:used-hosts-per-remote-dc` int
+  or
+    - `:type`                     `:latency-aware/dc-aware-round-robin`
+    - `:data-centre`              String
+    - `:used-hosts-per-remote-dc` int
+    - `:exclusion-threshold`      double
+    - `:min-measure`              int
+    - `:retry-period`             [long (time-unit Keyword)]
+    - `:scale`                    [long (time-unit Keyword)]
+    - `:update-rate`              [long (time-unit Keyword)]
 
 * `:reconnection-policy` : Configure the
   [Reconnection Policy](http://mpenet.github.io/alia/qbits.alia.policy.reconnection.html)
   to use for the new cluster.
+  Can be `ReconnectionPolicy`, `:default` or
+  a map of
+    - `:type`             `:constant`
+    - `:contant-delay-ms` long
+  or
+    - `:type`             `:exponential`
+    - `:base-delay-ms`    long
+    - `:max-delay-ms`     long
 
 * `:retry-policy` : Configure the
   [Retry Policy](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
   to use for the new cluster.
+  Can be `RetryPolicy`,
+         `:default`,
+         `:fallthrough`
+         `:downgrading`
+         `:logging/default`
+         `:logging/fallthrough`
+         `:logging/downgrading`
 
 * `:speculative-execution` The policy that decides if the driver will
   send speculative queries to the next hosts when the current host
   takes too long to respond. [Speculative Execution
   Policy](http://mpenet.github.io/alia/qbits.alia.policy.speculative-execution.html)
+  Can be `SpeculativeExecutionPolicy`, `:default`, `:none` or
+  a map of
+    - `:type`                       `:constant`
+    - `:constant-delay-millis`      long
+    - `:max-speculative-executions` int
+  or
+    - `:type`                             `:cluster-wide-percentile-tracker` or
+                                          `:per-host-percentile-tracker`
+    - `:percentile`                       double
+    - `:max-executions`                   int
+    - `:interval`                         [long (time-unit Keyword)]
+    - `:min-recorded-values`              int
+    - `:significant-value-digits`         int
+    - `:highest-trackable-latency-millis` long
 
 * `:metrics?` : Toggles metrics collection for the created cluster
   (metrics are enabled by default otherwise).
@@ -84,7 +148,7 @@
 * `:address-translator`: Configures the address translator to use for
   the new cluster. Expects
   a [AddressTranslator](http://mpenet.github.io/alia/qbits.alia.policy.address-translator.html)
-  or you can pass :ec2-multi-region which would translate in the
+  or you can pass :ec2-multi-region or :identity which would translate in the
   underlying implementations.
 
 * `:timestamp-generator`: Configures the timestamp generator to use
@@ -168,6 +232,10 @@
 
 :all :any :each-quorum :local-one :local-quorum :local-serial :one :quorum
 :serial :three :two
+
+  Values for time-unit:
+
+:days :hours :microseconds :milliseconds :minutes :nanoseconds :seconds
   "
   ([options]
    (-> (Cluster/builder)
