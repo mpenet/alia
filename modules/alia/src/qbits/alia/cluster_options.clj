@@ -3,10 +3,15 @@
    [qbits.alia.enum :as enum]
    [clojure.java.io :as io]
    [qbits.alia.timestamp-generator :as tsg]
-   [qbits.alia.policy.address-translator :as at])
+   [qbits.alia.policy.address-translator :as at]
+   [qbits.alia.policy.retry :as retry]
+   [qbits.alia.policy.load-balancing :as lb]
+   [qbits.alia.policy.reconnection :as reconnection]
+   [qbits.alia.policy.speculative-execution :as se])
   (:import
    (com.datastax.driver.core
     Cluster$Builder
+    PercentileTracker$Builder
     HostDistance
     PoolingOptions
     ProtocolOptions$Compression
@@ -15,13 +20,18 @@
     JdkSSLOptions
     JdkSSLOptions$Builder
     SSLOptions
-    TimestampGenerator)
+    TimestampGenerator
+    ClusterWidePercentileTracker
+    PerHostPercentileTracker)
    (com.datastax.driver.core.policies
+    LatencyAwarePolicy
+    LatencyAwarePolicy$Builder
     AddressTranslator
     LoadBalancingPolicy
     ReconnectionPolicy
     RetryPolicy
-    SpeculativeExecutionPolicy)
+    SpeculativeExecutionPolicy
+    Policies)
    (com.datastax.driver.dse.auth
     ;; DsePlainTextAuthProvider
     DseGSSAPIAuthProvider)
@@ -29,7 +39,24 @@
     TrustManagerFactory
     KeyManagerFactory
     SSLContext)
-   (java.security KeyStore)))
+   (java.security KeyStore)
+   (java.net
+    InetSocketAddress
+    InetAddress)
+   (java.util.concurrent TimeUnit)))
+
+(defn socket-address
+  [{:keys [ip hostname port]}]
+  (cond
+    (and hostname port) (InetSocketAddress. ^String hostname ^int (int port))
+    (and ip port)       (InetSocketAddress. ^InetAddress (InetAddress/getByName ip)
+                                            ^int (int port))
+    port                (InetSocketAddress. ^int (int port))))
+
+(defn time-period
+  [[value unit]]
+  {:value value
+   :unit  (-> unit name clojure.string/upper-case TimeUnit/valueOf)})
 
 (defmulti set-cluster-option! (fn [k ^Cluster$Builder builder option] k))
 
@@ -43,21 +70,176 @@
   [_ builder port]
   (.withPort ^Cluster$Builder builder (int port)))
 
-(defmethod set-cluster-option! :load-balancing-policy
-  [_ ^Cluster$Builder builder ^LoadBalancingPolicy policy]
-  (.withLoadBalancingPolicy builder policy))
-
-(defmethod set-cluster-option! :reconnection-policy
-  [_ ^Cluster$Builder builder ^ReconnectionPolicy policy]
-  (.withReconnectionPolicy builder policy))
+(defn retry-policy
+  [policy]
+  (case policy
+    :default              (retry/default-retry-policy)
+    :fallthrough          (retry/fallthrough-retry-policy)
+    :downgrading          (retry/downgrading-consistency-retry-policy)
+    :logging/default     (retry/logging-retry-policy
+                          (retry/default-retry-policy))
+    :logging/fallthrough (retry/logging-retry-policy
+                          (retry/fallthrough-retry-policy))
+    :logging/downgrading (retry/logging-retry-policy
+                          (retry/downgrading-consistency-retry-policy))))
 
 (defmethod set-cluster-option! :retry-policy
-  [_ ^Cluster$Builder builder ^RetryPolicy policy]
-  (.withRetryPolicy builder policy))
+  [_ ^Cluster$Builder builder policy]
+  (.withRetryPolicy builder
+                    (if (instance? RetryPolicy policy)
+                      policy
+                      (retry-policy policy))))
+
+(defn latency-aware-balance-policy
+  [[child {:keys [exclusion-threshold min-measure retry-period scale update-rate]}]]
+  (let [retry-period (time-period retry-period)
+        scale        (time-period scale)
+        update-rate  (time-period update-rate)
+
+        builder (LatencyAwarePolicy/builder child)]
+    (when exclusion-threshold
+      (.withExclusionThreshold ^LatencyAwarePolicy$Builder builder
+                               ^double (double exclusion-threshold)))
+    (when min-measure
+      (.withMininumMeasurements ^LatencyAwarePolicy$Builder builder
+                                ^int (int min-measure)))
+    (when retry-period
+      (.withRetryPeriod ^LatencyAwarePolicy$Builder builder
+                        ^long (long (:value retry-period))
+                        ^TimeUnit (:unit retry-period)))
+    (when  scale
+      (.withScale ^LatencyAwarePolicy$Builder builder
+                  ^long (long (:value scale))
+                  ^TimeUnit (:unit scale)))
+    (when update-rate
+      (.withUpdateRate ^LatencyAwarePolicy$Builder builder
+                       ^long (long (:value update-rate))
+                       ^TimeUnit (:unit update-rate)))
+    (.build ^LatencyAwarePolicy$Builder builder)))
+
+(declare load-balancing-policy)
+
+(defn white-list-policy
+  [{:keys [child white-list]}]
+  (lb/whitelist-policy
+   (load-balancing-policy child) (map socket-address white-list)))
+
+(defn dc-aware-round-robin-policy
+  [{:keys [data-centre used-hosts-per-remote-dc]}]
+  (lb/dc-aware-round-robin-policy data-centre
+                                  used-hosts-per-remote-dc))
+
+(defn load-balancing-policy
+  [policy]
+  (case (or (:type policy) policy)
+    :default                           (Policies/defaultLoadBalancingPolicy)
+    :round-robin                       (lb/round-robin-policy)
+    :white-list                        (white-list-policy policy)
+    :dc-aware-round-robin              (dc-aware-round-robin-policy policy)
+    :token-aware/round-robin          (lb/token-aware-policy
+                                       (lb/round-robin-policy))
+    :token-aware/white-list           (lb/token-aware-policy
+                                       (white-list-policy policy))
+    :token-aware/dc-aware-round-robin (lb/token-aware-policy
+                                       (dc-aware-round-robin-policy policy))
+    :latency-aware/round-robin          (latency-aware-balance-policy
+                                         (lb/round-robin-policy)
+                                         policy)
+    :latency-aware/white-list           (latency-aware-balance-policy
+                                         (white-list-policy policy)
+                                         policy)
+    :latency-aware/dc-aware-round-robin (latency-aware-balance-policy
+                                         (dc-aware-round-robin-policy policy)
+                                         policy)))
+
+(defmethod set-cluster-option! :load-balancing-policy
+  [_ ^Cluster$Builder builder policy]
+  (.withLoadBalancingPolicy builder
+                            (if (instance? LoadBalancingPolicy policy)
+                              policy
+                              (load-balancing-policy policy))))
+
+(defn constant-reconnection-policy
+  [{:keys [constant-delay-ms]}]
+  (reconnection/constant-reconnection-policy constant-delay-ms))
+
+(defn exponential-reconnection-policy
+  [{:keys [base-delay-ms max-delay-ms]}]
+  (reconnection/exponential-reconnection-policy base-delay-ms max-delay-ms))
+
+(defn reconnection-policy
+  [policy]
+  (case (or (:type policy) policy)
+    :default     (Policies/defaultReconnectionPolicy)
+    :constant    (constant-reconnection-policy policy)
+    :exponential (exponential-reconnection-policy policy)))
+
+(defmethod set-cluster-option! :reconnection-policy
+  [_ ^Cluster$Builder builder policy]
+  (.withReconnectionPolicy builder
+                           (if (instance? ReconnectionPolicy policy)
+                             policy
+                             (reconnection-policy policy))))
+
+(defn constant-speculative-execution-policy
+  [{:keys [constant-delay-millis max-speculative-executions]}]
+  (se/constant-speculative-execution-policy
+   constant-delay-millis
+   max-speculative-executions))
+
+(defn percentile-tracker
+  [^PercentileTracker$Builder builder
+   {:keys [interval min-recorded-values significant-value-digits]}]
+  (let [interval (time-period interval)]
+    (when interval
+      (.withInterval ^PercentileTracker$Builder builder
+                     ^long (long (:value interval))
+                     ^TimeUnit (:unit interval)))
+    (when min-recorded-values
+      (.withMinRecordedValues ^PercentileTracker$Builder builder
+                              ^int (int min-recorded-values)))
+    (when significant-value-digits
+      (.withNumberOfSignificantValueDigits ^PercentileTracker$Builder builder
+                                           ^int (int significant-value-digits)))
+    (.build ^PercentileTracker$Builder builder)))
+
+(defn cluster-wide-percentile-tracker
+  [{:keys [highest-trackable-latency-millis] :as opts}]
+  (percentile-tracker
+   (ClusterWidePercentileTracker/builder highest-trackable-latency-millis)
+   opts))
+
+(defn per-host-percentile-tracker
+  [{:keys [highest-trackable-latency-millis] :as opts}]
+  (percentile-tracker
+   (PerHostPercentileTracker/builder highest-trackable-latency-millis)
+   opts))
+
+(defn percentile-speculative-execution-policy
+  [tracker {:keys [percentile max-executions]}]
+  (se/percentile-speculative-execution-policy tracker
+                                              percentile
+                                              max-executions))
+
+(defn speculative-execution-policy
+  [policy]
+  (case (or (:type policy) policy)
+    :default                         (Policies/defaultSpeculativeExecutionPolicy)
+    :none                            (se/no-speculative-execution-policy)
+    :constant                        (constant-speculative-execution-policy policy)
+    :cluster-wide-percentile-tracker (percentile-speculative-execution-policy
+                                      (cluster-wide-percentile-tracker policy)
+                                      policy)
+    :per-host-percentile-tracker     (percentile-speculative-execution-policy
+                                      (per-host-percentile-tracker policy)
+                                      policy)))
 
 (defmethod set-cluster-option! :speculative-execution-policy
-  [_ ^Cluster$Builder builder ^SpeculativeExecutionPolicy policy]
-  (.withSpeculativeExecutionPolicy builder policy))
+  [_ ^Cluster$Builder builder policy]
+  (.withSpeculativeExecutionPolicy builder
+                                   (if (instance? SpeculativeExecutionPolicy policy)
+                                     policy
+                                     (speculative-execution-policy policy))))
 
 (defmethod set-cluster-option! :pooling-options
   [_ ^Cluster$Builder builder {:keys [core-connections-per-host
@@ -191,13 +373,18 @@
                                :server-side (tsg/server-side)
                                :thread-local (tsg/thread-local)))))
 
+(defn address-translator
+  [at]
+  (case at
+    :identity         (at/identity-translator)
+    :ec2-multi-region (at/ec2-multi-region-address-translator)))
+
 (defmethod set-cluster-option! :address-translator
   [_ ^Cluster$Builder builder at]
   (.withAddressTranslator builder
                           (if (instance? AddressTranslator at)
                             at
-                            (case at
-                              :ec2-multi-region (at/ec2-multi-region-address-translator)))))
+                            (address-translator at))))
 
 (defmethod set-cluster-option! :netty-options
   [_ ^Cluster$Builder builder netty-options]
