@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.0-beta9
+
+* Allow to pass most policies as EDN data (see cluster docstring)
+  instead of java instances
+
 ## 4.0.0-beta8
 
 * Use java-driver 3.2.0 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/tree/3.2.x/changelog)
