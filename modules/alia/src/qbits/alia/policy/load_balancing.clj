@@ -15,61 +15,61 @@
     InetAddress)))
 
 (defn round-robin-policy
-"A Round-robin load balancing policy.
+  "A Round-robin load balancing policy.
 
-This policy queries nodes in a round-robin fashion. For a given query,
-if an host fail, the next one (following the round-robin order) is
-tried, until all hosts have been tried.
+  This policy queries nodes in a round-robin fashion. For a given query,
+  if an host fail, the next one (following the round-robin order) is
+  tried, until all hosts have been tried.
 
-This policy is not datacenter aware and will include every known
-Cassandra host in its round robin algorithm. If you use multiple
-datacenter this will be inefficient and you will want to use the
-`dc-aware-round-robin-policy` load balancing policy instead.
+  This policy is not datacenter aware and will include every known
+  Cassandra host in its round robin algorithm. If you use multiple
+  datacenter this will be inefficient and you will want to use the
+  `dc-aware-round-robin-policy` load balancing policy instead.
 
-http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/RoundRobinPolicy.html"
+  http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/RoundRobinPolicy.html"
   []
   (RoundRobinPolicy.))
 
 (defn token-aware-policy
   "A wrapper load balancing policy that add token awareness to a child policy.
 
-This policy encapsulates another policy. The resulting policy works in
-the following way:
+  This policy encapsulates another policy. The resulting policy works in
+  the following way:
 
-the distance method is inherited from the child policy.  the iterator
-return by the newQueryPlan method will first return the LOCAL replicas
-for the query (based on Query.getRoutingKey()) if possible (i.e. if
-the query getRoutingKey method doesn't return null and if
-Metadata.getReplicas(java.nio.ByteBuffer) returns a non empty set of
-replicas for that partition key). If no local replica can be either
-found or successfully contacted, the rest of the query plan will
-fallback to one of the child policy.  Do note that only replica for
-which the child policy distance method returns HostDistance.LOCAL will
-be considered having priority. For example, if you wrap
-DCAwareRoundRobinPolicy with this token aware policy, replicas from
-remote data centers may only be returned after all the host of the
-local data center.
+  the distance method is inherited from the child policy.  the iterator
+  return by the newQueryPlan method will first return the LOCAL replicas
+  for the query (based on Query.getRoutingKey()) if possible (i.e. if
+  the query getRoutingKey method doesn't return null and if
+  Metadata.getReplicas(java.nio.ByteBuffer) returns a non empty set of
+  replicas for that partition key). If no local replica can be either
+  found or successfully contacted, the rest of the query plan will
+  fallback to one of the child policy.  Do note that only replica for
+  which the child policy distance method returns HostDistance.LOCAL will
+  be considered having priority. For example, if you wrap
+  DCAwareRoundRobinPolicy with this token aware policy, replicas from
+  remote data centers may only be returned after all the host of the
+  local data center.
 
-http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/TokenAwarePolicy.html"
+  http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/TokenAwarePolicy.html"
   [child]
   (TokenAwarePolicy. child))
 
 (defn dc-aware-round-robin-policy
-    "A data-center aware Round-robin load balancing policy.
+  "A data-center aware Round-robin load balancing policy.
 
-This policy provides round-robin queries over the node of the local
-datacenter. It also includes in the query plans returned a
-configurable number of hosts in the remote datacenters, but those are
-always tried after the local nodes. In other words, this policy
-guarantees that no host in a remote datacenter will be queried unless
-no host in the local datacenter can be reached.
+  This policy provides round-robin queries over the node of the local
+  datacenter. It also includes in the query plans returned a
+  configurable number of hosts in the remote datacenters, but those are
+  always tried after the local nodes. In other words, this policy
+  guarantees that no host in a remote datacenter will be queried unless
+  no host in the local datacenter can be reached.
 
-If used with a single datacenter, this policy is equivalent to the
-LoadBalancingPolicy.RoundRobin policy, but its DC awareness incurs a
-slight overhead so the `round-robin-policy` policy could
-be prefered to this policy in that case.
+  If used with a single datacenter, this policy is equivalent to the
+  LoadBalancingPolicy.RoundRobin policy, but its DC awareness incurs a
+  slight overhead so the `round-robin-policy` policy could
+  be prefered to this policy in that case.
 
-http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/DCAwareRoundRobinPolicy.html"
+  http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/DCAwareRoundRobinPolicy.html"
   ([dc used-hosts-per-remote-dc]
    (let [b (-> (DCAwareRoundRobinPolicy/builder))]
      (.withLocalDc b dc)
@@ -131,32 +131,34 @@ http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/D
         [update-rate-value update-rate-unit] update-rate
         builder (LatencyAwarePolicy/builder child)]
     (when exclusion-threshold
-      (.withExclusionThreshold ^LatencyAwarePolicy$Builder builder
-                               ^double (double exclusion-threshold)))
+      (.withExclusionThreshold builder
+                               (double exclusion-threshold)))
     (when min-measure
-      (.withMininumMeasurements ^LatencyAwarePolicy$Builder builder
-                                ^int (int min-measure)))
+      (.withMininumMeasurements builder
+                                (int min-measure)))
     (when retry-period
-      (.withRetryPeriod ^LatencyAwarePolicy$Builder builder
-                        ^long (long retry-period-value)
-                        ^TimeUnit (enum/time-unit retry-period-unit)))
+      (.withRetryPeriod builder
+                        (long retry-period-value)
+                        (enum/time-unit retry-period-unit)))
     (when  scale
-      (.withScale ^LatencyAwarePolicy$Builder builder
-                  ^long (long scale-value)
-                  ^TimeUnit (enum/time-unit scale-unit)))
+      (.withScale builder
+                  (long scale-value)
+                  (enum/time-unit scale-unit)))
     (when update-rate
-      (.withUpdateRate ^LatencyAwarePolicy$Builder builder
-                       ^long (long update-rate-value)
-                       ^TimeUnit (enum/time-unit update-rate-unit)))
-    (.build ^LatencyAwarePolicy$Builder builder)))
+      (.withUpdateRate builder
+                       (long update-rate-value)
+                       (enum/time-unit update-rate-unit)))
+    (.build builder)))
 
 (defn socket-address
   [{:keys [ip hostname port]}]
   (cond
-    (and hostname port) (InetSocketAddress. ^String hostname ^int (int port))
-    (and ip port) (InetSocketAddress. ^InetAddress (InetAddress/getByName ip)
-                                      ^int (int port))
-    port (InetSocketAddress. ^int (int port))))
+    (and hostname port) (InetSocketAddress. ^String hostname
+                                            (int port))
+    (and ip port) (InetSocketAddress. (InetAddress/getByName ip)
+                                      (int port))
+    port (InetSocketAddress. (int port))))
+
 
 (defmulti make (fn [policy] (or (:type policy) policy)))
 

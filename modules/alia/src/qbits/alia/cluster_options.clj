@@ -27,7 +27,6 @@
     RetryPolicy
     SpeculativeExecutionPolicy)
    (com.datastax.driver.dse.auth
-    ;; DsePlainTextAuthProvider
     DseGSSAPIAuthProvider)
    (javax.net.ssl
     TrustManagerFactory

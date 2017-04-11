@@ -48,83 +48,89 @@
 * `:load-balancing-policy` : Configure the
   [Load Balancing Policy](http://mpenet.github.io/alia/qbits.alia.policy.load-balancing.html)
   to use for the new cluster.
-  Can be `LoadBalancingPolicy`,
-         `:default`,
-         `:round-robin`,
-         `:token-aware/round-robin`,
-         `:latency-aware/round-robin` or
-  a map of
-    - `:type`       `:whitelist` or `:token-aware/whitelist`
-    - `:child`      Keyword or map (other load balancing policy configuration)
-    - `:whitelist`  Seq of maps of `:hostname` String
-                                   `:port`    int
-                                or `:ip`       String
-                                   `:port`     int
-                                or `:port`     int
-  or
-    - `:type`                `:latency-aware/white-list`
-    - `:child`               Same as above
-    - `:whitelist`           Same as above
-    - `:exclusion-threshold` double
-    - `:min-measure`         int
-    - `:retry-period`        [long (time-unit Keyword)]
-    - `:scale`               [long (time-unit Keyword)]
-    - `:update-rate`         [long (time-unit Keyword)]
-  or
-    - `:type`       `:dc-aware-round-robin`, `:token-aware/dc-aware-round-robin`
-    - `:data-centre`              String
-    - `:used-hosts-per-remote-dc` int
-  or
-    - `:type`                     `:latency-aware/dc-aware-round-robin`
-    - `:data-centre`              String
-    - `:used-hosts-per-remote-dc` int
-    - `:exclusion-threshold`      double
-    - `:min-measure`              int
-    - `:retry-period`             [long (time-unit Keyword)]
-    - `:scale`                    [long (time-unit Keyword)]
-    - `:update-rate`              [long (time-unit Keyword)]
+      * Can be a one of
+        - `LoadBalancingPolicy` instance
+        - `:default`
+        - `:round-robin`
+        - `:token-aware/round-robin`
+        - `:latency-aware/round-robin`
+      * or a map of
+        - `:type` : `:whitelist` or `:token-aware/whitelist`
+        - `:child` : Keyword or map (other load balancing policy configuration)
+        - `:whitelist : Seq of maps of `:hostname` String
+                                       `:port`    int
+                                    or `:ip`       String
+                                       `:port`     int
+                                    or `:port`     int
+      * or a map of
+        - `:type` : `:latency-aware/white-list`
+        - `:child` : Same as above
+        - `:whitelist : Same as above
+        - `:exclusion-threshold` : double
+        - `:min-measure` : int
+        - `:retry-period` : [long (time-unit Keyword)]
+        - `:scale` : [long (time-unit Keyword)]
+        - `:update-rate` : [long (time-unit Keyword)]
+      * or a map of
+        - `:type` : `:dc-aware-round-robin`, `:token-aware/dc-aware-round-robin`
+        - `:data-centre` : String
+        - `:used-hosts-per-remote-dc` : int
+      * or a map of
+        - `:type` : `:latency-aware/dc-aware-round-robin`
+        - `:data-centre` : String
+        - `:used-hosts-per-remote-dc` : int
+        - `:exclusion-threshold` : double
+        - `:min-measure` : int
+        - `:retry-period` : [long (time-unit Keyword)]
+        - `:scale` : [long (time-unit Keyword)]
+        - `:update-rate` : [long (time-unit Keyword)]
 
 * `:reconnection-policy` : Configure the
   [Reconnection Policy](http://mpenet.github.io/alia/qbits.alia.policy.reconnection.html)
   to use for the new cluster.
-  Can be `ReconnectionPolicy`, `:default` or
-  a map of
-    - `:type`             `:constant`
-    - `:contant-delay-ms` long
-  or
-    - `:type`             `:exponential`
-    - `:base-delay-ms`    long
-    - `:max-delay-ms`     long
+      * Can be
+        - `ReconnectionPolicy`
+        - `:default`
+      * or a map of
+        - `:type`             `:constant`
+        - `:contant-delay-ms` long
+      * or a map of
+        - `:type`             `:exponential`
+        - `:base-delay-ms`    long
+        - `:max-delay-ms`     long
 
 * `:retry-policy` : Configure the
   [Retry Policy](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
   to use for the new cluster.
-  Can be `RetryPolicy`,
-         `:default`,
-         `:fallthrough`
-         `:downgrading`
-         `:logging/default`
-         `:logging/fallthrough`
-         `:logging/downgrading`
+      * Can be
+        - `RetryPolicy`,
+        - `:default`
+        - `:fallthrough`
+        - `:downgrading`
+        - `:logging/default`
+        - `:logging/fallthrough`
+        - `:logging/downgrading`
 
 * `:speculative-execution` The policy that decides if the driver will
   send speculative queries to the next hosts when the current host
   takes too long to respond. [Speculative Execution
   Policy](http://mpenet.github.io/alia/qbits.alia.policy.speculative-execution.html)
-  Can be `SpeculativeExecutionPolicy`, `:default`, `:none` or
-  a map of
-    - `:type`                       `:constant`
-    - `:constant-delay-millis`      long
-    - `:max-speculative-executions` int
-  or
-    - `:type`                             `:cluster-wide-percentile-tracker` or
-                                          `:per-host-percentile-tracker`
-    - `:percentile`                       double
-    - `:max-executions`                   int
-    - `:interval`                         [long (time-unit Keyword)]
-    - `:min-recorded-values`              int
-    - `:significant-value-digits`         int
-    - `:highest-trackable-latency-millis` long
+      * Can be
+        - `SpeculativeExecutionPolicy`
+        - `:default`
+        - `:none`
+      * or a map of
+        - `:type` : `:constant`
+        - `:constant-delay-millis` : long
+        - `:max-speculative-executions` : int
+      * or
+        - `:type` : `:cluster-wide-percentile-tracker` or `:per-host-percentile-tracker`
+        - `:percentile` : double
+        - `:max-executions : int
+        - `:interval` : [long (time-unit Keyword)]
+        - `:min-recorded-values` : int
+        - `:significant-value-digits` : int
+        - `:highest-trackable-latency-millis` : long
 
 * `:metrics?` : Toggles metrics collection for the created cluster
   (metrics are enabled by default otherwise).
