@@ -3,7 +3,11 @@
    [qbits.alia.enum :as enum]
    [clojure.java.io :as io]
    [qbits.alia.timestamp-generator :as tsg]
-   [qbits.alia.policy.address-translator :as at])
+   [qbits.alia.policy.address-translator :as at]
+   [qbits.alia.policy.load-balancing :as lb]
+   [qbits.alia.policy.retry :as retry]
+   [qbits.alia.policy.reconnection :as reconnection]
+   [qbits.alia.policy.speculative-execution :as se])
   (:import
    (com.datastax.driver.core
     Cluster$Builder
@@ -44,20 +48,31 @@
   (.withPort ^Cluster$Builder builder (int port)))
 
 (defmethod set-cluster-option! :load-balancing-policy
-  [_ ^Cluster$Builder builder ^LoadBalancingPolicy policy]
-  (.withLoadBalancingPolicy builder policy))
+  [_ ^Cluster$Builder builder policy]
+  (.withLoadBalancingPolicy builder
+                            (if (instance? LoadBalancingPolicy policy)
+                              policy
+                              (lb/make policy))))
 
 (defmethod set-cluster-option! :reconnection-policy
-  [_ ^Cluster$Builder builder ^ReconnectionPolicy policy]
-  (.withReconnectionPolicy builder policy))
+  [_ ^Cluster$Builder builder policy]
+  (.withReconnectionPolicy builder
+                           (if (instance? ReconnectionPolicy policy)
+                             policy
+                             (reconnection/make policy))))
 
 (defmethod set-cluster-option! :retry-policy
   [_ ^Cluster$Builder builder ^RetryPolicy policy]
-  (.withRetryPolicy builder policy))
+  (.withRetryPolicy builder (if (instance? RetryPolicy policy)
+                              policy
+                              (retry/make policy))))
 
 (defmethod set-cluster-option! :speculative-execution-policy
   [_ ^Cluster$Builder builder ^SpeculativeExecutionPolicy policy]
-  (.withSpeculativeExecutionPolicy builder policy))
+  (.withSpeculativeExecutionPolicy builder
+                                   (if (instance? SpeculativeExecutionPolicy policy)
+                                     policy
+                                     (se/make policy))))
 
 (defmethod set-cluster-option! :pooling-options
   [_ ^Cluster$Builder builder {:keys [core-connections-per-host
@@ -197,6 +212,7 @@
                           (if (instance? AddressTranslator at)
                             at
                             (case at
+                              :identity (at/identity-translator)
                               :ec2-multi-region (at/ec2-multi-region-address-translator)))))
 
 (defmethod set-cluster-option! :netty-options
