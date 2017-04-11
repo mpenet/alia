@@ -139,3 +139,29 @@ exception."
                      (int required-acks)
                      (int received-acks)
                      (int nb-retry))))
+
+(defmulti make (fn [policy] (or (:type policy) policy)))
+
+(defmethod make :default
+  [_]
+  (default-retry-policy))
+
+(defmethod make :fallthrough
+  [_]
+  (fallthrough-retry-policy))
+
+(defmethod make :downgrading
+  [_]
+  (downgrading-consistency-retry-policy))
+
+(defmethod make :logging/default
+  [_]
+  (logging-retry-policy (default-retry-policy)))
+
+(defmethod make :logging/fallthrough
+  [_]
+  (logging-retry-policy (fallthrough-retry-policy)))
+
+(defmethod make :logging/downgrading
+  [_]
+  (logging-retry-policy (downgrading-consistency-retry-policy)))

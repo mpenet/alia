@@ -1,11 +1,18 @@
 (ns qbits.alia.policy.load-balancing
   "The policy that decides which Cassandra hosts to contact for each new query."
+  (:require [qbits.alia.enum :as enum])
   (:import
    (com.datastax.driver.core.policies
     DCAwareRoundRobinPolicy
     RoundRobinPolicy
     TokenAwarePolicy
-    WhiteListPolicy)))
+    WhiteListPolicy
+    LatencyAwarePolicy
+    LatencyAwarePolicy$Builder
+    Policies)
+   (java.net
+    InetSocketAddress
+    InetAddress)))
 
 (defn round-robin-policy
 "A Round-robin load balancing policy.
@@ -91,3 +98,113 @@ http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/D
   DCAwareRoundRobinPolicy and not this policy in particular."
   [child whitelist-coll]
   (WhiteListPolicy. child whitelist-coll))
+
+(defn latency-aware-balance-policy
+  "A wrapper load balancing policy that adds latency awareness to a
+  child policy.
+
+  When used, this policy will collect the latencies of the queries to
+  each Cassandra node and maintain a per-node latency score
+  (an average). Based on these scores, the policy will penalize
+  (technically, it will ignore them unless no other nodes are up) the
+  nodes that are slower than the best performing node by more than
+  some configurable amount (the exclusion threshold).
+
+  The latency score for a given node is a based on a form of
+  exponential moving average. In other words, the latency score of a
+  node is the average of its previously measured latencies, but where
+  older measurements gets an exponentially decreasing weight. The
+  exact weight applied to a newly received latency is based on the
+  time elapsed since the previous measure (to account for the fact
+  that latencies are not necessarily reported with equal regularity,
+  neither over time nor between different nodes).
+
+  Once a node is excluded from query plans (because its averaged
+  latency grew over the exclusion threshold), its latency score will
+  not be updated anymore (since it is not queried). To give a chance
+  to this node to recover, the policy has a configurable retry period.
+  The policy will not penalize a host for which no measurement has
+  been collected for more than this retry period."
+  [child {:keys [exclusion-threshold min-measure retry-period scale update-rate]}]
+  (let [[retry-period-value retry-period-unit] retry-period
+        [scale-value scale-unit] scale
+        [update-rate-value update-rate-unit] update-rate
+        builder (LatencyAwarePolicy/builder child)]
+    (when exclusion-threshold
+      (.withExclusionThreshold ^LatencyAwarePolicy$Builder builder
+                               ^double (double exclusion-threshold)))
+    (when min-measure
+      (.withMininumMeasurements ^LatencyAwarePolicy$Builder builder
+                                ^int (int min-measure)))
+    (when retry-period
+      (.withRetryPeriod ^LatencyAwarePolicy$Builder builder
+                        ^long (long retry-period-value)
+                        ^TimeUnit (enum/time-unit retry-period-unit)))
+    (when  scale
+      (.withScale ^LatencyAwarePolicy$Builder builder
+                  ^long (long scale-value)
+                  ^TimeUnit (enum/time-unit scale-unit)))
+    (when update-rate
+      (.withUpdateRate ^LatencyAwarePolicy$Builder builder
+                       ^long (long update-rate-value)
+                       ^TimeUnit (enum/time-unit update-rate-unit)))
+    (.build ^LatencyAwarePolicy$Builder builder)))
+
+(defn socket-address
+  [{:keys [ip hostname port]}]
+  (cond
+    (and hostname port) (InetSocketAddress. ^String hostname ^int (int port))
+    (and ip port) (InetSocketAddress. ^InetAddress (InetAddress/getByName ip)
+                                      ^int (int port))
+    port (InetSocketAddress. ^int (int port))))
+
+(defmulti make (fn [policy] (or (:type policy) policy)))
+
+(defn map->whitelist-policy
+  [{:keys [child white-list]}]
+  (whitelist-policy (make child)
+                    (map socket-address white-list)))
+
+(defn map->dc-aware-round-robin-policy
+  [{:keys [data-centre used-hosts-per-remote-dc]}]
+  (dc-aware-round-robin-policy data-centre used-hosts-per-remote-dc))
+
+(defmethod make :default
+  [_]
+  (Policies/defaultLoadBalancingPolicy))
+
+(defmethod make :round-robin
+  [_]
+  (round-robin-policy))
+
+(defmethod make :whitelist
+  [policy]
+  (map->whitelist-policy policy))
+
+(defmethod make :dc-aware-round-robin
+  [policy]
+  (dc-aware-round-robin-policy policy))
+
+(defmethod make :token-aware/round-robin
+  [_]
+  (token-aware-policy (round-robin-policy)))
+
+(defmethod make :token-aware/whitelist
+  [policy]
+  (token-aware-policy (map->whitelist-policy policy)))
+
+(defmethod make :token-aware/dc-aware-round-robin
+  [policy]
+  (token-aware-policy (map->dc-aware-round-robin-policy policy)))
+
+(defmethod make :latency-aware/round-robin
+  [policy]
+  (latency-aware-balance-policy (round-robin-policy) policy))
+
+(defmethod make :latency-aware/whitelist
+  [policy]
+  (latency-aware-balance-policy (map->whitelist-policy policy) policy))
+
+(defmethod make :latency-aware/dc-aware-round-robin
+  [policy]
+  (latency-aware-balance-policy (map->dc-aware-round-robin-policy policy) policy))

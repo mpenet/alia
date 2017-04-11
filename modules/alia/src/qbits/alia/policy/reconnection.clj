@@ -4,7 +4,8 @@ attempted."
   (:import
    (com.datastax.driver.core.policies
     ConstantReconnectionPolicy
-    ExponentialReconnectionPolicy)))
+    ExponentialReconnectionPolicy
+    Policies)))
 
 (defn constant-reconnection-policy
   "A reconnection policy that waits a constant time between each reconnection
@@ -18,3 +19,25 @@ reconnection attempt (but keeps a constant delay once a maximum delay is
 reached)."
   [base-delay-ms max-delay-ms]
   (ExponentialReconnectionPolicy. base-delay-ms max-delay-ms))
+
+(defmulti make (fn [policy] (or (:type policy) policy)))
+
+(defn map->constant-reconnection-policy
+  [{:keys [constant-delay-ms]}]
+  (constant-reconnection-policy constant-delay-ms))
+
+(defn map->exponential-reconnection-policy
+  [{:keys [base-delay-ms max-delay-ms]}]
+  (exponential-reconnection-policy base-delay-ms max-delay-ms))
+
+(defmethod make :default
+  [_]
+  (Policies/defaultReconnectionPolicy))
+
+(defmethod make :constant
+  [policy]
+  (map->constant-reconnection-policy policy))
+
+(defmethod make :exponential
+  [policy]
+  (map->exponential-reconnection-policy policy))
