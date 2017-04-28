@@ -2,8 +2,8 @@
   "Basic specs for validation/instrumentation, atm this doesn't
   include gen in most cases, not sure it ever will"
   (:require
-   [clojure.spec :as s]
-   [clojure.spec.gen :as sg]
+   [clojure.spec.alpha :as s]
+   [clojure.spec.alpha.gen :as sg]
    [qbits.spex :as x]
    [qbits.spex.networking :as xn]
    [qbits.alia :as alia]

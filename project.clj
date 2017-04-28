@@ -1,5 +1,5 @@
-(def alia-version "4.0.0-beta9")
-(def clj-version "1.9.0-alpha15")
+(def alia-version "4.0.0-beta10")
+(def clj-version "1.9.0-alpha16")
 (defproject cc.qbits/alia-all alia-version
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
   :url "https://github.com/mpenet/alia"

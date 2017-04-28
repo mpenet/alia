@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.0-beta10
+
+* use clojure 1.9 alpha16 (breaking changes, see: https://groups.google.com/forum/#!topic/clojure/nB4qnDNGS2A)
+
 ## 4.0.0-beta9
 
 * Allow to pass most policies as EDN data (see cluster docstring)

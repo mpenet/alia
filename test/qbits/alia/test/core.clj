@@ -20,8 +20,8 @@
 
 (try
   (require 'qbits.alia.spec)
-  (require 'clojure.spec.test)
-  ((resolve 'clojure.spec.test/instrument))
+  (require 'clojure.spec.alpha.test)
+  ((resolve 'clojure.spec.alpha.test/instrument))
   (println "Instrumenting qbits.alia with clojure.spec")
   (catch Exception e
     (.printStackTrace e)))
