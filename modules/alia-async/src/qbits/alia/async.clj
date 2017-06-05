@@ -24,12 +24,12 @@
   appropriate.
 
   For options refer to `qbits.alia/execute` doc"
-  ([^Session session query {:keys [executor consistency serial-consistency
+  ([^Session session query {:keys [executor channel consistency serial-consistency
                                    routing-key retry-policy result-set-fn codec
                                    tracing? idempotent?
                                    row-generator fetch-size values timestamp
                                    paging-state read-timeout]}]
-   (let [ch (async/promise-chan)]
+   (let [ch (or channel (async/promise-chan))]
      (try
        (let [codec (or codec default-codec/codec)
              ^Statement statement (query->statement query values codec)]
@@ -50,16 +50,15 @@
                     (async/put! ch
                                 (ex->ex-info err
                                              {:query statement
-                                              :values values}))))
-                (async/close! ch))
+                                              :values values})))))
               (onFailure [_ ex]
                 (async/put! ch
                             (ex->ex-info ex
                                          {:query statement
                                           :values values}))))
             (get-executor executor))))
-       (catch Throwable t
-         (async/put! ch t)))
+       (catch Exception e
+         (async/put! ch e)))
      ch))
   ([^Session session query]
    (execute-chan session query {})))
@@ -139,9 +138,9 @@
                                     ::error (throw v)
                                     ::success (recur))))
                               (recur)))))
-                      (catch Exception err
+                      (catch Exception e
                         (async/put! ch
-                                    (ex->ex-info err
+                                    (ex->ex-info e
                                                  {:query statement
                                                   :values values}))))
                     (async/close! ch))))
@@ -151,8 +150,8 @@
                                              :values values}))
                 (async/close! ch)))
             (get-executor executor))))
-       (catch Throwable t
-         (async/put! ch t)
+       (catch Exception e
+         (async/put! ch e)
          (async/close! ch)))
      ch))
   ([^Session session query]
