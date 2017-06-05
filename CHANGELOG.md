@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.0.0-beta11
+
+* use clojure 1.9 alpha17
+
+* no longer depend on qbits/spex
+
+* catch Exception not Throwable
+
+* qbits.alia/execute now takes an optional `:channel`, kill noop
+  close! on promise-chan
+
+* dump manifold dependency
+
 ## 4.0.0-beta10
 
 * use clojure 1.9 alpha16 (breaking changes, see: https://groups.google.com/forum/#!topic/clojure/nB4qnDNGS2A)
