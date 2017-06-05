@@ -508,8 +508,8 @@
                 (error (ex->ex-info ex {:query statement :values values})))))
           (get-executor executor))
          rs-future))
-     (catch Throwable t
-       (error t))))
+     (catch Exception e
+       (error e))))
   ([^Session session query]
    (execute-async session query {})))
 

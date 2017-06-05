@@ -57,8 +57,8 @@
                  (d/error! deferred
                            (ex->ex-info ex {:query statement :values values}))))
              (get-executor executor))))
-       (catch Throwable t
-         (d/error! deferred t)))
+       (catch Exception e
+         (d/error! deferred e)))
      deferred))
   ([^Session session query]
      (execute session query {})))
@@ -169,9 +169,9 @@
                 (s/put! stream (ex->ex-info ex {:query statement :values values}))
                 (s/close! stream)))
             (get-executor executor))))
-       (catch Throwable t
+       (catch Exception e
          (s/close! stream)
-         (throw t)))
+         (throw e)))
      (s/source-only stream)))
   ([^Session session query]
    (execute-buffered session query {})))

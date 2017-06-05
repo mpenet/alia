@@ -20,8 +20,8 @@
 
 (try
   (require 'qbits.alia.spec)
-  (require 'clojure.spec.alpha.test)
-  ((resolve 'clojure.spec.alpha.test/instrument))
+  (require 'clojure.spec.test.alpha)
+  ((resolve 'clojure.spec.test.alpha/instrument))
   (println "Instrumenting qbits.alia with clojure.spec")
   (catch Exception e
     (.printStackTrace e)))
@@ -267,7 +267,7 @@
     (is (instance? clojure.lang.ExceptionInfo
                    (async/<!! (execute-chan *session* "select * from users;"
                                             {:values ["foo"]}))))
-    (is (instance? Throwable
+    (is (instance? Exception
                    (async/<!! (execute-chan *session* "select * from users;"
                                             {:fetch-size :wtf}))))
 
@@ -276,16 +276,16 @@
     (is (instance? clojure.lang.ExceptionInfo
                    (async/<!! (execute-chan-buffered *session* "select * from users;"
                                             {:values ["foo"]}))))
-    (is (instance? Throwable
+    (is (instance? Exception
                    (async/<!! (execute-chan-buffered *session* "select * from users;"
                                             {:retry-policy :wtf}))))
 
-    (is (instance? Throwable
+    (is (instance? Exception
                    (try @(ma/execute *session* "select * from users;"
                                   {:values ["foo"]})
                      (catch Exception ex ex))))
 
-    (is (instance? Throwable
+    (is (instance? Exception
                    (try @(ma/execute *session* "select * from users;"
                                      {:fetch-size :wtf})
                         (catch Exception ex
@@ -301,7 +301,7 @@
       (execute-async *session* "select * from users;"
                           {:fetch-size :wtf
                            :error (fn [r] (deliver p r))})
-      (instance? Throwable @p))))
+      (instance? Exception @p))))
 
 (deftest test-lazy-query
   (is (= 10 (count (take 10 (lazy-query *session*

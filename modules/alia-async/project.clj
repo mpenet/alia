@@ -5,5 +5,5 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure ~clj-version]
                  [cc.qbits/alia ~alia-version]
-                 [org.clojure/core.async "0.3.442"]]
+                 [org.clojure/core.async "0.3.443"]]
   :global-vars {*warn-on-reflection* true})

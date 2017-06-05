@@ -2,10 +2,9 @@
   "Basic specs for validation/instrumentation, atm this doesn't
   include gen in most cases, not sure it ever will"
   (:require
+   [clojure.string :as str]
    [clojure.spec.alpha :as s]
-   [clojure.spec.alpha.gen :as sg]
-   [qbits.spex :as x]
-   [qbits.spex.networking :as xn]
+   [clojure.spec.gen.alpha :as sg]
    [qbits.alia :as alia]
    [qbits.alia.cluster-options :as cluster-options]
    [qbits.alia.enum :as enum]
@@ -44,12 +43,18 @@
    (java.nio ByteBuffer)
    (java.util.concurrent Executor)))
 
+(defn ns-as
+  "Creates a namespace 'n' (if non existant) and then aliases it to 'a'"
+  [n a]
+  (create-ns n)
+  (alias a n))
+
 (def string-or-named? #(or (string? %) (instance? clojure.lang.Named %)))
 
-(s/def ::alia/cluster (x/instance-of Cluster))
-(s/def ::alia/session (x/instance-of Session))
-(s/def ::alia/query (x/satisfies alia/PStatement))
-(s/def ::alia/prepared-statement (x/instance-of PreparedStatement))
+(s/def ::alia/cluster #(instance? Cluster %))
+(s/def ::alia/session #(instance? Session %))
+(s/def ::alia/query #(satisfies? alia/PStatement %))
+(s/def ::alia/prepared-statement #(instance? PreparedStatement %))
 
 ;; enums
 (letfn [(enum-key-set [enum] (-> enum ce/enum->map keys set))]
@@ -59,31 +64,43 @@
   (s/def ::enum/compression (enum-key-set ProtocolOptions$Compression))
   (s/def ::enum/batch-statement-type (enum-key-set BatchStatement$Type)))
 
+(s/def ::port (s/and nat-int? #(s/int-in-range? 1 65535 %)))
+
+(s/def ::hostname
+  (letfn [(hostname? [x]
+            (re-matches #"^(?=.{1,255}$)[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?(?:\.[0-9A-Za-z](?:(?:[0-9A-Za-z]|-){0,61}[0-9A-Za-z])?)*\.?$" x))
+          (gen []
+            (sg/fmap #(str/join (if (pos? (rand-int 2)) "" ".") %)
+                      (sg/vector
+                       (sg/fmap #(apply str %)
+                                 (sg/vector sg/char-alphanumeric 2 10))
+                       1 10)))]
+    (s/spec hostname? :gen gen)))
 
 ;; cluster opts
 
 (s/def ::cluster-options/contact-points
-  (s/coll-of ::xn/hostname :min-count 1))
+  (s/coll-of ::hostname :min-count 1))
 
-(s/def ::cluster-options/port ::xn/port)
+(s/def ::cluster-options/port ::port)
 
 (s/def ::cluster-options/load-balancing-policy
-  (x/instance-of LoadBalancingPolicy))
+  #(instance? LoadBalancingPolicy %))
 (s/def ::cluster-options/reconnection-policy
-  (x/instance-of ReconnectionPolicy))
+  #(instance? ReconnectionPolicy %))
 
 (s/def ::cluster-options/retry-policy
-  (x/instance-of RetryPolicy))
+  #(instance? RetryPolicy %))
 
 (s/def ::cluster-options/speculative-execution-policy
-  (x/instance-of SpeculativeExecutionPolicy))
+  #(instance? SpeculativeExecutionPolicy %))
 
 ;; pooling opts
 
 (s/def ::cluster-options/pooling-option
   (s/+ (s/tuple ::enum/host-distance pos-int?)))
 
-(x/ns-as 'qbits.alia.cluster-options.pooling-options
+(ns-as 'qbits.alia.cluster-options.pooling-options
          'cluster-options.pooling-options)
 (s/def ::cluster-options.pooling-options/core-connections-per-host
   ::cluster-options/pooling-option)
@@ -100,7 +117,7 @@
            ::cluster-options.pooling-options/connection-thresholds]))
 
 ;; socket options
-(x/ns-as 'qbits.alia.cluster-options.socket-options
+(ns-as 'qbits.alia.cluster-options.socket-options
          'cluster-options.socket-options)
 (s/def ::cluster-options.socket-options/read-timeout pos-int?)
 (s/def ::cluster-options.socket-options/read-timeout pos-int?)
@@ -122,7 +139,7 @@
            ::cluster-options.socket-options/keep-alive?]))
 
 ;; query opts
-(x/ns-as 'qbits.alia.cluster-options.query-options
+(ns-as 'qbits.alia.cluster-options.query-options
          'cluster-options.query-options)
 (s/def ::cluster-options.query-options/fetch-size pos-int?)
 (s/def ::cluster-options.query-options/consitency ::enum/consistency-level)
@@ -138,7 +155,7 @@
 (s/def ::cluster-options/jmx-reporting? boolean?)
 
 ;; credentials
-(x/ns-as 'qbits.alia.cluster-options.credentials
+(ns-as 'qbits.alia.cluster-options.credentials
          'cluster-options.credentials)
 (s/def ::cluster-options.credentials/user string?)
 (s/def ::cluster-options.credentials/password string?)
@@ -147,20 +164,20 @@
           [::cluster-options.credentials/user
            ::cluster-options.credentials/password]))
 
-(s/def ::cluster-options/auth-provider (x/instance-of AuthProvider))
+(s/def ::cluster-options/auth-provider #(instance? AuthProvider %))
 (s/def ::cluster-options/kerberos? boolean?)
 (s/def ::cluster-options/compression ::enum/compression)
 (s/def ::cluster-options/ssl? boolean?)
 
 ;; ssl options
-(x/ns-as 'qbits.alia.cluster-options.ssl-options
+(ns-as 'qbits.alia.cluster-options.ssl-options
          'cluster-options.ssl-options)
 (s/def ::cluster-options.ssl-options/keystore-path string?)
 (s/def ::cluster-options.ssl-options/keystore-password string?)
 (s/def ::cluster-options.ssl-options/cipher-suites (s/coll-of string? :min-count 1))
 
 (s/def ::cluster-options/ssl-options
-  (s/or :ssl-options-instance (x/instance-of SSLOptions)
+  (s/or :ssl-options-instance #(instance? SSLOptions %)
         :ssl-options-map
         (s/keys :opt-un
                 [::cluster-options.ssl-options/keystore-path
@@ -168,11 +185,11 @@
                  ::cluster-options.ssl-options/cipher-suites])))
 
 (s/def ::cluster-options/timestamp-generator
-  (x/instance-of TimestampGenerator))
+  #(instance? TimestampGenerator %))
 (s/def ::cluster-options/address-translator
-  (x/instance-of AddressTranslator))
+  #(instance? AddressTranslator %))
 (s/def ::cluster-options/netty-options
-  (x/instance-of NettyOptions))
+  #(instance? NettyOptions %))
 (s/def ::cluster-options/max-schema-agreement-wait-seconds pos-int?)
 (s/def ::cluster-options/cluster-name string?)
 
@@ -205,8 +222,8 @@
 ;; execute & co
 (create-ns 'qbits.alia.statement-options)
 (alias 'alia.statement-options 'qbits.alia.statement-options)
-(s/def ::alia.statement-options/routing-key (x/instance-of ByteBuffer))
-(s/def ::alia.statement-options/retry-policy (x/instance-of RetryPolicy))
+(s/def ::alia.statement-options/routing-key #(instance? ByteBuffer %))
+(s/def ::alia.statement-options/retry-policy #(instance? RetryPolicy %))
 (s/def ::alia.statement-options/tracing boolean?)
 (s/def ::alia.statement-options/idempotent? boolean?)
 
@@ -214,7 +231,7 @@
 (s/def ::alia.statement-options/serial-consistency ::enum/consistency-level)
 (s/def ::alia.statement-options/fetch-size pos-int?)
 (s/def ::alia.statement-options/timesamp pos-int?)
-(s/def ::alia.statement-options/paging-state (x/instance-of PagingState))
+(s/def ::alia.statement-options/paging-state #(instance? PagingState %))
 (s/def ::alia.statement-options/read-timeout pos-int?)
 
 (s/def ::alia/statement-options
@@ -259,7 +276,7 @@
   (s/fspec :args (s/cat :result-set any?)
            :ret any?))
 
-(s/def ::alia.execute-opts/row-generator (x/satisfies codec/RowGenerator))
+(s/def ::alia.execute-opts/row-generator #(satisfies? codec/RowGenerator %))
 
 (s/def ::alia/execute-opts-common
   (s/keys :opts-un
@@ -274,7 +291,7 @@
 
 (create-ns 'qbits.alia.execute-async)
 (alias 'alia.execute-async 'qbits.alia.execute-async)
-(s/def ::alia.execute-async/executor (x/instance-of Executor))
+(s/def ::alia.execute-async/executor #(instance? Executor %))
 
 ;; TODO fix when we can avoid to run gen on instrument
 (comment
@@ -283,17 +300,19 @@
              :ret any?))
 
   (s/def ::alia.execute-async/error
-    (s/fspec :args (s/cat :err (x/instance-of clojure.lang.ExceptionInfo))
+    (s/fspec :args (s/cat :err #(instance? clojure.lang.ExceptionInfo %))
              :ret any?)))
 
 (s/def ::alia.execute-async/success fn?)
 (s/def ::alia.execute-async/error fn?)
+(s/def ::alia.execute-async/channel any?)
 
 (s/def ::alia/execute-async-opts
   (s/merge ::alia/execute-opts
            (s/keys :opt-un [::alia.execute-async/success
                             ::alia.execute-async/error
-                            ::alia.execute-async/executor])))
+                            ::alia.execute-async/executor
+                            ::alia.execute-async/channel])))
 
 ;; functions
 
@@ -310,13 +329,13 @@
         :args (s/cat :cluster-or-session
                      (s/or :cluster ::alia/cluster
                            :session ::alia/session))
-        :ret (x/instance-of CloseFuture))
+        :ret #(instance? CloseFuture %))
 
 (s/fdef qbits.alia/bind
         :args (s/cat :statement ::alia/prepared-statement
                      :values (s/nilable ::alia.execute-opts/values)
                      :codec (s/? ::alia.execute-opts/codec))
-        :ret (x/instance-of BoundStatement))
+        :ret #(instance? BoundStatement %))
 
 (s/fdef qbits.alia/prepare
         :args (s/cat :session ::alia/session
@@ -327,7 +346,7 @@
         :args (s/cat :statements (s/spec (s/+ ::alia/query))
                      :type (s/? ::enum/batch-statement-type)
                      :codec (s/? ::alia.execute-opts/codec))
-        :ret (x/instance-of BatchStatement))
+        :ret #(instance? BatchStatement %))
 
 (s/fdef qbits.alia/execute
         :args (s/cat :session ::alia/session
@@ -339,7 +358,7 @@
         :args (s/cat :session ::alia/session
                      :query ::alia/query
                      :options (s/? ::alia/execute-async-opts))
-        :ret (x/instance-of ResultSetFuture))
+        :ret #(instance? ResultSetFuture %))
 
 (s/fdef qbits.alia/udt-encoder
         :args (s/cat :session ::alia/session
