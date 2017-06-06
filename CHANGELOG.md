@@ -11,7 +11,7 @@
 * qbits.alia/execute now takes an optional `:channel`, kill noop
   close! on promise-chan
 
-* dump manifold dependency
+* bump manifold dependency
 
 ## 4.0.0-beta10
 
