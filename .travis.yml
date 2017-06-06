@@ -9,18 +9,14 @@ branches:
     - master
 
 env:
-  - CASSANDRA_VERSION=39
+  - CASSANDRA_VERSION=310
 
 before_install:
-  - sudo echo "deb http://www.apache.org/dist/cassandra/debian ${CASSANDRA_VERSION}x main" | sudo tee -a /etc/apt/sources.list
+  - sudo echo "deb http://www.apache.org/dist/cassandra/debian ${CASSANDRA_VERSION}x main" | sudo tee -a /etc/apt/sources.list.d/cassandra.sources.list
   - sudo echo "deb-src http://www.apache.org/dist/cassandra/debian ${CASSANDRA_VERSION}x main" | sudo tee -a /etc/apt/sources.list
   - sudo rm -rf ~/.gnupg
-  - sudo gpg --keyserver keyserver.kjsl.com --recv-keys F758CE318D77295D
-  - sudo gpg --export --armor F758CE318D77295D | sudo apt-key add -
-  - sudo gpg --keyserver keyserver.kjsl.com --recv-keys 2B5C1B00
-  - sudo gpg --export --armor 2B5C1B00 | sudo apt-key add -
-  - sudo gpg --keyserver keyserver.kjsl.com --recv-keys 0353B12C
-  - sudo gpg --export --armor 0353B12C | sudo apt-key add -
+  - curl https://www.apache.org/dist/cassandra/KEYS | sudo apt-key add -
+  - sudo apt-key adv --keyserver pool.sks-keyservers.net --recv-key A278B781FE4B2BDA
   - sudo apt-get update
   - sudo apt-get -o Dpkg::Options::="--force-confnew" install -y cassandra --force-yes
   - sudo rm -rf /var/lib/cassandra/*
