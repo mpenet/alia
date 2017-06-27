@@ -5,10 +5,10 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure ~clj-version]
                  [cc.qbits/commons "0.4.6"]
-                 [com.datastax.cassandra/cassandra-driver-core "3.2.0"
+                 [com.datastax.cassandra/cassandra-driver-core "3.3.0"
                   :classifier "shaded"
                   :exclusions [io.netty/*]]
-                 [com.datastax.cassandra/dse-driver "1.1.0"
+                 [com.datastax.cassandra/dse-driver "1.1.2"
                   :exclusions [com.datastax.cassandra/cassandra-driver-core]]
                  [org.hdrhistogram/HdrHistogram "2.1.9"]]
   :jar-exclusions [#"log4j.properties"]

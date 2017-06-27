@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.0
+
+* Use java-driver 3.3.0 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/tree/3.2.x/changelog)
+
 ## 4.0.0-beta11
 
 * use clojure 1.9 alpha17
