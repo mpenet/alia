@@ -46,11 +46,10 @@ Add the following to your dependencies:
 
 [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-all.svg)](https://clojars.org/cc.qbits/alia-all)
 
-
 This would include all the codec extensions and extra libraries.
 
-You can also pick and choose what you need from alia's
-[modules](https://github.com/mpenet/alia/tree/master/modules):
+But the better thing to do is to pick and choose what you really need
+from alia's [modules](https://github.com/mpenet/alia/tree/master/modules):
 
 * [cc.qbits/alia](https://github.com/mpenet/alia/tree/master/modules/alia)
   Main module with all the basic alia functions (required).
