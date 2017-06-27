@@ -71,16 +71,6 @@ from alia's [modules](https://github.com/mpenet/alia/tree/master/modules):
 
   [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-joda-time.svg)](https://clojars.org/cc.qbits/alia-joda-time)
 
-* [cc.qbits/alia-eaio-uuid](https://github.com/mpenet/alia/tree/master/modules/alia-eaio-uui):
-  Codec for eaio-uuid library.
-
-  [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-eaio-uuid.svg)](https://clojars.org/cc.qbits/alia-eaio-uuid)
-
-* [cc.qbits/alia-nippy](https://github.com/mpenet/alia/tree/master/modules/alia-nippy):
-  Codec with nippy serialisation (for blobs)
-
-  [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-nippy.svg)](https://clojars.org/cc.qbits/alia-nippy)
-
 * [cc.qbits/alia-spec](https://github.com/mpenet/alia/tree/master/modules/alia-spec):
   clojure.spec for alia
 
