@@ -1,5 +1,7 @@
 # alia-nippy
 
+DEPRECATED
+
 Adds `nippy` support to alia
 
 ## Installation

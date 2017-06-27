@@ -1,5 +1,7 @@
 # alia-eaio-uuid
 
+DEPRECATED
+
 Adds support for http://stephenc.github.io/eaio-uuid/
 
 ## Installation
