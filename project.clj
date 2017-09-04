@@ -18,13 +18,13 @@
                         [lein-modules "0.3.11"]]
               :dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
                              [cc.qbits/hayt "4.0.0-beta6"]
-                             [net.jpountz.lz4/lz4 "1.2.0"]
+                             [net.jpountz.lz4/lz4 "1.3.0"]
                              [clj-time "0.11.0"]
-                             [com.taoensso/nippy "2.9.0"]
+                             [com.taoensso/nippy "2.10.0" :exclusions [org.clojure/tools.reader]]
                              [cc.qbits/tardis "1.0.0"]
-                             [manifold "0.1.5"]
-                             [org.clojure/tools.logging "0.2.6"]
-                             [org.slf4j/slf4j-log4j12 "1.7.3"]]}}
+                             [manifold "0.1.6"]
+                             [org.clojure/tools.logging "0.3.1"]
+                             [org.slf4j/slf4j-log4j12 "1.7.25"]]}}
   :modules {:dirs ["modules/alia"
                    "modules/alia-manifold"
                    "modules/alia-async"
@@ -45,4 +45,5 @@
                          "modules/alia-joda-time/src"
                          "modules/alia-eaio-uuid/src"
                          "modules/alia-nippy/src"]}
-  :global-vars {*warn-on-reflection* true})
+  :global-vars {*warn-on-reflection* true}
+  :pedantic? :abort)
