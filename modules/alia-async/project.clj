@@ -1,3 +1,4 @@
+(load-file "../../.deps-versions.clj")
 (defproject cc.qbits/alia-async alia-version
   :description "core.async interface for Alia"
   :url "https://github.com/mpenet/alia"

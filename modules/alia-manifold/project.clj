@@ -1,3 +1,4 @@
+(load-file "../../.deps-versions.clj")
 (defproject cc.qbits/alia-manifold alia-version
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"

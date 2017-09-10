@@ -1,3 +1,4 @@
+(load-file "../../.deps-versions.clj")
 (defproject cc.qbits/alia alia-version
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
   :url "https://github.com/mpenet/alia"

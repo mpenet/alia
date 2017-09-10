@@ -1,3 +1,4 @@
+(load-file "../../.deps-versions.clj")
 (defproject cc.qbits/alia-spec alia-version
   :description "clojure.spec for Alia"
   :url "https://github.com/mpenet/alia/alia-joda-time"

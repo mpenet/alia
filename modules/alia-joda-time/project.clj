@@ -1,3 +1,4 @@
+(load-file "../../.deps-versions.clj")
 (defproject cc.qbits/alia-joda-time alia-version
   :description "Alia extension for joda-time codec"
   :url "https://github.com/mpenet/alia/alia-joda-time"
