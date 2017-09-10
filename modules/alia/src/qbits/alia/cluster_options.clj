@@ -76,7 +76,10 @@
 (defmethod set-cluster-option! :pooling-options
   [_ ^Cluster$Builder builder {:keys [core-connections-per-host
                                       max-connections-per-host
-                                      connection-thresholds]
+                                      connection-thresholds
+                                      max-requests-per-connection
+                                      queue-size
+                                      pool-timeout-millis]
                                :as pooling-options}]
   ;; (doseq [[opt x] pooling-options]
   ;;   (set-cluster-option! opt builder x))
@@ -96,6 +99,20 @@
         (.setNewConnectionThreshold pooling-options
                                     (enum/host-distance dist)
                                     (int value))))
+
+    (when max-requests-per-connection
+      (doseq [[dist value] max-requests-per-connection]
+        (.setMaxRequestsPerConnection pooling-options
+                                    (enum/host-distance dist)
+                                    (int value))))
+
+    (when queue-size
+      (.setMaxQueueSize pooling-options (int queue-size)))
+
+    (when pool-timeout-millis
+      (.setPoolTimeoutMillis pooling-options (int pool-timeout-millis)))
+
+
     (.withPoolingOptions builder pooling-options)))
 
 (defmethod set-cluster-option! :socket-options
