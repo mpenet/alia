@@ -19,3 +19,4 @@ pom.xml
 .idea
 .lein-env
 /bench.clj
+scripts*
