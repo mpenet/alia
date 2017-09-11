@@ -208,6 +208,9 @@
 
   + `:core-connections-per-host` Number
   + `:max-connections-per-host` Number
+  + `:max-requests-per-connection` Number
+  + `:queue-size` Number
+  + `:pool-timeout-millis` Number
   + `:connection-thresholds` [[host-distance-kw value]+]
 
 * `:socket-options`: a map of
