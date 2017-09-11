@@ -78,7 +78,7 @@
                                       max-connections-per-host
                                       connection-thresholds
                                       max-requests-per-connection
-                                      queue-size
+                                      max-queue-size
                                       pool-timeout-millis]
                                :as pooling-options}]
   ;; (doseq [[opt x] pooling-options]
@@ -106,8 +106,8 @@
                                     (enum/host-distance dist)
                                     (int value))))
 
-    (when queue-size
-      (.setMaxQueueSize pooling-options (int queue-size)))
+    (when max-queue-size
+      (.setMaxQueueSize pooling-options (int max-queue-size)))
 
     (when pool-timeout-millis
       (.setPoolTimeoutMillis pooling-options (int pool-timeout-millis)))
