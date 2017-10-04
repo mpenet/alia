@@ -13,6 +13,7 @@
     BoundStatement
     Cluster
     Cluster$Builder
+    GuavaCompatibility
     LatencyTracker
     PreparedStatement
     Statement
@@ -23,7 +24,6 @@
     RegularStatement
     Statement)
    (com.google.common.util.concurrent
-    MoreExecutors
     Futures
     FutureCallback)
    (java.nio ByteBuffer)
@@ -31,7 +31,7 @@
 
 (defn ^:no-doc get-executor
   [x]
-  (or x (MoreExecutors/sameThreadExecutor)))
+  (or x (-> GuavaCompatibility/INSTANCE .sameThreadExecutor)))
 
 (defn cluster
   "Takes an option map and returns a new
