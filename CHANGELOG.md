@@ -1,5 +1,13 @@
 # Changelog
 
+## 4.0.2
+
+* Use datastax compatibility layer to inteact with one of guava deprecated utility
+
+## 4.0.1
+
+* Added :max-requests-per-connection :queue-size :pool-timeout-millis to cluster pooling options
+
 ## 4.0.0
 
 * Use java-driver 3.3.0 [driver-core/CHANGELOG](https://github.com/datastax/java-driver/tree/3.x/changelog)
