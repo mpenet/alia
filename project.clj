@@ -9,7 +9,7 @@
                  [cc.qbits/alia-manifold ~alia-version]
                  [cc.qbits/alia-async ~alia-version]
                  [cc.qbits/alia-joda-time ~alia-version]
-                 [cc.qbits/alia-nippy ~alia-version]
+                 [cc.qbits/alia-nippy ~alia-version :exclusions [org.clojure/tools.reader]]
                  [cc.qbits/alia-eaio-uuid ~alia-version]
                  [cc.qbits/alia-spec ~alia-version]]
   :profiles {:dev
@@ -19,7 +19,7 @@
                              [net.jpountz.lz4/lz4 "1.3.0"]
                              [clj-time "0.11.0"]
                              [com.taoensso/nippy "2.10.0" :exclusions [org.clojure/tools.reader]]
-                             [cc.qbits/tardis "1.0.0"]
+                             [cc.qbits/tardis "1.1.1"]
                              [manifold "0.1.6"]
                              [org.clojure/tools.logging "0.3.1"]
                              [org.slf4j/slf4j-log4j12 "1.7.25"]]}}
