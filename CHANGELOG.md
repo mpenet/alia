@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.3
+
+* update tardis
+
 ## 4.0.2
 
 * Use datastax compatibility layer to inteact with one of guava deprecated utility
