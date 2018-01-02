@@ -22,15 +22,6 @@
 (defprotocol PResultSet
   (execution-info [this]))
 
-(defn lazy-result-set-
-  [^ResultSet rs]
-  (when-let [row (.one rs)]
-    (lazy-seq (cons row (lazy-result-set- rs)))))
-
-(defn lazy-result-set
-  [^ResultSet rs]
-  (lazy-seq (lazy-result-set- rs)))
-
 ;; Shamelessly inspired from https://github.com/ghadishayban/squee's
 ;; monoid'ish appoach
 (defprotocol RowGenerator
@@ -84,7 +75,7 @@
       clojure.lang.Seqable
       (seq [this]
         (map #(decode-row % row-generator decode)
-             (lazy-result-set rs)))
+             rs))
 
       clojure.lang.IReduceInit
       (reduce [this f init]
