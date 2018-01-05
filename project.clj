@@ -11,7 +11,7 @@
                  [cc.qbits/alia-joda-time ~alia-version]
                  [cc.qbits/alia-spec ~alia-version]]
   :profiles {:dev
-             {:plugins [[codox "0.10.2"]]
+             {:plugins [[codox "0.10.3"]]
               :dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
                              [cc.qbits/hayt "4.0.0-beta6"]
                              [net.jpountz.lz4/lz4 "1.3.0"]
@@ -26,8 +26,5 @@
           :source-paths ["modules/alia/src"
                          "modules/alia-manifold/src"
                          "modules/alia-async/src"
-                         "modules/alia-joda-time/src"
-                         "modules/alia-eaio-uuid/src"
-                         "modules/alia-nippy/src"]}
+                         "modules/alia-joda-time/src"]}
   :global-vars {*warn-on-reflection* true}
-  :pedantic? :abort)

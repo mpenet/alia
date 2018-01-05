@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.1.1
+
+* add qbits.alia/prepare-async
+
 ## 4.1.0
 
 * kill deprecated modules: eao.uuid, nippy
