@@ -25,7 +25,8 @@
     Statement)
    (com.google.common.util.concurrent
     Futures
-    FutureCallback)
+    FutureCallback
+    ListenableFuture)
    (java.nio ByteBuffer)
    (java.util Map)))
 
@@ -360,6 +361,39 @@
   (let [q (query->statement query nil nil)]
     (try
       (.prepare session ^RegularStatement q)
+      (catch Exception ex
+        (throw (ex->ex-info ex
+                            {:type ::prepare-error
+                             :query q}
+                            "Query prepare failed"))))))
+
+(defn prepare-async
+  "Takes a session, a query (raw string or hayt) and success and
+   error callbacks and prepares a statement asynchronously. If
+   successful the success callback will receive the
+   com.datastax.driver.core.PreparedStatement instance, otherwise
+   the error callback will receive an Exception"
+  [^Session session query {:keys [executor success error]}]
+  (let [q (query->statement query nil nil)]
+    (try
+      (let [^ListenableFuture ps-future (.prepareAsync session ^RegularStatement q)]
+        (Futures/addCallback
+         ps-future
+         (reify FutureCallback
+           (onSuccess [_ result]
+             (when success
+               (try
+                 (success result)
+                 (catch Exception err
+                   (when error
+                     (error (ex->ex-info err {:type ::prepare-error
+                                              :query q})))))))
+           (onFailure [_ ex]
+             (when error
+               (error (ex->ex-info ex {:type ::prepare-error
+                                       :query q})))))
+         (get-executor executor))
+        ps-future)
       (catch Exception ex
         (throw (ex->ex-info ex
                             {:type ::prepare-error
