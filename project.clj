@@ -28,3 +28,4 @@
                          "modules/alia-async/src"
                          "modules/alia-joda-time/src"]}
   :global-vars {*warn-on-reflection* true}
+  :pedantic? :abort)
