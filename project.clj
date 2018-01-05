@@ -9,8 +9,6 @@
                  [cc.qbits/alia-manifold ~alia-version]
                  [cc.qbits/alia-async ~alia-version]
                  [cc.qbits/alia-joda-time ~alia-version]
-                 [cc.qbits/alia-nippy ~alia-version :exclusions [org.clojure/tools.reader]]
-                 [cc.qbits/alia-eaio-uuid ~alia-version]
                  [cc.qbits/alia-spec ~alia-version]]
   :profiles {:dev
              {:plugins [[codox "0.10.2"]]
