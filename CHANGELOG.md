@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.1.0
+
+* kill deprecated modules: eao.uuid, nippy
+
+* bump clojure, java-driver, core.async, test.check
+
+* make default seq result-set more lightweight: it's no longer lazy
+  with a cell per row, it's now chunked (default clj behavior)
+
 ## 4.0.3
 
 * update tardis
