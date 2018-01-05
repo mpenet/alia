@@ -10,10 +10,7 @@
    [qbits.alia.codec.default :refer :all]
    [qbits.alia.codec.udt-aware]
    [qbits.alia.codec.extension.joda-time :refer :all]
-   [qbits.alia.codec.extension.eaio-uuid :refer :all]
-   [qbits.alia.codec.extension.nippy :refer :all]
    [qbits.hayt :as h]
-   [qbits.tardis :refer :all]
    [clojure.core.async :as async])
   (:import
     (com.datastax.driver.core Statement UDTValue ConsistencyLevel Cluster)))
@@ -207,7 +204,7 @@
     (is (= [] (execute *session* s-prepare-types {:values ["foobar"
                                                            0
                                                            #uuid "b474e171-7757-449a-87be-d2797d1336e3"
-                                                           (qbits.tardis/to-uuid "e34288d0-7617-11e2-9243-0024d70cf6c4")
+                                                           #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"
                                                            (java.util.Date.)
                                                            false
                                                            [1 2 3 4]
@@ -221,7 +218,7 @@
     (is (= [] (try (execute *session* s-prepare-types {:values {:user_name "barfoo"
                                                             :birth_year 0
                                                             :auuid #uuid "b474e171-7757-449a-87be-d2797d1336e3"
-                                                            :tuuid (qbits.tardis/to-uuid "e34288d0-7617-11e2-9243-0024d70cf6c4")
+                                                            :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"
                                                             :created (java.util.Date.)
                                                             :valid false
                                                             :tags [1 2 3 4]
@@ -235,7 +232,7 @@
     (is (= [] (try (execute *session* s-prepare-types {:values {:user_name "ffoooobbaarr"
                                                             :birth_year 0
                                                             :auuid #uuid "b474e171-7757-449a-87be-d2797d1336e3"
-                                                            :tuuid (qbits.tardis/to-uuid "e34288d0-7617-11e2-9243-0024d70cf6c4")
+                                                            :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"
                                                             :created (t/now)
                                                             :valid false
                                                             :tags [1 2 3 4]
@@ -329,9 +326,8 @@
 
       result-set-fn-with-execution-infos
       (fn [rs]
-        (-> (seq rs)
-            (vary-meta assoc
-                       :execution-info (execution-info rs))))
+        (vary-meta rs assoc
+                   :execution-info (execution-info rs)))
 
       get-fetch-size
       (fn [rs]

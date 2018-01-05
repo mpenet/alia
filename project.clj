@@ -16,8 +16,6 @@
                              [cc.qbits/hayt "4.0.0-beta6"]
                              [net.jpountz.lz4/lz4 "1.3.0"]
                              [clj-time "0.11.0"]
-                             [com.taoensso/nippy "2.10.0" :exclusions [org.clojure/tools.reader]]
-                             [cc.qbits/tardis "1.1.1"]
                              [manifold "0.1.6"]
                              [org.clojure/tools.logging "0.3.1"]
                              [org.slf4j/slf4j-log4j12 "1.7.25"]]}}
@@ -25,7 +23,7 @@
   :monkeypatch-clojure-test false
   :codox {:source-uri "https://github.com/mpenet/alia/blob/master/{filepath}#L{line}"
           :metadata {:doc/format :markdown}
-          :source-paths ["modules/alia/src/"
+          :source-paths ["modules/alia/src"
                          "modules/alia-manifold/src"
                          "modules/alia-async/src"
                          "modules/alia-joda-time/src"
