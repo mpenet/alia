@@ -8,5 +8,4 @@
                  [exoscale/clj-yaml "0.5.6"]
                  [cc.qbits/alia ~alia-version]
                  [org.apache.cassandra/cassandra-all "3.11.1"]]
-  :source-paths ["src/clj"]
   :global-vars {*warn-on-reflection* true})
