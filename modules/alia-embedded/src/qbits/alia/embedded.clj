@@ -88,6 +88,10 @@
     (try
       (.deactivate ^CassandraDaemon daemon)
       (.drain StorageService/instance)
+      (.stopDaemon StorageService/instance)
+      (.stopClient StorageService/instance)
+      (.stopTransports StorageService/instance)
+      (.stopGossiping StorageService/instance)
       (jmx/unregister! "org.apache.cassandra.db:type=NativeAccess")
       (recursive-delete tmpdir)
       (catch Exception _))))
