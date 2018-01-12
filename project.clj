@@ -26,6 +26,7 @@
           :source-paths ["modules/alia/src"
                          "modules/alia-manifold/src"
                          "modules/alia-async/src"
-                         "modules/alia-joda-time/src"]}
+                         "modules/alia-joda-time/src"
+                         "modules/alia-component/src"]}
   :global-vars {*warn-on-reflection* true}
   :pedantic? :abort)
