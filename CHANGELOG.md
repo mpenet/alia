@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.2.1
+
+* add qbits.alia/component module This adds a
+  https://github.com/stuartsierra/component for alia with
+  single/multicluster capabilities and also a query registry that
+  encapsulates query level information/state (prepared queries).
+
+  Docs will come for this, but if you feel adventurous you can already
+  try it based on the information you'd find in the related PR:
+
+  https://github.com/mpenet/alia/pull/89#issue-287081644
+
+  Thanks @pyr for the work on this.
+
 ## 4.1.1
 
 * add qbits.alia/prepare-async
