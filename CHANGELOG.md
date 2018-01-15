@@ -14,6 +14,12 @@
 
   Thanks @pyr for the work on this.
 
+  On a side not this is the last release with the alia-all package, in
+  the near future there will be a re-do on the way we manage the
+  modules and alia-all will go away. That simply means you will have
+  to pick and choose what you need/want, which is a better default.
+
+
 ## 4.1.1
 
 * add qbits.alia/prepare-async
