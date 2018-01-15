@@ -9,7 +9,8 @@
                  [cc.qbits/alia-manifold ~alia-version]
                  [cc.qbits/alia-async ~alia-version]
                  [cc.qbits/alia-joda-time ~alia-version]
-                 [cc.qbits/alia-spec ~alia-version]]
+                 [cc.qbits/alia-spec ~alia-version]
+                 [cc.qbits/alia-component ~alia-version]]
   :profiles {:dev
              {:plugins [[codox "0.10.3"]]
               :dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
