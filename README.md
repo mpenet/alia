@@ -76,6 +76,11 @@ from alia's [modules](https://github.com/mpenet/alia/tree/master/modules):
 
   [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-spec.svg)](https://clojars.org/cc.qbits/alia-spec)
 
+* [cc.qbits/alia-component](https://github.com/mpenet/alia/tree/master/modules/alia-component):
+  [Component](https://github.com/stuartsierra/component) integration for alia
+
+  [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-component.svg)](https://clojars.org/cc.qbits/alia-component)
+
 ### Hayt (the query DSL)
 
 If you wish to use Hayt you need to add it to your dependencies
