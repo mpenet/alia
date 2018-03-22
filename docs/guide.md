@@ -501,10 +501,8 @@ allows you to register Record instances to cassandra UDTs:
      :bar #user.Bar{:a "Meh" :b "Really"}}]
 ```
 
-This is done at decoding time, so there's no iteration involved, and
-this can be applied on streaming queries just fine as a result.
-
-You hopefully get the idea by now.
+This is done at decoding time, so there's no extra iteration involved,
+and this can be applied on streaming queries just fine as a result.
 
 
 ## Row Generators
