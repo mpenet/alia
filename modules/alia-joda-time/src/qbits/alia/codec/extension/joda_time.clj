@@ -31,16 +31,3 @@
   com.datastax.driver.core.LocalDate
   (-set-named-parameter! [val settable name]
     (.setDate ^com.datastax.driver.core.SettableByNameData settable name val)))
-
-;; org.joda.time.LocalTime
-(extend-protocol codec/Decoder
-  java.lang.Long
-  (decode [x]
-    (new org.joda.time.LocalTime (/ x 1000 1000))))
-
-(extend-protocol codec/Encoder
-  org.joda.time.LocalTime
-  (encode [x]
-    (long (+ (* 60 60 1000 1000 1000 (.getHourOfDay x))
-             (* 60 1000 1000 1000 (.getMinuteOfHour x))
-             (* 1000 1000 1000 (.getSecondOfMinute x))))))
