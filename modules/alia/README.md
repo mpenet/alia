@@ -2,6 +2,8 @@
 
 Core of the driver
 
+[![cljdoc badge](https://cljdoc.xyz/badge/cc.qbits/alia)](https://cljdoc.xyz/d/cc.qbits/alia/CURRENT)
+
 ## Installation
 
 Add this to your dependencies:
