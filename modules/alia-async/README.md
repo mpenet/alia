@@ -2,6 +2,8 @@
 
 Adds `clojure.core.async` support to alia
 
+[![cljdoc badge](https://cljdoc.xyz/badge/cc.qbits/alia-async)](https://cljdoc.xyz/d/cc.qbits/alia-async/CURRENT)
+
 ## Installation
 
 Add this to your dependencies:

@@ -2,6 +2,8 @@
 
 Adds [Component](https://github.com/stuartsierra/component) support to alia
 
+[![cljdoc badge](https://cljdoc.xyz/badge/cc.qbits/alia-component)](https://cljdoc.xyz/d/cc.qbits/alia-component/CURRENT)
+
 ## Installation
 
 Add this to your dependencies:

@@ -1,6 +1,7 @@
 # alia-manifold
 
 Adds [manifold](https://github.com/ztellman/manifold) support to alia
+[![cljdoc badge](https://cljdoc.xyz/badge/cc.qbits/alia-manifold)](https://cljdoc.xyz/d/cc.qbits/alia-manifold/CURRENT)
 
 ## Installation
 
