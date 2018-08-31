@@ -48,12 +48,12 @@
     (.setFloat ^TupleValue u i f))
 
   InetAddress
-  (-set-field! [i u i]
-    (.setInet ^TupleValue u i i))
+  (-set-field! [x u i]
+    (.setInet ^TupleValue u i x))
 
   Integer
-  (-set-field! [i u i]
-    (.setInt ^TupleValue u i i))
+  (-set-field! [x u i]
+    (.setInt ^TupleValue u i x))
 
   List
   (-set-field! [l u i]
