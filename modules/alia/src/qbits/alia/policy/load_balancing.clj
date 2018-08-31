@@ -8,7 +8,6 @@
     TokenAwarePolicy
     WhiteListPolicy
     LatencyAwarePolicy
-    LatencyAwarePolicy$Builder
     Policies)
    (java.net
     InetSocketAddress
@@ -71,7 +70,7 @@
 
   http://www.datastax.com/drivers/java/apidocs/com/datastax/driver/core/policies/DCAwareRoundRobinPolicy.html"
   ([dc used-hosts-per-remote-dc]
-   (let [b (-> (DCAwareRoundRobinPolicy/builder))]
+   (let [b (DCAwareRoundRobinPolicy/builder)]
      (.withLocalDc b dc)
      (when used-hosts-per-remote-dc
        (.withUsedHostsPerRemoteDc b (int used-hosts-per-remote-dc)))
