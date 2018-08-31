@@ -13,7 +13,7 @@
    [qbits.hayt :as h]
    [clojure.core.async :as async])
   (:import
-    (com.datastax.driver.core Statement UDTValue ConsistencyLevel Cluster)))
+    (com.datastax.driver.core UDTValue ConsistencyLevel Cluster)))
 
 (try
   (require 'qbits.alia.spec)

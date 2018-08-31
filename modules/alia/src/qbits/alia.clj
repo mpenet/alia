@@ -320,11 +320,11 @@
 
 (defprotocol ^:no-doc PStatement
   (^:no-doc query->statement
-   [q values codec] "Encodes input into a Statement instance"))
+    [q values codec] "Encodes input into a Statement instance"))
 
 (extend-protocol PStatement
   Statement
-  (query->statement [q _ codec] q)
+  (query->statement [q _ _] q)
 
   PreparedStatement
   (query->statement [q values codec]
@@ -333,17 +333,22 @@
   String
   (query->statement [q values codec]
     (let [encode (:encoder codec)]
-      (if (map? values)
+      (cond
+        (nil? values)
+        (SimpleStatement. q)
+
+        (map? values)
         (SimpleStatement. q
                           ^Map (reduce-kv (fn [m k v]
                                             (assoc m (name k) (encode v)))
                                           {}
                                           values))
+
+        :default
         (SimpleStatement. q (to-array (map encode values))))))
 
-
   BatchStatement
-  (query->statement [bs values codec]
+  (query->statement [bs values _]
     (when values
       (throw (ex-info {:type ::bind-error}
                       "You cannot bind values to batch statements directly,
@@ -549,7 +554,6 @@
        (error e))))
   ([^Session session query]
    (execute-async session query {})))
-
 
 (defn ^:no-doc lazy-query-
   [session query pred coll opts]
