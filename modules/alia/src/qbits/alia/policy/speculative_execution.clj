@@ -48,16 +48,12 @@
    {:keys [interval min-recorded-values significant-value-digits]}]
   (let [[interval-value interval-unit] interval]
     (when interval
-      (.withInterval ^PercentileTracker$Builder builder
-                     ^long (long interval-value)
-                     ^TimeUnit (enum/time-unit interval-unit)))
+      (.withInterval builder (long interval-value) (enum/time-unit interval-unit)))
     (when min-recorded-values
-      (.withMinRecordedValues ^PercentileTracker$Builder builder
-                              ^int (int min-recorded-values)))
+      (.withMinRecordedValues builder(int min-recorded-values)))
     (when significant-value-digits
-      (.withNumberOfSignificantValueDigits ^PercentileTracker$Builder builder
-                                           ^int (int significant-value-digits)))
-    (.build ^PercentileTracker$Builder builder)))
+      (.withNumberOfSignificantValueDigits builder (int significant-value-digits)))
+    (.build builder)))
 
 (defn cluster-wide-percentile-tracker
   "A `PercentileTracker` that aggregates all measurements into a single
