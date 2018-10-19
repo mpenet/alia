@@ -298,6 +298,11 @@ etc).
 If you want to know more about it head to its [codox documentation](http://mpenet.github.com/hayt/codox/qbits.hayt.html) or
 [Hayt's tests](https://github.com/mpenet/hayt/blob/master/test/qbits/hayt/core_test.clj).
 
+## Patreon
+
+If you wish to support the work on this project you can do this here:
+[patreon](https://www.patreon.com/mpenet)
+
 ## Mailing list
 
 Alia has a
