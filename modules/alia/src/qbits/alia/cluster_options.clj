@@ -245,6 +245,10 @@
   [_ ^Cluster$Builder builder cluster-name]
   (.withClusterName builder (name cluster-name)))
 
+(defmethod set-cluster-option! :default
+  [_ ^Cluster$Builder builder option]
+  builder)
+
 (defn set-cluster-options!
   ^Cluster$Builder
   [^Cluster$Builder builder options]

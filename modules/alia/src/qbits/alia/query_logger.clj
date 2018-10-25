@@ -33,6 +33,10 @@
   [_ ^QueryLogger$Builder b max-query-string-length]
   (.withMaxQueryStringLength b (int max-query-string-length)))
 
+(defmethod set-query-logger-option! :default
+  [_ ^QueryLogger$Builder b option]
+  b)
+
 (defn set-query-logger-options!
   ^QueryLogger$Builder
   [^QueryLogger$Builder builder options]
