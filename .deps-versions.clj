@@ -1,2 +1,2 @@
-(def alia-version "4.2.2")
-(def clj-version "1.9.0")
+(def alia-version "4.3.0")
+(def clj-version "1.10.0-beta4")

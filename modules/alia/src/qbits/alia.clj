@@ -4,7 +4,6 @@
    [qbits.alia.codec.default :as default-codec]
    [qbits.alia.udt :as udt]
    [qbits.alia.tuple :as tuple]
-   [qbits.commons.ns :as nsq]
    [qbits.alia.enum :as enum]
    [qbits.alia.cluster-options :as copt])
   (:import

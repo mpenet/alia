@@ -5,6 +5,6 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure ~clj-version]
-                 [org.clojure/test.check "0.10.0-alpha2"]
+                 [org.clojure/test.check "0.10.0-alpha3"]
                  [cc.qbits/alia ~alia-version]]
   :global-vars {*warn-on-reflection* true})
