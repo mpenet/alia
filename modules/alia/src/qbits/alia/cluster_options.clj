@@ -191,9 +191,9 @@
   (.withSSL builder
             (if (instance? SSLOptions ssl-options)
               ssl-options
-              (let [{:keys [keystore-path keystore-password cipher-suites]} ssl-options
+              (let [{:keys [keystore-path keystore-password ssl-protocol cipher-suites]} ssl-options
                     keystore (KeyStore/getInstance "JKS")
-                    ssl-context (SSLContext/getInstance "SSL")
+                    ssl-context (SSLContext/getInstance (or ssl-protocol "SSL"))
                     keymanager (KeyManagerFactory/getInstance (KeyManagerFactory/getDefaultAlgorithm))
                     trustmanager (TrustManagerFactory/getInstance (TrustManagerFactory/getDefaultAlgorithm))
                     password (char-array keystore-password)]
