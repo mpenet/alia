@@ -174,6 +174,7 @@
          'cluster-options.ssl-options)
 (s/def ::cluster-options.ssl-options/keystore-path string?)
 (s/def ::cluster-options.ssl-options/keystore-password string?)
+(s/def ::cluster-options.ssl-options/ssl-protocol string?)
 (s/def ::cluster-options.ssl-options/cipher-suites (s/coll-of string? :min-count 1))
 
 (s/def ::cluster-options/ssl-options
@@ -182,6 +183,7 @@
         (s/keys :opt-un
                 [::cluster-options.ssl-options/keystore-path
                  ::cluster-options.ssl-options/keystore-password
+                 ::cluster-options.ssl-options/ssl-protocol
                  ::cluster-options.ssl-options/cipher-suites])))
 
 (s/def ::cluster-options/timestamp-generator

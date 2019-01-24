@@ -168,7 +168,7 @@
 * `:ssl-options` : advanced SSL setup using a
   `com.datastax.driver.core.SSLOptions` instance or a map of
   `:keystore-path`, `:keystore-password` and optional
-  `:ssl-protcol`, `:cipher-suites`.  This provides a path/pwd to a
+  `:ssl-protocol`, `:cipher-suites`.  This provides a path/pwd to a
   [KeyStore](http://docs.oracle.com/javase/7/docs/api/java/security/KeyStore.html)
   that can ben generated
   with [keytool](http://docs.oracle.com/javase/7/docs/technotes/tools/solaris/keytool.html)
