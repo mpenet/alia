@@ -14,7 +14,7 @@
   :profiles {:dev
              {:plugins [[codox "0.10.3"]]
               :dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
-                             [cc.qbits/hayt "4.0.2"]
+                             [cc.qbits/hayt "4.1.0"]
                              [net.jpountz.lz4/lz4 "1.3.0"]
                              [clj-time "0.11.0"]
                              [manifold "0.1.8"]
