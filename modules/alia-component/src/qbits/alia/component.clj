@@ -104,10 +104,12 @@
     (let [clusters (reduce-kv #(assoc %1 %2 (alia/cluster %3)) {} configs)]
       (assoc this :clusters clusters :sessions (atom []))))
   (stop [this]
-    (doseq [^com.datastax.driver.core.Session session @sessions]
-      (.close session))
-    (doseq [[_ cluster] clusters]
-      (.close ^com.datastax.driver.core.Cluster cluster))
+    (when (some? sessions)
+      (doseq [^com.datastax.driver.core.Session session @sessions]
+        (.close session)))
+    (when (some? clusters)
+      (doseq [[_ cluster] clusters]
+        (.close ^com.datastax.driver.core.Cluster cluster)))
     (assoc this :clusters nil :sessions nil)))
 
 (defn cassandra-registry
