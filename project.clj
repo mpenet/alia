@@ -9,6 +9,7 @@
                  [cc.qbits/alia-manifold ~alia-version]
                  [cc.qbits/alia-async ~alia-version]
                  [cc.qbits/alia-joda-time ~alia-version]
+                 [cc.qbits/alia-java-time ~alia-version]
                  [cc.qbits/alia-spec ~alia-version]
                  [cc.qbits/alia-component ~alia-version]]
   :profiles {:dev
