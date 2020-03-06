@@ -13,7 +13,8 @@
    See `query-functions` for details on how to use it."
   (:require [com.stuartsierra.component :as component]
             [clojure.spec.alpha         :as s]
-            [qbits.alia                 :as alia]))
+            [qbits.alia                 :as alia]
+            qbits.alia.spec))
 
 (defn keyspace-session
   "Retrieve a `Session` instance set to use a specific keyspace.
