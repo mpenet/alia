@@ -1,9 +1,10 @@
 (ns qbits.alia.timestamp-generator
   (:import
-   (com.datastax.driver.core
-    AtomicMonotonicTimestampGenerator
+   [com.datastax.oss.driver.api.core.context DriverContext]
+   [com.datastax.oss.driver.internal.core.time
+    AtomicTimestampGenerator
     ServerSideTimestampGenerator
-    ThreadLocalMonotonicTimestampGenerator)))
+    ThreadLocalTimestampGenerator]))
 
 (defn atomic-monotonic
   "A timestamp generator based on System.currentTimeMillis(), with an
@@ -18,14 +19,14 @@
   increment anymore until the next clock tick. If you consistently
   exceed that rate, consider using
   ThreadLocalMonotonicTimestampGenerator."
-  []
-  (AtomicMonotonicTimestampGenerator.))
+  [^DriverContext driver-context]
+  (AtomicTimestampGenerator. driver-context))
 
 (defn server-side
   "A timestamp generator that always returns Long.MIN_VALUE, in order to let
   Cassandra assign server-side timestamps."
-  []
-  (ServerSideTimestampGenerator/INSTANCE))
+  [^DriverContext driver-context]
+  (ServerSideTimestampGenerator. driver-context))
 
 (defn thread-local
   "A timestamp generator based on System.currentTimeMillis(), with an
@@ -39,5 +40,5 @@
 
   If that rate is exceeded, a warning is logged and the timestamps don't
   increment anymore until the next clock tick."
-  []
-  (ThreadLocalMonotonicTimestampGenerator.))
+  [^DriverContext driver-context]
+  (ThreadLocalTimestampGenerator. driver-context))
