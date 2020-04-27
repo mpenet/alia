@@ -5,13 +5,8 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure ~clj-version]
-                 [cc.qbits/commons "0.5.1"]
-                 [com.datastax.cassandra/cassandra-driver-core "3.6.0"
-                  :classifier "shaded"
-                  :exclusions [io.netty/*]]
-                 [com.datastax.cassandra/dse-driver "1.1.2"
-                  :exclusions [com.datastax.cassandra/cassandra-driver-core]]
-                 [org.hdrhistogram/HdrHistogram "2.1.9"]]
+                 [cc.qbits/commons "0.5.2"]
+                 [com.datastax.oss/java-driver-core-shaded "4.5.1"]]
   :jar-exclusions [#"log4j.properties"]
   :codox {:source-uri "https://github.com/mpenet/alia/blob/master/{filepath}#L{line}"
           :metadata {:doc/format :markdown}
