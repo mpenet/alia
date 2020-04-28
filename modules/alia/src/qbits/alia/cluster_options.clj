@@ -87,23 +87,23 @@
     (when core-connections-per-host
       (doseq [[dist value] core-connections-per-host]
         (.setCoreConnectionsPerHost pooling-options
-                                    (enum/host-distance dist)
+                                    (enum/node-distance dist)
                                     (int value))))
     (when max-connections-per-host
       (doseq [[dist value] max-connections-per-host]
         (.setMaxConnectionsPerHost pooling-options
-                                   (enum/host-distance dist)
+                                   (enum/node-distance dist)
                                    (int value))))
     (when connection-thresholds
       (doseq [[dist value] connection-thresholds]
         (.setNewConnectionThreshold pooling-options
-                                    (enum/host-distance dist)
+                                    (enum/node-distance dist)
                                     (int value))))
 
     (when max-requests-per-connection
       (doseq [[dist value] max-requests-per-connection]
         (.setMaxRequestsPerConnection pooling-options
-                                    (enum/host-distance dist)
+                                    (enum/node-distance dist)
                                     (int value))))
 
     (when max-queue-size

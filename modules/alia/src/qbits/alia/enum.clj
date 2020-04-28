@@ -2,17 +2,16 @@
   (:require
    [qbits.commons.enum :as enum])
   (:import
-   (com.datastax.driver.core
-    BatchStatement$Type
-    ConsistencyLevel
-    HostDistance
-    ProtocolOptions$Compression
-    WriteType)
-   (java.util.concurrent TimeUnit)))
+   [com.datastax.oss.driver.api.core DefaultConsistencyLevel]
+   [com.datastax.oss.driver.api.core.loadbalancing NodeDistance]
+   [com.datastax.oss.driver.api.core.servererrors DefaultWriteType]
+   [com.datastax.oss.driver.api.core.cql DefaultBatchType]
+   [java.util.concurrent TimeUnit]))
 
-(def write-type (enum/enum->fn WriteType))
-(def consistency-level (enum/enum->fn ConsistencyLevel))
-(def host-distance (enum/enum->fn HostDistance))
-(def compression (enum/enum->fn ProtocolOptions$Compression))
-(def batch-statement-type (enum/enum->fn BatchStatement$Type))
+(def write-type (enum/enum->fn DefaultWriteType))
+(def consistency-level (enum/enum->fn DefaultConsistencyLevel))
+(def node-distance (enum/enum->fn NodeDistance))
+;; TODO remove? compression options not on SessionBuilder
+;; (def compression (enum/enum->fn ProtocolOptions$Compression))
+(def batch-type (enum/enum->fn DefaultBatchType))
 (def time-unit (enum/enum->fn TimeUnit))

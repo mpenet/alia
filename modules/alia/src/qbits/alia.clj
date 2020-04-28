@@ -213,7 +213,7 @@
   + `:max-requests-per-connection` Number
   + `:max-queue-size` Number
   + `:pool-timeout-millis` Number
-  + `:connection-thresholds` [[host-distance-kw value]+]
+  + `:connection-thresholds` [[node-distance-kw value]+]
 
 * `:socket-options`: a map of
     - `:connect-timeout` Number
@@ -415,7 +415,7 @@
   ([qs type]
    (batch qs :logged default-codec/codec))
   ([qs type codec]
-   (let [bs (BatchStatement. (enum/batch-statement-type type))]
+   (let [bs (BatchStatement. (enum/batch-type type))]
      (doseq [q qs]
        (.add bs (query->statement q nil codec)))
      bs)))

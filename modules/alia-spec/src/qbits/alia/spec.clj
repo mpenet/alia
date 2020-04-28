@@ -58,11 +58,11 @@
 
 ;; enums
 (letfn [(enum-key-set [enum] (-> enum ce/enum->map keys set))]
-  (s/def ::enum/host-distance (enum-key-set HostDistance))
+  (s/def ::enum/node-distance (enum-key-set HostDistance))
   (s/def ::enum/write-type (enum-key-set WriteType))
   (s/def ::enum/consistency-level (enum-key-set ConsistencyLevel))
   (s/def ::enum/compression (enum-key-set ProtocolOptions$Compression))
-  (s/def ::enum/batch-statement-type (enum-key-set BatchStatement$Type)))
+  (s/def ::enum/batch-type (enum-key-set BatchStatement$Type)))
 
 (s/def ::port (s/and nat-int? #(s/int-in-range? 1 65535 %)))
 
@@ -98,7 +98,7 @@
 ;; pooling opts
 
 (s/def ::cluster-options/pooling-option
-  (s/+ (s/tuple ::enum/host-distance pos-int?)))
+  (s/+ (s/tuple ::enum/node-distance pos-int?)))
 
 (ns-as 'qbits.alia.cluster-options.pooling-options
          'cluster-options.pooling-options)
@@ -346,7 +346,7 @@
 
 (s/fdef qbits.alia/batch
         :args (s/cat :statements (s/spec (s/+ ::alia/query))
-                     :type (s/? ::enum/batch-statement-type)
+                     :type (s/? ::enum/batch-type)
                      :codec (s/? ::alia.execute-opts/codec))
         :ret #(instance? BatchStatement %))
 
