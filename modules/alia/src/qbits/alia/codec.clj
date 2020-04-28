@@ -1,22 +1,20 @@
 (ns qbits.alia.codec
   (:import
-   (java.nio ByteBuffer)
-   (com.datastax.driver.core
-    DataType
-    DataType$Name
-    GettableByIndexData
+   [java.nio ByteBuffer]
+   [com.datastax.oss.driver.api.core.data
+    GettableByIndex
+    SettableByName
+    UdtValue
+    TupleValue]
+   [com.datastax.oss.driver.api.core.cql
     ResultSet
     Row
-    UserType$Field
-    Session
-    SettableByNameData
-    UDTValue
-    TupleType
-    TupleValue)
-   (java.util UUID List Map Set Date)
-   (java.net InetAddress)))
+    ColumnDefinitions]
+   [java.util UUID List Map Set]
+   [java.time Instant LocalDate LocalTime]
+   [java.net InetAddress]))
 
-(defn deserialize [^GettableByIndexData x idx decode]
+(defn deserialize [^GettableByIndex x idx decode]
   (decode (.getObject x idx)))
 
 (defprotocol PResultSet
@@ -53,7 +51,7 @@
 
 (defn decode-row
   [^Row row rg decode]
-  (let [cdef (.getColumnDefinitions row)
+  (let [^ColumnDefinitions cdef (.getColumnDefinitions row)
         len (.size cdef)]
     (loop [idx (int 0)
            r (init-row rg)]
@@ -61,7 +59,7 @@
         (finalize-row rg r)
         (recur (unchecked-inc-int idx)
                (conj-row rg r
-                         (.getName cdef idx)
+                         (.get cdef idx)
                          (deserialize row idx decode)))))))
 
 (defn ->result-set
@@ -69,9 +67,11 @@
   (let [row-generator (or row-generator row-gen->map)
         decode (:decoder codec)]
     (reify ResultSet
+
       PResultSet
       (execution-info [this]
-        (.getAllExecutionInfo rs))
+        (.getExecutionInfos rs))
+
       clojure.lang.Seqable
       (seq [this]
         (map #(decode-row % row-generator decode)
@@ -93,81 +93,96 @@
 
 (defprotocol PNamedBinding
   "Bind the val onto Settable by name"
-  (-set-named-parameter! [val settable name]))
+  (-set-named-parameter!
+    [val settable name]
+    [val settable name el-class]
+    [val settable name k-class v-class]))
 
 (defn set-named-parameter!
-  [^SettableByNameData settable name val]
-  (-set-named-parameter! val settable name))
+  ([^SettableByName settable name val]
+   (-set-named-parameter! val settable name))
+  ([^SettableByName settable name val el-class]
+   (-set-named-parameter! val settable name el-class))
+  ([^SettableByName settable name val k-class v-class]
+   (-set-named-parameter! val settable name k-class v-class)))
 
 (extend-protocol PNamedBinding
   Boolean
   (-set-named-parameter! [val settable name]
-    (.setBool ^SettableByNameData settable name val))
+    (.setBoolean ^SettableByName settable ^String name val))
 
   Integer
   (-set-named-parameter! [val settable name]
-    (.setInt ^SettableByNameData settable name val))
+    (.setInt ^SettableByName settable ^String name val))
 
   Long
   (-set-named-parameter! [val settable name]
-    (.setLong ^SettableByNameData settable name val))
+    (.setLong ^SettableByName settable ^String name val))
 
-  Date
+  Instant
   (-set-named-parameter! [val settable name]
-    (.setTimestamp ^SettableByNameData settable name val))
+    (.setInstant ^SettableByName settable ^String name val))
+
+  LocalDate
+  (-set-named-parameter! [val settable name]
+    (.setLocalDate ^SettableByName settable ^String name val))
+
+  LocalTime
+  (-set-named-parameter! [val settable name]
+    (.setLocalTime ^SettableByName settable ^String name val))
 
   Float
   (-set-named-parameter! [val settable name]
-    (.setFloat ^SettableByNameData settable name val))
+    (.setFloat ^SettableByName settable ^String name val))
 
   Double
   (-set-named-parameter! [val settable name]
-    (.setDouble ^SettableByNameData settable name val))
+    (.setDouble ^SettableByName settable ^String name val))
 
   String
   (-set-named-parameter! [val settable name]
-    (.setString ^SettableByNameData settable name val))
+    (.setString ^SettableByName settable ^String name val))
 
   ByteBuffer
   (-set-named-parameter! [val settable name]
-    (.setBytes ^SettableByNameData settable name val))
+    (.setByteBuffer ^SettableByName settable ^String name val))
 
   BigInteger
   (-set-named-parameter! [val settable name]
-    (.setVarint ^SettableByNameData settable name val))
+    (.setBigInteger ^SettableByName settable ^String name val))
 
   BigDecimal
   (-set-named-parameter! [val settable name]
-    (.setDecimal ^SettableByNameData settable name val))
+    (.setBigDecimal ^SettableByName settable ^String name val))
 
   UUID
   (-set-named-parameter! [val settable name]
-    (.setUUID ^SettableByNameData settable name val))
+    (.setUuid ^SettableByName settable ^String name val))
 
   InetAddress
   (-set-named-parameter! [val settable name]
-    (.setInet ^SettableByNameData settable name val))
+    (.setInetAddress ^SettableByName settable ^String name val))
 
   List
-  (-set-named-parameter! [val settable name]
-    (.setList ^SettableByNameData settable name val))
+  (-set-named-parameter! [val settable name el-class]
+    (.setList ^SettableByName settable ^String name val ^Class el-class))
 
   Map
-  (-set-named-parameter! [val settable name]
-    (.setMap ^SettableByNameData settable name val))
+  (-set-named-parameter! [val settable name k-class v-class]
+    (.setMap ^SettableByName settable ^String name val ^Class k-class ^Class v-class))
 
   Set
-  (-set-named-parameter! [val settable name]
-    (.setSet ^SettableByNameData settable name val))
+  (-set-named-parameter! [val settable name el-class]
+    (.setSet ^SettableByName settable ^String name val ^Class el-class))
 
-  UDTValue
+  UdtValue
   (-set-named-parameter! [val settable name]
-    (.setUDTValue ^SettableByNameData settable name val))
+    (.setUdtValue ^SettableByName settable ^String name val))
 
   TupleValue
   (-set-named-parameter! [val settable name]
-    (.setTupleValue ^SettableByNameData settable name val))
+    (.setTupleValue ^SettableByName settable ^String name val))
 
   nil
   (-set-named-parameter! [_ settable name]
-    (.setToNull ^SettableByNameData settable name)))
+    (.setToNull ^SettableByName settable ^String name)))
