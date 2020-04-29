@@ -2,21 +2,15 @@
   (:require
    [qbits.alia.codec :as codec])
   (:import
-   (java.nio ByteBuffer)
-   (com.datastax.driver.core
-    DataType
-    DataType$Name
-    GettableByIndexData
-    ResultSet
-    Row
-    UserType$Field
-    Session
-    SettableByNameData
-    UDTValue
-    TupleType
-    TupleValue)
-   (java.util UUID List Map Set Date)
-   (java.net InetAddress)))
+   [java.nio ByteBuffer]
+   [com.datastax.oss.driver.api.core
+    CqlIdentifier]
+   [com.datastax.oss.driver.api.core.type
+    UserDefinedType]
+   [com.datastax.oss.driver.api.core.data
+    UdtValue
+    TupleValue]
+   [java.util List Map Set]))
 
 (defprotocol Encoder
   (encode [x]
@@ -41,20 +35,19 @@
                 persistent!)
      :List #(into [] decode-xform %)
      :Set #(into #{} decode-xform %)
-     :UDTValue
-     #(let [^UDTValue udt-value %
-           udt-type (.getType udt-value)
-           udt-type-iter (.iterator udt-type)
-           len (.size udt-type)]
-       (loop [udt (transient {})
-              idx' 0]
-         (if (= idx' len)
-           (persistent! udt)
-           (let [^UserType$Field type (.next udt-type-iter)]
-             (recur (assoc! udt
-                            (-> type .getName keyword)
-                            (codec/deserialize udt-value idx' decode))
-                    (unchecked-inc-int idx'))))))
+     :UdtValue
+     #(let [^UdtValue udt-value %
+            ^UserDefinedType udt-type (.getType udt-value)
+            len (.size udt-value)
+            field-ids (.getFieldNames udt-type)]
+        (into
+         {}
+         (map (fn [i]
+                (let [^CqlIdentifier field-id (.get field-ids i)
+                      field-name (-> field-id .asInternal keyword)
+                      val (codec/deserialize udt-value i decode)]
+                  [field-name val])))
+         (range len)))
      :TupleValue
      #(let [^TupleValue tuple-value %
             len (.size (.getComponentTypes (.getType tuple-value)))]
@@ -86,7 +79,7 @@
 (extend Map Decoder {:decode (:Map default-decoders)})
 (extend List Decoder {:decode (:List default-decoders)})
 (extend Set Decoder {:decode (:Set default-decoders)})
-(extend UDTValue Decoder {:decode (:UDTValue default-decoders)})
+(extend UdtValue Decoder {:decode (:UdtValue default-decoders)})
 (extend TupleValue Decoder {:decode (:TupleValue default-decoders)})
 (extend Object Decoder {:decode (:Object default-decoders)})
 (extend nil Decoder {:decode (:nil default-decoders)})
