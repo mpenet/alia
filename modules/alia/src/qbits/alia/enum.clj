@@ -6,6 +6,7 @@
    [com.datastax.oss.driver.api.core.loadbalancing NodeDistance]
    [com.datastax.oss.driver.api.core.servererrors DefaultWriteType]
    [com.datastax.oss.driver.api.core.cql DefaultBatchType]
+   [com.datastax.oss.driver.api.core.config DefaultDriverOption]
    [java.util.concurrent TimeUnit]))
 
 (def write-type (enum/enum->fn DefaultWriteType))
@@ -15,3 +16,4 @@
 ;; (def compression (enum/enum->fn ProtocolOptions$Compression))
 (def batch-type (enum/enum->fn DefaultBatchType))
 (def time-unit (enum/enum->fn TimeUnit))
+(def driver-option (enum/enum->fn DefaultDriverOption))
