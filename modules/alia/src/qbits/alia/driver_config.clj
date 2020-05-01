@@ -5,7 +5,8 @@
    [com.datastax.oss.driver.api.core.config
     DriverOption
     DriverConfigLoader
-    ProgrammaticDriverConfigLoaderBuilder]))
+    ProgrammaticDriverConfigLoaderBuilder]
+   [java.util List Map]))
 
 (defn programmatic-driver-config-loader
   []
@@ -14,6 +15,14 @@
 (defprotocol IDriverConfigLoaderBuilder
   (-with-config [v builder driver-option]))
 
+(defn check-element-classes [cl coll]
+  (when-not (every? #(= cl (class %)) coll)
+    (throw (ex-info
+            "element-classes must all be the same"
+            {:coll coll}))))
+
+;; can't see a way to map .withBytes since the value
+;; is a Long, just like .withLong
 (extend-protocol IDriverConfigLoaderBuilder
   Boolean
   (-with-config [b
@@ -45,11 +54,33 @@
                  ^DriverOption driver-option]
     (.withString builder driver-option s))
 
+  Map
+  (-with-config [m
+                 ^ProgrammaticDriverConfigLoaderBuilder builder
+                 ^DriverOption driver-option]
+    (.withStringMap builder driver-option m))
+
   Class
   (-with-config [c
                  ^ProgrammaticDriverConfigLoaderBuilder builder
                  ^DriverOption driver-option]
-    (.withClass builder driver-option c)))
+    (.withClass builder driver-option c))
+
+  List
+  (-with-config [l
+                 ^ProgrammaticDriverConfigLoaderBuilder builder
+                 ^DriverOption driver-option]
+    (if (> (.size l) 0)
+      (let [cl (-> l (.get 0) class)
+            _ (check-element-classes cl l)]
+        (case cl
+          Boolean (.withBooleanList builder driver-option l)
+          Integer (.withIntList builder driver-option l)
+          Long (.withLongList builder driver-option l)
+          Double (.withDoubleList builder driver-option l)
+          String (.withStringList builder driver-option l)))
+
+      (.withStringList builder driver-option l))))
 
 (defn with-config
   [^ProgrammaticDriverConfigLoaderBuilder builder
