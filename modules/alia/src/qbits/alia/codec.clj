@@ -6,15 +6,19 @@
     SettableByName
     UdtValue
     TupleValue]
+   [com.datastax.oss.driver.api.core
+    CqlIdentifier]
    [com.datastax.oss.driver.api.core.cql
     ResultSet
     Row
-    ColumnDefinitions]
+    ColumnDefinitions
+    ColumnDefinition]
    [java.util UUID List Map Set]
    [java.time Instant LocalDate LocalTime]
    [java.net InetAddress]))
 
 (defn deserialize [^GettableByIndex x idx decode]
+  (prn x idx)
   (decode (.getObject x idx)))
 
 (defprotocol PResultSet
@@ -27,12 +31,48 @@
   (conj-row [this r k v] "Adds a entry/col to a row")
   (finalize-row [this r] "\"completes\" the row"))
 
-(def row-gen->map
-  "Row Generator that map instances"
+(defn create-row-gen->map-like
+  "create a row-generator for map-like things"
+  [{constructor :constructor
+    table-ns? :table-ns?}]
   (reify RowGenerator
     (init-row [_] (transient {}))
-    (conj-row [_ row k v] (assoc! row (keyword k) v))
-    (finalize-row [_ row] (persistent! row))))
+    (conj-row [_ row col-def v]
+      (if table-ns?
+        (let [^CqlIdentifier col-name (.getName ^ColumnDefinition col-def)
+              ^CqlIdentifier col-table (.getTable ^ColumnDefinition col-def)]
+          (assoc!
+           row
+           (keyword (.asInternal col-table) (.asInternal col-name))
+           v))
+        (let [^CqlIdentifier col-name (.getName ^ColumnDefinition col-def)]
+          (assoc!
+           row
+           (.asInternal col-name)
+           v))))
+    (finalize-row [_ row]
+      (if constructor
+        (constructor (persistent! row))
+        (persistent! row)))))
+
+(def row-gen->map
+  "Row Generator that returns map instances"
+  (create-row-gen->map-like {}))
+
+(def row-gen->ns-map
+  "row-generator creating maps with table-namespaced keys"
+  (create-row-gen->map-like {:table-ns? true}))
+
+(defn row-gen->record
+  "Row Generator that builds record instances"
+  [record-ctor]
+  (create-row-gen->map-like {:constructor record-ctor}))
+
+(defn row-gen->ns-record
+  "Row Generator that builds record instances with table-namspaced keys"
+  [record-ctor]
+  (create-row-gen->map-like {:constructor record-ctor
+                             :table-ns? true}))
 
 (def row-gen->vector
   "Row Generator that builds vector instances"
@@ -41,26 +81,19 @@
     (conj-row [_ row _ v] (conj! row v))
     (finalize-row [_ row] (persistent! row))))
 
-(defn row-gen->record
-  "Row Generator that builds record instances"
-  [record-ctor]
-  (reify RowGenerator
-    (init-row [_] (transient {}))
-    (conj-row [_ row k v] (assoc! row (keyword k) v))
-    (finalize-row [_ row] (-> row persistent! record-ctor))))
-
 (defn decode-row
   [^Row row rg decode]
-  (let [^ColumnDefinitions cdef (.getColumnDefinitions row)
-        len (.size cdef)]
+  (let [^ColumnDefinitions cdefs (.getColumnDefinitions row)
+        len (.size cdefs)]
     (loop [idx (int 0)
            r (init-row rg)]
       (if (= idx len)
         (finalize-row rg r)
         (recur (unchecked-inc-int idx)
-               (conj-row rg r
-                         (.get cdef idx)
-                         (deserialize row idx decode)))))))
+               (let [^ColumnDefinition cdef (.get cdefs idx)]
+                 (conj-row rg r
+                           cdef
+                           (deserialize row idx decode))))))))
 
 (defn ->result-set
   [^ResultSet rs row-generator codec]
