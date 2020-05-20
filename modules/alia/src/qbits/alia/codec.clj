@@ -10,6 +10,7 @@
     CqlIdentifier]
    [com.datastax.oss.driver.api.core.cql
     ResultSet
+    AsyncResultSet
     Row
     ColumnDefinitions
     ColumnDefinition]
@@ -23,6 +24,10 @@
 
 (defprotocol PResultSet
   (execution-info [this]))
+
+(defprotocol PAsyncResultSet
+  (current-page [this])
+  (fetch-next-page [this]))
 
 ;; Shamelessly inspired from https://github.com/ghadishayban/squee's
 ;; monoid'ish appoach
@@ -123,6 +128,28 @@
 (defn result-set
   [^ResultSet rs result-set-fn row-generator codec]
   ((or result-set-fn seq) (->result-set rs row-generator codec)))
+
+(defn async-result-set
+  [^AsyncResultSet rs
+   async-result-set-page-fn
+   row-generator
+   codec
+   next-page-handler]
+  (let [decode (:decoder codec)
+        page-rows (map
+                   #(decode-row % row-generator decode)
+                   (.currentPage rs))
+        page ((or async-result-set-page-fn seq) page-rows)]
+    (reify
+      PResultSet
+      (execution-info [this]
+        (.getExecutionInfo rs))
+
+      PAsyncResultSet
+      (current-page [this] page)
+      (fetch-next-page [this]
+        (next-page-handler
+         (.fetchNextPage rs))))))
 
 (defprotocol PNamedBinding
   "Bind the val onto Settable by name"
