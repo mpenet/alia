@@ -5,281 +5,42 @@
    [qbits.alia.udt :as udt]
    [qbits.alia.tuple :as tuple]
    [qbits.alia.enum :as enum]
-   [qbits.alia.cluster-options :as copt])
+;;   [qbits.alia.cluster-options :as copt]
+   [qbits.alia.cql-session :as cql-session])
   (:import
-   (com.datastax.driver.core
+   [com.datastax.oss.driver.api.core.session
+    Session
+    ]
+   [com.datastax.oss.driver.api.core
+    CqlSession]
+   [com.datastax.oss.driver.api.core.cql
+    Statement
+    PreparedStatement
     BatchStatement
     BoundStatement
-    Cluster
-    Cluster$Builder
-    GuavaCompatibility
-    LatencyTracker
-    PreparedStatement
-    Statement
-    ResultSet
-    ResultSetFuture
-    Session
+    BoundStatementBuilder
     SimpleStatement
-    RegularStatement
-    Statement)
-   (com.google.common.util.concurrent
-    Futures
-    FutureCallback
-    ListenableFuture)
-   (java.nio ByteBuffer)
-   (java.util Map)))
+    ]
+   ;; (com.datastax.driver.core
+   ;;  GuavaCompatibility
+   ;;  LatencyTracker
+   ;;  ResultSet
+   ;;  ResultSetFuture
+   ;; [com.google.common.util.concurrent
+   ;;  Futures
+   ;;  FutureCallback
+   ;;  ListenableFuture]
+   [java.util.concurrent Executor CompletionStage CompletableFuture]
+   [java.nio ByteBuffer]
+   [java.util Map]))
 
 (defn ^:no-doc get-executor
   [x]
-  (or x (-> GuavaCompatibility/INSTANCE .sameThreadExecutor)))
-
-(defn cluster
-  "Takes an option map and returns a new
-  com.datastax.driver.core/Cluster instance.
-
-  The following options are supported:
-
-* `:contact-points` : List of nodes ip addresses to connect to.
-
-* `:port` : port to connect to on the nodes (native transport must be
-  active on the nodes: `start_native_transport: true` in
-  cassandra.yaml). Defaults to 9042 if not supplied.
-
-* `:load-balancing-policy` : Configure the
-  [Load Balancing Policy](http://mpenet.github.io/alia/qbits.alia.policy.load-balancing.html)
-  to use for the new cluster.
-      * Can be a one of
-        - `LoadBalancingPolicy` instance
-        - `:default`
-        - `:round-robin`
-        - `:token-aware/round-robin`
-        - `:latency-aware/round-robin`
-      * or a map of
-        - `:type` : `:whitelist` or `:token-aware/whitelist`
-        - `:child` : Keyword or map (other load balancing policy configuration)
-        - `:whitelist : Seq of maps of `:hostname` String
-                                       `:port`    int
-                                    or `:ip`       String
-                                       `:port`     int
-                                    or `:port`     int
-      * or a map of
-        - `:type` : `:latency-aware/white-list`
-        - `:child` : Same as above
-        - `:whitelist : Same as above
-        - `:exclusion-threshold` : double
-        - `:min-measure` : int
-        - `:retry-period` : [long (time-unit Keyword)]
-        - `:scale` : [long (time-unit Keyword)]
-        - `:update-rate` : [long (time-unit Keyword)]
-      * or a map of
-        - `:type` : `:dc-aware-round-robin`, `:token-aware/dc-aware-round-robin`
-        - `:data-centre` : String
-        - `:used-hosts-per-remote-dc` : int
-      * or a map of
-        - `:type` : `:latency-aware/dc-aware-round-robin`
-        - `:data-centre` : String
-        - `:used-hosts-per-remote-dc` : int
-        - `:exclusion-threshold` : double
-        - `:min-measure` : int
-        - `:retry-period` : [long (time-unit Keyword)]
-        - `:scale` : [long (time-unit Keyword)]
-        - `:update-rate` : [long (time-unit Keyword)]
-
-* `:reconnection-policy` : Configure the
-  [Reconnection Policy](http://mpenet.github.io/alia/qbits.alia.policy.reconnection.html)
-  to use for the new cluster.
-      * Can be
-        - `ReconnectionPolicy`
-        - `:default`
-      * or a map of
-        - `:type`             `:constant`
-        - `:contant-delay-ms` long
-      * or a map of
-        - `:type`             `:exponential`
-        - `:base-delay-ms`    long
-        - `:max-delay-ms`     long
-
-* `:retry-policy` : Configure the
-  [Retry Policy](http://mpenet.github.io/alia/qbits.alia.policy.retry.html)
-  to use for the new cluster.
-      * Can be
-        - `RetryPolicy`,
-        - `:default`
-        - `:fallthrough`
-        - `:downgrading`
-        - `:logging/default`
-        - `:logging/fallthrough`
-        - `:logging/downgrading`
-
-* `:speculative-execution` The policy that decides if the driver will
-  send speculative queries to the next hosts when the current host
-  takes too long to respond. [Speculative Execution
-  Policy](http://mpenet.github.io/alia/qbits.alia.policy.speculative-execution.html)
-      * Can be
-        - `SpeculativeExecutionPolicy`
-        - `:default`
-        - `:none`
-      * or a map of
-        - `:type` : `:constant`
-        - `:constant-delay-millis` : long
-        - `:max-speculative-executions` : int
-      * or
-        - `:type` : `:cluster-wide-percentile-tracker` or `:per-host-percentile-tracker`
-        - `:percentile` : double
-        - `:max-executions : int
-        - `:interval` : [long (time-unit Keyword)]
-        - `:min-recorded-values` : int
-        - `:significant-value-digits` : int
-        - `:highest-trackable-latency-millis` : long
-
-* `:metrics?` : Toggles metrics collection for the created cluster
-  (metrics are enabled by default otherwise).
-
-* `:jmx-reporting?` : Toggles JMX reporting of the metrics.
-
-* `:credentials` : Takes a map of :user and :password for use with
-  Cassandra's PasswordAuthenticator
-
-* `:compression` : Compression supported by the Cassandra binary
-  protocol. Can be `:none`, `:snappy` or `:lz4`.
-
-* `:cluster-name` : Optional name for create cluster
-
-* `max-schema-aggreement-wait-seconds` Sets the maximum time to wait
-  for schema agreement before returning from a DDL query.
-
-* `:netty-options`: (advanced) see
-  http://docs.datastax.com/en/drivers/java/2.1/com/datastax/driver/core/NettyOptions.html
-
-* `:address-translator`: Configures the address translator to use for
-  the new cluster. Expects
-  a [AddressTranslator](http://mpenet.github.io/alia/qbits.alia.policy.address-translator.html)
-  or you can pass :ec2-multi-region or :identity which would translate in the
-  underlying implementations.
-
-* `:timestamp-generator`: Configures the timestamp generator to use
-  with the new cluster. Expects
-  a [timestamp-generator](http://mpenet.github.io/alia/qbits.alia.timestamp-generator.html)
-  instance, or `:atomic-monotonic` , `:server-side` or `:thread-local`
-  which would translate in the underlying implementations.
-
-* `:ssl?`: enables/disables SSL
-
-* `:ssl-options` : advanced SSL setup using a
-  `com.datastax.driver.core.SSLOptions` instance or a map of
-  `:keystore-path`, `:keystore-password` and optional
-  `:ssl-protocol`, `:cipher-suites`.  This provides a path/pwd to a
-  [KeyStore](http://docs.oracle.com/javase/7/docs/api/java/security/KeyStore.html)
-  that can ben generated
-  with [keytool](http://docs.oracle.com/javase/7/docs/technotes/tools/solaris/keytool.html)
-  Overriding default ssl protocol is supported via `:ssl-protocol`,
-  which accepts a string like - TLSv1.2
-  Overriding default cipher suites is supported via `:cipher-suites`,
-  which accepts a sequence of Strings.
-
-* `:kerberos?` : activate Kerberos via DseAuthProvider, see
-  http://www.datastax.com/dev/blog/accessing-secure-dse-clusters-with-cql-native-protocol
-
-* `:pooling-options` : The pooling options used by this builder.
-  Options related to connection pooling.
-
-  The driver uses connections in an asynchronous way. Meaning that
-  multiple requests can be submitted on the same connection at the
-  same time. This means that the driver only needs to maintain a
-  relatively small number of connections to each Cassandra host. These
-  options allow to control how many connections are kept exactly.
-
-  For each host, the driver keeps a core amount of connections open at
-  all time. If the utilisation of those connections reaches a
-  configurable threshold ,more connections are created up to a
-  configurable maximum number of connections.
-
-  Once more than core connections have been created, connections in
-  excess are reclaimed if the utilisation of opened connections drops
-  below the configured threshold.
-
-  Each of these parameters can be separately set for `:local` and `:remote`
-  hosts (HostDistance). For `:ignored` hosts, the default for all those
-  settings is 0 and cannot be changed.
-
-  Each of the following configuration keys, take a map of {distance value}  :
-  ex:
-  ```clojure
-  :core-connections-per-host {:remote 10 :local 100}
-  ```
-
-  + `:core-connections-per-host` Number
-  + `:max-connections-per-host` Number
-  + `:max-requests-per-connection` Number
-  + `:max-queue-size` Number
-  + `:pool-timeout-millis` Number
-  + `:connection-thresholds` [[node-distance-kw value]+]
-
-* `:socket-options`: a map of
-    - `:connect-timeout` Number
-    - `:read-timeout` Number
-    - `:receive-buffer-size` Number
-    - `:send-buffer-size` Number
-    - `:so-linger` Number
-    - `:tcp-no-delay?` Bool
-    - `:reuse-address?` Bool
-    - `:keep-alive?` Bool
-
-* `:query-options`: a map of
-    - `:fetch-size` Number
-    - `:consistency` (consistency Keyword)
-    - `:serial-consistency` (consistency Keyword)
-
-* `:jmx-reporting?` Bool, enables/disables JMX reporting of the metrics.
-
-
-  The handling of these options is achieved with a multimethod that you
-  could extend if you need to handle some special case or want to create
-  your own options templates.
-  See `qbits.alia.cluster-options/set-cluster-option!` [source](../src/qbits/alia/cluster_options.clj#L19)
-
-  The handling of the individual policy options is achieved with a multimethod
-  in each of the policy namespaces that you could extend if you need to handle
-  some special case or want to create your own policy options template.
-  See - `qbits.alia.policy.load-balancing/make`
-      - `qbits.alia.policy.reconnection/make`
-      - `qbits.alia.policy.retry/make`
-      - `qbits.alia.policy.speculative-execution/make`
-
-  Values for consistency:
-
-:all :any :each-quorum :local-one :local-quorum :local-serial :one :quorum
-:serial :three :two
-
-  Values for time-unit:
-
-:days :hours :microseconds :milliseconds :minutes :nanoseconds :seconds
-  "
-  ([options]
-   (-> (Cluster/builder)
-       (copt/set-cluster-options! (merge {:contact-points ["localhost"]}
-                                         options))
-       .build))
-  ([] (cluster {})))
-
-(defn ^Session connect
-  "Returns a new com.datastax.driver.core/Session instance. We need to
-  have this separate in order to allow users to connect to multiple
-  keyspaces from a single cluster instance"
-  ([^Cluster cluster keyspace]
-   (.connect cluster (name keyspace)))
-  ([^Cluster cluster]
-   (.connect cluster)))
-
-(defn shutdown
-  "Shutdowns Session or Cluster instance, clearing the underlying
-  pools/connections"
-  [x]
-  (cond
-    (instance? Session x)
-    (.closeAsync ^Session x)
-    (instance? Cluster x)
-    (.closeAsync ^Cluster x)))
+  (or x
+      (reify
+        Executor
+        (execute [_ runnable]
+          (.run runnable)))))
 
 (defn ^:no-doc ex->ex-info
   ([^Exception ex data msg]
@@ -306,12 +67,14 @@
   ([^PreparedStatement statement values {:keys [encoder]}]
    (try
      (if (map? values)
-       (let [bound (.bind statement)]
+       (let [^BoundStatementBuilder builder (.boundStatementBuilder
+                                             statement
+                                             (to-array []))]
          (doseq [[k x] values]
-           (codec/set-named-parameter! bound
+           (codec/set-named-parameter! builder
                                        (name k)
                                        (encoder x)))
-         bound)
+         (.build builder))
        (.bind statement (to-array (map encoder values))))
      (catch Exception ex
        (throw (ex->ex-info ex {:query statement
@@ -336,17 +99,18 @@
     (let [encode (:encoder codec)]
       (cond
         (nil? values)
-        (SimpleStatement. q)
+        (SimpleStatement/newInstance q)
 
         (map? values)
-        (SimpleStatement. q
-                          ^Map (reduce-kv (fn [m k v]
-                                            (assoc m (name k) (encode v)))
-                                          {}
-                                          values))
+        (SimpleStatement/newInstance
+         q
+         ^Map (reduce-kv (fn [m k v]
+                           (assoc m (name k) (encode v)))
+                         {}
+                         values))
 
-        :default
-        (SimpleStatement. q (to-array (map encode values))))))
+        :else
+        (SimpleStatement/newInstance q (to-array (map encode values))))))
 
   BatchStatement
   (query->statement [bs values _]
@@ -363,10 +127,10 @@
   `execute` after it's been bound with `bind`. Hayt query parameter
   will be compiled with qbits.hayt/->raw internaly
   ex: (prepare session (select :foo (where {:bar ?})))"
-  [^Session session query]
-  (let [q (query->statement query nil nil)]
+  [^CqlSession session query]
+  (let [^SimpleStatement q (query->statement query nil nil)]
     (try
-      (.prepare session ^RegularStatement q)
+      (.prepare session q)
       (catch Exception ex
         (throw (ex->ex-info ex
                             {:type ::prepare-error
@@ -379,27 +143,25 @@
    successful the success callback will receive the
    com.datastax.driver.core.PreparedStatement instance, otherwise
    the error callback will receive an Exception"
-  [^Session session query {:keys [executor success error]}]
-  (let [q (query->statement query nil nil)]
+  [^CqlSession session query {:keys [executor success error]}]
+  (let [^SimpleStatement q (query->statement query nil nil)]
     (try
-      (let [^ListenableFuture ps-future (.prepareAsync session ^RegularStatement q)]
-        (Futures/addCallback
-         ps-future
-         (reify FutureCallback
-           (onSuccess [_ result]
+      (let [^CompletionStage prep-stage (.prepareAsync session q)]
+        (.handleAsync
+         prep-stage
+         (fn [result ex]
+           (if (some? ex)
+             (when error
+               (error (ex->ex-info ex {:type ::prepare-error
+                                       :query q})))
              (when success
                (try
                  (success result)
                  (catch Exception err
                    (when error
                      (error (ex->ex-info err {:type ::prepare-error
-                                              :query q})))))))
-           (onFailure [_ ex]
-             (when error
-               (error (ex->ex-info ex {:type ::prepare-error
-                                       :query q})))))
-         (get-executor executor))
-        ps-future)
+                                              :query q}))))))))
+         (get-executor executor)))
       (catch Exception ex
         (throw (ex->ex-info ex
                             {:type ::prepare-error
@@ -413,39 +175,53 @@
   optional third argument, codec instance (see `execute`)"
   ([qs] (batch qs :logged))
   ([qs type]
-   (batch qs :logged default-codec/codec))
+   (batch qs type default-codec/codec))
   ([qs type codec]
-   (let [bs (BatchStatement. (enum/batch-type type))]
+   (let [bs (BatchStatement/newInstance (enum/batch-type type))]
      (doseq [q qs]
        (.add bs (query->statement q nil codec)))
      bs)))
 
+(defmacro when-opt
+  [opts k form]
+  `(let [opt# (get ~opts ~(keyword k))]
+     (when (some? opt#)
+       (let [~(symbol k) opt#]
+         ~form))))
+
 (defn ^:no-doc set-statement-options!
-  [^Statement statement routing-key retry-policy tracing? idempotent?
-   consistency serial-consistency fetch-size timestamp paging-state
-   read-timeout]
-  (when routing-key
-    (.setRoutingKey ^SimpleStatement statement
-                    ^ByteBuffer routing-key))
-  (when retry-policy
-    (.setRetryPolicy statement retry-policy))
-  (when tracing?
-    (.enableTracing statement))
-  (when idempotent?
-    (.setIdempotent statement idempotent?))
-  (when fetch-size
-    (.setFetchSize statement fetch-size))
-  (when timestamp
-    (.setDefaultTimestamp statement timestamp))
-  (when paging-state
-    (.setPagingState statement paging-state))
-  (when serial-consistency
-    (.setSerialConsistencyLevel statement
-                                (enum/consistency-level serial-consistency)))
+  [^Statement statement
+   {:keys [consistency execution-profile idempotent? page-size paging-state
+           routing-key tracing?
+           serial-consistency timestamp
+           timeout]
+    :as opts}]
+
   (when consistency
     (.setConsistencyLevel statement (enum/consistency-level consistency)))
-  (when read-timeout
-    (.setReadTimeoutMillis statement read-timeout)))
+  (when-opt opts execution-profile-name
+    (.setExecutionProfileName statement execution-profile))
+  (when-opt opts idempotent?
+    (.setIdempotent statement idempotent?))
+  (when-opt opts page-size
+   (.setPageSize statement page-size))
+  (when paging-state
+    (.setPagingState statement paging-state))
+  (when timestamp
+    (.setQueryTimestamp statement timestamp))
+  (when-opt opts routing-key
+    (.setRoutingKey ^SimpleStatement statement
+                    ^ByteBuffer routing-key))
+  (when-opt opts routing-keyspace
+    (.setRoutingKeyspace ^SimpleStatement statement
+                         ^String routing-keyspace))
+  (when-opt opts serial-consistency
+    (.setSerialConsistencyLevel statement
+                                (enum/consistency-level serial-consistency)))
+  (when-opt opts timeout
+    (.setTimeout statement timeout))
+  (when-opt opts tracing?
+    (.setTracing statement tracing?)))
 
 (defn execute
   "Executes a query against a session.
@@ -492,12 +268,12 @@
 
 :all :any :each-quorum :local-one :local-quorum :local-serial :one :quorum
 :serial :three :two"
-  ([^Session session query {:keys [consistency serial-consistency
-                                   routing-key retry-policy
-                                   result-set-fn row-generator
-                                   tracing? idempotent? paging-state
-                                   fetch-size values timestamp
-                                   read-timeout codec]}]
+  ([^CqlSession session query {:keys [consistency serial-consistency
+                                      routing-key retry-policy
+                                      result-set-fn row-generator
+                                      tracing? idempotent? paging-state
+                                      fetch-size values timestamp
+                                      read-timeout codec]}]
    (let [codec (or codec default-codec/codec)
          ^Statement statement (query->statement query values codec)]
      (set-statement-options! statement routing-key retry-policy
@@ -515,17 +291,40 @@
   ([^Session session query]
    (execute session query {})))
 
+(defn handle-async-result-set-completion-stage
+  [^CompletionStage completion-stage
+   {next-page-handler :next-page-handler
+    async-result-set-page-fn :async-result-set-page-fn
+    row-generator :row-generator
+    codec :codec
+    statement :statement
+    values :values}]
+  (.handle
+   completion-stage
+   (fn [async-result-set ex]
+     (if (some? ex)
+       (throw
+        (ex->ex-info ex {:query statement :values values}))
+
+       (codec/async-result-set
+        async-result-set
+        async-result-set-page-fn
+        next-page-handler
+        row-generator
+        codec)))))
+
 (defn execute-async
   "Same execute but async and takes optional :success and :error
   callback functions via options. For options refer to
   `qbits.alia/execute` doc"
-  ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy
-                                   result-set-fn row-generator codec
-                                   tracing? idempotent?
-                                   fetch-size values timestamp
-                                   paging-state read-timeout
-                                   success error]}]
+  ([^CqlSession session query {:keys [executor consistency serial-consistency
+                                      routing-key retry-policy
+                                      async-result-set-page-fn
+                                      row-generator codec
+                                      tracing? idempotent?
+                                      fetch-size values timestamp
+                                      paging-state read-timeout]
+                               :as opts}]
    (try
      (let [codec (or codec default-codec/codec)
            ^Statement statement (query->statement query values codec)]
@@ -533,27 +332,20 @@
                                tracing? idempotent?
                                consistency serial-consistency fetch-size
                                timestamp paging-state read-timeout)
-       (let [^ResultSetFuture rs-future (.executeAsync session statement)]
-         (Futures/addCallback
-          rs-future
-          (reify FutureCallback
-            (onSuccess [_ result]
-              (when success
-                (try
-                  (success (codec/result-set (.get rs-future)
-                                             result-set-fn
-                                             row-generator
-                                             codec))
-                  (catch Exception err
-                    (error (ex->ex-info err {:query statement :values values}))))))
-            (onFailure [_ ex]
-              (when error
-                (error (ex->ex-info ex {:query statement :values values})))))
-          (get-executor executor))
-         rs-future))
-     (catch Exception e
-       (error e))))
-  ([^Session session query]
+
+       (let [handler (fn arscs-handler
+                       [completion-stage]
+                       (handle-async-result-set-completion-stage
+                        completion-stage
+                        (assoc opts
+                               :statement statement
+                               :next-page-handler arscs-handler)))
+             ^CompletionStage async-result-set-cs (.executeAsync session statement)]
+         (handler async-result-set-cs)))
+     (catch Exception ex
+       (CompletableFuture/completedFuture
+        (ex->ex-info ex {:query query :values values})))))
+  ([^CqlSession session query]
    (execute-async session query {})))
 
 (defn ^:no-doc lazy-query-
@@ -582,16 +374,6 @@
    (lazy-query- session query pred [] opts))
   ([session query pred]
    (lazy-query session query pred {})))
-
-(defn register!
-  "Register querylogger/latency tracker to cluster"
-  [^Cluster cluster ^LatencyTracker latency-tracker]
-  (.register cluster latency-tracker))
-
-(defn unregister!
-  "Unregister querylogger/latency tracker from cluster"
-  [^Cluster cluster ^LatencyTracker latency-tracker]
-  (.unregister cluster latency-tracker))
 
 (defn udt-encoder
   ([session type]
