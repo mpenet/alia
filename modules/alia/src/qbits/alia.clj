@@ -32,7 +32,8 @@
    ;;  ListenableFuture]
    [java.util.concurrent Executor CompletionStage CompletableFuture]
    [java.nio ByteBuffer]
-   [java.util Map]))
+   [java.util Map]
+   [java.util.function BiFunction]))
 
 (defn ^:no-doc get-executor
   [x]
@@ -182,45 +183,54 @@
        (.add bs (query->statement q nil codec)))
      bs)))
 
-(defmacro when-opt
-  [opts k form]
-  `(let [opt# (get ~opts ~(keyword k))]
-     (when (some? opt#)
-       (let [~(symbol k) opt#]
-         ~form))))
-
 (defn ^:no-doc set-statement-options!
   [^Statement statement
-   {:keys [consistency execution-profile idempotent? page-size paging-state
-           routing-key tracing?
-           serial-consistency timestamp
-           timeout]
-    :as opts}]
+   {:keys [consistency-level
+           execution-profile
+           execution-profile-name
+           idempotent?
+           node
+           page-size
+           paging-state
+           query-timestamp
+           routing-key
+           routing-keyspace
+           routing-token
+           serial-consistency-level
+           timeout
+           tracing?]}]
 
-  (when consistency
-    (.setConsistencyLevel statement (enum/consistency-level consistency)))
-  (when-opt opts execution-profile-name
-    (.setExecutionProfileName statement execution-profile))
-  (when-opt opts idempotent?
+  (when (some? consistency-level)
+    (.setConsistencyLevel statement (enum/consistency-level consistency-level)))
+  (when (some? execution-profile)
+    (.setExecutionProfile statement execution-profile))
+  (when (some? execution-profile-name)
+    (.setExecutionProfileName statement execution-profile-name))
+  (when (some? idempotent?)
     (.setIdempotent statement idempotent?))
-  (when-opt opts page-size
+  (when (some? node)
+    (.setNode statement node))
+  (when (some? page-size)
    (.setPageSize statement page-size))
-  (when paging-state
+  (when (some? paging-state)
     (.setPagingState statement paging-state))
-  (when timestamp
-    (.setQueryTimestamp statement timestamp))
-  (when-opt opts routing-key
+  (when (some? query-timestamp)
+    (.setQueryTimestamp statement query-timestamp))
+  (when (some? routing-key)
     (.setRoutingKey ^SimpleStatement statement
                     ^ByteBuffer routing-key))
-  (when-opt opts routing-keyspace
+  (when (some? routing-keyspace)
     (.setRoutingKeyspace ^SimpleStatement statement
                          ^String routing-keyspace))
-  (when-opt opts serial-consistency
-    (.setSerialConsistencyLevel statement
-                                (enum/consistency-level serial-consistency)))
-  (when-opt opts timeout
+  (when (some? routing-token)
+    (.setRoutingToken statement routing-token))
+  (when (some? serial-consistency-level)
+    (.setSerialConsistencyLevel
+     statement
+     (enum/consistency-level serial-consistency-level)))
+  (when (some? timeout)
     (.setTimeout statement timeout))
-  (when-opt opts tracing?
+  (when (some? tracing?)
     (.setTracing statement tracing?)))
 
 (defn execute
@@ -234,13 +244,14 @@
   The following options are supported:
 
 * `:values` : values to be bound to a prepared query
-* `:consistency` : Keyword, consistency
-* `:serial-consistency` : Keyword, consistency
+  * `:consistency-level` : Keyword, consistency
+  * `:serial-consistency-level` : Keyword, consistency
 * `:routing-key` : ByteBuffer
-* `:retry-policy` : one of qbits.alia.policy.retry/*
+  * `:routing-keyspace` : ByteBuffer
+  * `:routing-token` : ByteBuffer
 * `:tracing?` : Bool, toggles query tracing (available via query result metadata)
-* `:fetch-size` : Number, sets query fetching size
-* `:timestamp` : Number, sets the timestamp for query (if not specified in CQL)
+  * `:page-size` : Number, sets query fetching size
+  * `:query-timestamp` : Number, sets the timestamp for query (if not specified in CQL)
 * `:idempotent?` : Whether this statement is idempotent, i.e. whether
   it can be applied multiple times without changing the result beyond
   the initial application
@@ -262,25 +273,22 @@
 * `:codec` : map of `:encoder` `:decoder` functions that control how to
   apply extra modifications on data sent/received (defaults to
   `qbits.alia.codec/default`).
-* `:read-timeout` : Read timeout in milliseconds
+* `:timeout` : Read timeout in milliseconds
 
   Possible values for consistency:
 
 :all :any :each-quorum :local-one :local-quorum :local-serial :one :quorum
 :serial :three :two"
-  ([^CqlSession session query {:keys [consistency serial-consistency
-                                      routing-key retry-policy
-                                      result-set-fn row-generator
-                                      tracing? idempotent? paging-state
-                                      fetch-size values timestamp
-                                      read-timeout codec]}]
+  ([^CqlSession session query {:keys [values
+                                      codec
+                                      result-set-fn
+                                      row-generator]
+                               :as opts}]
    (let [codec (or codec default-codec/codec)
          ^Statement statement (query->statement query values codec)]
-     (set-statement-options! statement routing-key retry-policy
-                             tracing? idempotent?
-                             consistency serial-consistency fetch-size
-                             timestamp paging-state read-timeout)
+     (set-statement-options! statement opts)
      (try
+
        (codec/result-set (.execute session statement)
                          result-set-fn
                          row-generator
@@ -292,52 +300,48 @@
    (execute session query {})))
 
 (defn handle-async-result-set-completion-stage
+  "if successful, applies the row-generator to the current page
+   if failed, decorates the exception with query and value details"
   [^CompletionStage completion-stage
-   {next-page-handler :next-page-handler
-    async-result-set-page-fn :async-result-set-page-fn
-    row-generator :row-generator
-    codec :codec
-    statement :statement
-    values :values}]
-  (.handle
-   completion-stage
-   (fn [async-result-set ex]
-     (if (some? ex)
-       (throw
-        (ex->ex-info ex {:query statement :values values}))
+   {:keys [next-page-handler
+           row-generator
+           codec
+           statement
+           values]}]
+  (let [handler-bifn (reify BiFunction
+                       (apply [_ async-result-set ex]
+                         (if (some? ex)
+                           (throw
+                            (ex->ex-info ex {:query statement :values values}))
 
-       (codec/async-result-set
-        async-result-set
-        async-result-set-page-fn
-        next-page-handler
-        row-generator
-        codec)))))
+                           (codec/async-result-set
+                            async-result-set
+                            row-generator
+                            codec
+                            next-page-handler))))]
+
+    (.handle
+     completion-stage
+     handler-bifn)))
 
 (defn execute-async
   "Same execute but async and takes optional :success and :error
   callback functions via options. For options refer to
   `qbits.alia/execute` doc"
-  ([^CqlSession session query {:keys [executor consistency serial-consistency
-                                      routing-key retry-policy
-                                      async-result-set-page-fn
-                                      row-generator codec
-                                      tracing? idempotent?
-                                      fetch-size values timestamp
-                                      paging-state read-timeout]
+  ([^CqlSession session query {:keys [values
+                                      codec]
                                :as opts}]
    (try
      (let [codec (or codec default-codec/codec)
            ^Statement statement (query->statement query values codec)]
-       (set-statement-options! statement routing-key retry-policy
-                               tracing? idempotent?
-                               consistency serial-consistency fetch-size
-                               timestamp paging-state read-timeout)
+       (set-statement-options! statement opts)
 
        (let [handler (fn arscs-handler
                        [completion-stage]
                        (handle-async-result-set-completion-stage
                         completion-stage
                         (assoc opts
+                               :codec codec
                                :statement statement
                                :next-page-handler arscs-handler)))
              ^CompletionStage async-result-set-cs (.executeAsync session statement)]

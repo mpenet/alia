@@ -19,7 +19,6 @@
    [java.net InetAddress]))
 
 (defn deserialize [^GettableByIndex x idx decode]
-  (prn x idx)
   (decode (.getObject x idx)))
 
 (defprotocol PResultSet
@@ -129,27 +128,34 @@
   [^ResultSet rs result-set-fn row-generator codec]
   ((or result-set-fn seq) (->result-set rs row-generator codec)))
 
+(defrecord AliaAsyncResultSet [current-page
+                               ^AsyncResultSet async-result-set
+                               next-page-handler]
+  PResultSet
+  (execution-info [_]
+    (.getExecutionInfo async-result-set))
+  PAsyncResultSet
+  (current-page [this]
+    (:current-page this))
+  (fetch-next-page [_]
+    (next-page-handler
+     (.fetchNextPage async-result-set))))
+
 (defn async-result-set
   [^AsyncResultSet rs
-   async-result-set-page-fn
    row-generator
    codec
    next-page-handler]
   (let [decode (:decoder codec)
+        current-page (.currentPage rs)
         page-rows (map
                    #(decode-row % row-generator decode)
-                   (.currentPage rs))
-        page ((or async-result-set-page-fn seq) page-rows)]
-    (reify
-      PResultSet
-      (execution-info [this]
-        (.getExecutionInfo rs))
+                   current-page)]
 
-      PAsyncResultSet
-      (current-page [this] page)
-      (fetch-next-page [this]
-        (next-page-handler
-         (.fetchNextPage rs))))))
+    (map->AliaAsyncResultSet
+     {:current-page page-rows
+      :async-result-set rs
+      :next-page-handler next-page-handler})))
 
 (defprotocol PNamedBinding
   "Bind the val onto Settable by name"
