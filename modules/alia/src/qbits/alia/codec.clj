@@ -150,12 +150,14 @@
         current-page (.currentPage rs)
         page-rows (map
                    #(decode-row % row-generator decode)
-                   current-page)]
+                   current-page)
+        has-more-pages? (.hasMorePages rs)]
 
     (map->AliaAsyncResultSet
      {:current-page page-rows
       :async-result-set rs
-      :next-page-handler next-page-handler})))
+      :next-page-handler (when has-more-pages?
+                           next-page-handler)})))
 
 (defprotocol PNamedBinding
   "Bind the val onto Settable by name"
