@@ -148,7 +148,8 @@
    row-generator
    codec
    next-page-handler]
-  (let [decode (:decoder codec)
+  (let [row-generator (or row-generator row-gen->map)
+        decode (:decoder codec)
         current-page (.currentPage rs)
         page-rows (map
                    #(decode-row % row-generator decode)
