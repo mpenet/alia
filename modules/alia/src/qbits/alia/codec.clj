@@ -24,7 +24,7 @@
 (defprotocol PResultSet
   (execution-info [this]))
 
-(defprotocol PAsyncResultSet
+(defprotocol PAsyncResultSetPage
   (current-page [this])
   (fetch-next-page [this]))
 
@@ -128,18 +128,20 @@
   [^ResultSet rs result-set-fn row-generator codec]
   ((or result-set-fn seq) (->result-set rs row-generator codec)))
 
-(defrecord AliaAsyncResultSet [current-page
-                               ^AsyncResultSet async-result-set
-                               next-page-handler]
+(defrecord AliaAsyncResultSetPage [current-page
+                                   ^AsyncResultSet async-result-set
+                                   next-page-handler]
   PResultSet
-  (execution-info [_]
+  (execution-info [this]
     (.getExecutionInfo async-result-set))
-  PAsyncResultSet
+
+  PAsyncResultSetPage
   (current-page [this]
     (:current-page this))
-  (fetch-next-page [_]
-    (next-page-handler
-     (.fetchNextPage async-result-set))))
+  (fetch-next-page [this]
+    (when next-page-handler
+      (next-page-handler
+       (.fetchNextPage async-result-set)))))
 
 (defn async-result-set
   [^AsyncResultSet rs
@@ -153,7 +155,7 @@
                    current-page)
         has-more-pages? (.hasMorePages rs)]
 
-    (map->AliaAsyncResultSet
+    (map->AliaAsyncResultSetPage
      {:current-page page-rows
       :async-result-set rs
       :next-page-handler (when has-more-pages?
