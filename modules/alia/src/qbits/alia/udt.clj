@@ -1,4 +1,6 @@
 (ns qbits.alia.udt
+  (:require
+   [qbits.alia.metadata :as md])
   (:import
    [com.datastax.oss.driver.api.core.session Session]
    [com.datastax.oss.driver.api.core.type UserDefinedType]
@@ -119,16 +121,7 @@
   ([^Session session type codec]
    (encoder session (.getKeyspace session) type codec))
   ([^Session session ks type codec]
-   (let [^KeyspaceMetadata ks-metadata
-         (some-> session
-                 .getMetadata
-                 (.getKeyspace (name (or ks (.getKeyspace session))))
-                 (.get))
-
-         ^UserDefinedType t
-         (some-> ks-metadata
-                 (.getUserDefinedType (name type))
-                 (.get))
+   (let [^UserDefinedType t (md/get-udt-metadata session ks type)
 
          encode
          (:encoder codec)]

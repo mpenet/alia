@@ -1,8 +1,12 @@
 (ns qbits.alia.tuple
+  (:require
+   [qbits.alia.metadata :as md])
   (:import
+   [com.datastax.oss.driver.api.core CqlIdentifier]
    [com.datastax.oss.driver.api.core.session Session]
    [com.datastax.oss.driver.api.core.type DataType TupleType]
    [com.datastax.oss.driver.api.core.data TupleValue UdtValue]
+   [com.datastax.oss.driver.api.core.metadata Metadata]
    [com.datastax.oss.driver.api.core.metadata.schema
     KeyspaceMetadata
     TableMetadata
@@ -118,45 +122,30 @@
   name and returns a function that can be used to encode a collection into
   a TupleValue suitable to be used in PreparedStatements
 
-  TODO broken for collection values - java-driver-4 changed the API"
+  TODO broken for collection components - java-driver-4 changed the API"
   ([^Session session table column codec]
-   (encoder session (.getKeyspace session) table column codec))
+   (encoder session nil table column codec))
   ([^Session session ks table column codec]
-   (let [^KeyspaceMetadata ks-metadata
-         (some-> session
-                 .getMetadata
-                 (.getKeyspace (name (or ks (.getKeyspace session))))
-                 (.get))
+   (let [^DataType dt (md/get-column-type session ks table column)
 
-         ^TableMetadata table-metadata
-         (some-> ks-metadata
-                 (.getTable (name table))
-                 (.get))
+         ^TupleType tuple-type (when (instance? TupleType dt)
+                                 dt)]
 
-         ^ColumnMetadata column-metadata
-         (some-> table-metadata
-                 (.getColumn (name column))
-                 (.get))
-
-
-         ^DataType dt
-         (some-> column-metadata
-                 (.getType))
-
-         ^TupleType t (when (instance? TupleType dt)
-                        dt)
-
-         encode (:encoder codec)]
-     (when-not t
+     (when (nil? tuple-type)
        (throw (ex-info (format "Tuple Column '%s' not found on Keyspace '%s'"
                                (name column)
                                (name ks))
                        {:type ::type-not-found})))
-     (fn [coll]
-       (let [ttv (.newValue t)]
-         (loop [i 0
-                coll coll]
-           (if-let [x (first coll)]
-             (set-field! ttv i (encode x))
-             (recur (inc i) (rest coll))))
-         ttv)))))
+
+     (let [component-types (.getComponentTypes tuple-type)
+           encode (:encoder codec)]
+
+       (fn [coll]
+         (let [ttv (.newValue tuple-type)]
+           (dorun
+            (map-indexed
+             (fn [i x]
+               (prn "setting!" i x)
+               (set-field! ttv i x))
+             coll))
+           ttv))))))
