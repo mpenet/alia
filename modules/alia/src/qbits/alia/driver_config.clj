@@ -15,8 +15,8 @@
 (defprotocol IDriverConfigLoaderBuilder
   (-with-config [v builder driver-option]))
 
-(defn check-element-classes [cl coll]
-  (when-not (every? #(= cl (class %)) coll)
+(defn check-element-classes [clname coll]
+  (when-not (every? #(= clname (-> % class .getName)) coll)
     (throw (ex-info
             "element-classes must all be the same"
             {:coll coll}))))
@@ -71,14 +71,14 @@
                  ^ProgrammaticDriverConfigLoaderBuilder builder
                  ^DriverOption driver-option]
     (if (> (.size l) 0)
-      (let [cl (-> l (.get 0) class)
+      (let [cl (-> l (.get 0) class .getName)
             _ (check-element-classes cl l)]
         (case cl
-          Boolean (.withBooleanList builder driver-option l)
-          Integer (.withIntList builder driver-option l)
-          Long (.withLongList builder driver-option l)
-          Double (.withDoubleList builder driver-option l)
-          String (.withStringList builder driver-option l)))
+          "java.lang.Boolean" (.withBooleanList builder driver-option l)
+          "java.lang.Integer" (.withIntList builder driver-option l)
+          "java.lang.Long" (.withLongList builder driver-option l)
+          "jva.lang.Double" (.withDoubleList builder driver-option l)
+          "java.lang.String" (.withStringList builder driver-option l)))
 
       (.withStringList builder driver-option l))))
 
