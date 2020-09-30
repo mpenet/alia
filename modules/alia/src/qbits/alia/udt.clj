@@ -3,7 +3,12 @@
    [qbits.alia.metadata :as md])
   (:import
    [com.datastax.oss.driver.api.core.session Session]
-   [com.datastax.oss.driver.api.core.type UserDefinedType]
+   [com.datastax.oss.driver.api.core.type
+    DataType
+    UserDefinedType
+    MapType
+    SetType
+    ListType]
    [com.datastax.oss.driver.api.core.data TupleValue UdtValue]
    [com.datastax.oss.driver.api.core.metadata.schema KeyspaceMetadata]
    [java.util UUID List Map Set]
@@ -105,34 +110,71 @@
 
 (defn set-field!
   "Where's flip when you need it"
-  ([u k x]
-   (-set-field! x u k))
-  ([u k x ec]
-   (-set-field! x u k ec))
-  ([u k x kc vc]
-   (-set-field! x u k kc vc)))
+  [ct utv k x]
+  (cond
+    (map? x)
+    (let [[kc vc] (->> x
+                       first
+                       (map #(some-> ^Object % .getClass)))]
+      (when (not (instance? MapType ct))
+        (throw (ex-info "not a map!" ct x)))
+      (-set-field!
+       x
+       utv
+       k
+       (md/default-class (.getKeyType ^MapType ct)  kc)
+       (md/default-class (.getValueType ^MapType ct) vc)))
+
+    (sequential? x)
+    (let [ec (some->> x  first #(.getClass ^Object %))]
+      (when (not (instance? ListType ct))
+        (throw (ex-info "not a list!" ct x)))
+      (-set-field! x utv k (md/default-class (.getElementType ^ListType ct) ec)))
+
+    (set? x)
+    (let [ec (some->> x  first #(.getClass ^Object %))]
+      (when (not (instance? SetType ct))
+        (throw (ex-info "not a set!" ct x)))
+      (-set-field! x utv k (md/default-class (.getElementType ^SetType ct) ec)))
+
+    :else
+    (-set-field! x utv k)))
 
 (defn encoder
-  "Takes a Session, optionaly keyspace name, UDT name and returns a
+  "Takes a Session, optionally keyspace name, UDT name and returns a
   function that can be used to encode a map into a UdtValue suitable
   to be used in PreparedStatements
 
   TODO broken for collection values - java-driver-4 changed the API"
-  ([^Session session type codec]
-   (encoder session (.getKeyspace session) type codec))
-  ([^Session session ks type codec]
-   (let [^UserDefinedType t (md/get-udt-metadata session ks type)
+  ([^Session session table column codec]
+   (encoder session nil table column codec))
+  ([^Session session ks table column codec]
+   (let [^KeyspaceMetadata ksm (md/get-keyspace-metadata session ks)
+         ^DataType dt (md/get-column-type session ks table column)
 
-         encode
-         (:encoder codec)]
+         ^UserDefinedType t (when (instance? UserDefinedType dt)
+                              dt)]
 
      (when-not t
-       (throw (ex-info (format "User Type '%s' not found on Keyspace '%s'"
-                               (name type)
-                               (name ks))
+       (throw (ex-info (format "UDT column not found: %s.%s/%s"
+                               (-> ksm .getName .asInternal)
+                               (name table)
+                               (name column))
                        {:type ::type-not-found})))
-     (fn [x]
-       (let [utv (.newValue t)]
-         (doseq [[k v] x]
-           (set-field! utv (name k) (encode v)))
-         utv)))))
+
+     (let [field-names (->> (.getFieldNames t)
+                            (map md/cql-id->kw))
+           field-types (.getFieldTypes t)
+
+           types-by-name (into {} (map vector field-names field-types))
+
+           encode (:encoder codec)]
+       (fn [x]
+         (let [utv (.newValue t)]
+           (doseq [[k v] x]
+             (set-field!
+              (get types-by-name (keyword k))
+              utv
+              (name k)
+              (encode v)))
+           utv))))))

@@ -176,7 +176,6 @@
            (dorun
             (map-indexed
              (fn [i x]
-               (prn "setting!" i x)
-               (set-field! (.get component-types i) ttv i x))
+               (set-field! (.get component-types i) ttv i (encode x)))
              coll))
            ttv))))))

@@ -109,5 +109,8 @@
 
 (defn default-class
   [dt ec]
-  (prn "default-class" dt ec)
   (or ec (get default-classes dt Object)))
+
+(defn cql-id->kw
+  [^CqlIdentifier cql-id]
+  (keyword (.asInternal cql-id)))
