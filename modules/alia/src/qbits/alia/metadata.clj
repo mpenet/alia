@@ -10,10 +10,16 @@
     KeyspaceMetadata
     TableMetadata
     ColumnMetadata]
-   [java.util UUID List Map Set]
+   [java.util UUID List Map Set Optional]
    [java.time Instant LocalDate LocalTime Duration]
    [java.net InetAddress]
    [java.nio ByteBuffer]))
+
+(defn safe-get
+  [^Optional opt]
+  (if (.isPresent opt)
+    (.get opt)
+    nil))
 
 (defn get-keyspace-metadata
   "ks - keyspace name, if nil then default session keyspace will be used"
@@ -25,12 +31,12 @@
           (some? ks)
           (some-> metadata
                   (.getKeyspace (name ks))
-                  (.get))
+                  (safe-get))
 
           :else
           (some-> metadata
                   (.getKeyspace ^CqlIdentifier (.get (.getKeyspace session)))
-                  (.get)))]
+                  (safe-get)))]
 
     ks-metadata))
 
@@ -42,7 +48,7 @@
         ^UserDefinedType udt
         (some-> ks-metadata
                 (.getUserDefinedType (name type))
-                (.get))]
+                (safe-get))]
     udt))
 
 (defn get-table-metadata
@@ -53,7 +59,7 @@
         ^TableMetadata table-metadata
         (some-> ks-metadata
                 (.getTable (name table))
-                (.get))]
+                (safe-get))]
 
     table-metadata))
 
@@ -65,7 +71,7 @@
         ^ColumnMetadata column-metadata
         (some-> table-metadata
                 (.getColumn (name column))
-                (.get))]
+                (safe-get))]
 
     column-metadata))
 
