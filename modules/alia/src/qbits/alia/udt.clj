@@ -146,21 +146,18 @@
   to be used in PreparedStatements
 
   TODO broken for collection values - java-driver-4 changed the API"
-  ([^Session session table column codec]
-   (encoder session nil table column codec))
-  ([^Session session ks table column codec]
+  ([^Session session typename codec]
+   (encoder session nil typename codec))
+  ([^Session session ks typename codec]
    (let [^KeyspaceMetadata ksm (md/get-keyspace-metadata session ks)
-         ^DataType dt (md/get-column-type session ks table column)
-
-         ^UserDefinedType t (when (instance? UserDefinedType dt)
-                              dt)]
+         ^UserDefinedType t (md/get-udt-metadata session ks typename)]
 
      (when-not t
-       (throw (ex-info (format "UDT column not found: %s.%s/%s"
-                               (-> ksm .getName .asInternal)
-                               (name table)
-                               (name column))
-                       {:type ::type-not-found})))
+       (throw (ex-info
+               "UDT not found"
+               {:type ::udt-not-found
+                :keyspace (-> ksm .getName .asInternal)
+                :udt typename})))
 
      (let [field-names (->> (.getFieldNames t)
                             (map md/cql-id->kw))

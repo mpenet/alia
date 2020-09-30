@@ -162,11 +162,12 @@
                                  dt)]
 
      (when (nil? tuple-type)
-       (throw (ex-info (format "Tuple column not found: %s.%s/%s"
-                               (-> ksm .getName .asInternal)
-                               (name table)
-                               (name column))
-                       {:type ::type-not-found})))
+       (throw (ex-info
+               "Tuple column not found"
+               {:type ::tuple-not-found
+                :keyspace (-> ksm .getName .asInternal keyword)
+                :table table
+                :column column})))
 
      (let [component-types (.getComponentTypes tuple-type)
            encode (:encoder codec)]
