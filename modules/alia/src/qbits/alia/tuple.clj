@@ -133,17 +133,21 @@
 
     (sequential? x)
     (let [ec (some->> x  first #(.getClass ^Object %))]
+      (when (not (instance? ListType ct))
+        (throw (ex-info "not a list!" ct x)))
       (-set-field! x tv i (md/default-class (.getElementType ^ListType ct) ec)))
 
     (set? x)
     (let [ec (some->> x  first #(.getClass ^Object %))]
+      (when (not (instance? SetType ct))
+        (throw (ex-info "not a set!" ct x)))
       (-set-field! x tv i (md/default-class (.getElementType ^SetType ct) ec)))
 
     :else
     (-set-field! x tv i)))
 
 (defn encoder
-  "Takes a Session, optionaly keyspace name, table name and column
+  "Takes a Session, optionally keyspace name, table name and column
   name and returns a function that can be used to encode a collection into
   a TupleValue suitable to be used in PreparedStatements
 
@@ -151,15 +155,17 @@
   ([^Session session table column codec]
    (encoder session nil table column codec))
   ([^Session session ks table column codec]
-   (let [^DataType dt (md/get-column-type session ks table column)
+   (let [^KeyspaceMetadata ksm (md/get-keyspace-metadata session ks)
+         ^DataType dt (md/get-column-type session ks table column)
 
          ^TupleType tuple-type (when (instance? TupleType dt)
                                  dt)]
 
      (when (nil? tuple-type)
-       (throw (ex-info (format "Tuple Column '%s' not found on Keyspace '%s'"
-                               (name column)
-                               (name ks))
+       (throw (ex-info (format "Tuple column not found: %s.%s/%s"
+                               (-> ksm .getName .asInternal)
+                               (name table)
+                               (name column))
                        {:type ::type-not-found})))
 
      (let [component-types (.getComponentTypes tuple-type)
