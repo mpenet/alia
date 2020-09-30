@@ -3,7 +3,7 @@
    [com.datastax.oss.driver.api.core CqlIdentifier]
    [com.datastax.oss.driver.api.core.session Session]
    [com.datastax.oss.driver.api.core.type
-    DataType TupleType UserDefinedType]
+    DataType DataTypes TupleType UserDefinedType]
    [com.datastax.oss.driver.api.core.data TupleValue UdtValue]
    [com.datastax.oss.driver.api.core.metadata Metadata]
    [com.datastax.oss.driver.api.core.metadata.schema
@@ -11,7 +11,7 @@
     TableMetadata
     ColumnMetadata]
    [java.util UUID List Map Set]
-   [java.time Instant LocalDate LocalTime]
+   [java.time Instant LocalDate LocalTime Duration]
    [java.net InetAddress]
    [java.nio ByteBuffer]))
 
@@ -78,3 +78,30 @@
                       column-metadata
                       (.getType))]
     dt))
+
+(def default-classes
+  {DataTypes/ASCII String
+   DataTypes/BIGINT BigInteger
+   DataTypes/BLOB (.getClass (byte-array []))
+   DataTypes/BOOLEAN Boolean
+   DataTypes/COUNTER Integer
+   DataTypes/DATE Instant
+   DataTypes/DECIMAL Float
+   DataTypes/DOUBLE Double
+   DataTypes/DURATION Duration
+   DataTypes/FLOAT Float
+   DataTypes/INET String
+   DataTypes/INT Integer
+   DataTypes/SMALLINT Short
+   DataTypes/TEXT String
+   DataTypes/TIME Instant
+   DataTypes/TIMESTAMP Instant
+   DataTypes/TIMEUUID UUID
+   DataTypes/TINYINT Byte
+   DataTypes/UUID UUID
+   DataTypes/VARINT BigDecimal})
+
+(defn default-class
+  [dt ec]
+  (prn "default-class" dt ec)
+  (or ec (get default-classes dt Object)))
