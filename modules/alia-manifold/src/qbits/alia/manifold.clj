@@ -38,7 +38,7 @@
                          (fn [put?]
                            (cond
 
-                             ;; last page was put, there is another
+                             ;; last page put ok and there is another
                              (and put?
                                   next-page-handler)
                              (d/chain
@@ -46,11 +46,12 @@
                               next-page-handler
                               page-stream-handler)
 
-                             ;; last page was the last
+                             ;; last page put ok and was the last
                              put?
                              (s/close! stream)
 
-                             ;; bork!
+                             ;; bork! last page did not put.
+                             ;; maybe the stream was closed?
                              :else
                              (throw
                               (ex-info
@@ -61,7 +62,9 @@
          (d/chain r-d page-handler)
          (fn [err]
            (d/chain
+            ;; try and return the error to the user
             (s/put! stream err)
+            ;; if that fails, print it to *err*
             (fn [put?]
               (when-not put?
                 (binding [*out* *err*]
