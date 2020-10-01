@@ -4,13 +4,8 @@
    [qbits.alia.codec.default :as default-codec]
    [qbits.alia.udt :as udt]
    [qbits.alia.tuple :as tuple]
-   [qbits.alia.enum :as enum]
-;;   [qbits.alia.cluster-options :as copt]
-   [qbits.alia.cql-session :as cql-session])
+   [qbits.alia.enum :as enum])
   (:import
-   [com.datastax.oss.driver.api.core.session
-    Session
-    ]
    [com.datastax.oss.driver.api.core
     CqlSession]
    [com.datastax.oss.driver.api.core.cql
@@ -19,17 +14,7 @@
     BatchStatement
     BoundStatement
     BoundStatementBuilder
-    SimpleStatement
-    ]
-   ;; (com.datastax.driver.core
-   ;;  GuavaCompatibility
-   ;;  LatencyTracker
-   ;;  ResultSet
-   ;;  ResultSetFuture
-   ;; [com.google.common.util.concurrent
-   ;;  Futures
-   ;;  FutureCallback
-   ;;  ListenableFuture]
+    SimpleStatement]
    [java.util.concurrent Executor CompletionStage CompletableFuture]
    [java.nio ByteBuffer]
    [java.util Map]
@@ -296,7 +281,7 @@
        (catch Exception err
          (throw (ex->ex-info err {:query statement :values values}))))))
   ;; to support old syle api with unrolled args
-  ([^Session session query]
+  ([^CqlSession session query]
    (execute session query {})))
 
 (defn handle-async-result-set-completion-stage
@@ -307,7 +292,8 @@
            row-generator
            codec
            statement
-           values]}]
+           values
+           executor]}]
   (let [handler-bifn (reify BiFunction
                        (apply [_ async-result-set ex]
                          (if (some? ex)
@@ -320,16 +306,27 @@
                             codec
                             next-page-handler))))]
 
-    (.handle
-     completion-stage
-     handler-bifn)))
+    (if (some? executor)
+      (.handleAsync
+       completion-stage
+       handler-bifn
+       executor)
+
+      (.handleAsync
+       completion-stage
+       handler-bifn))))
 
 (defn execute-async
-  "Same execute but async and takes optional :success and :error
-  callback functions via options. For options refer to
-  `qbits.alia/execute` doc"
+  "Same args as execute but executes async and returns a
+   CompletableFuture<{:current-page <records>
+                      :async-result-set <async-result-set>
+                      :next-page-handler <handler>}>
+
+   to fetch and decode the next page do
+   (next-page-handler (.fetchNextPage async-result-set))"
   ([^CqlSession session query {:keys [values
-                                      codec]
+                                      codec
+                                      executor]
                                :as opts}]
    (try
      (let [codec (or codec default-codec/codec)
