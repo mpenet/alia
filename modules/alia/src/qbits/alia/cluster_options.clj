@@ -26,8 +26,6 @@
     ReconnectionPolicy
     RetryPolicy
     SpeculativeExecutionPolicy)
-   (com.datastax.driver.dse.auth
-    DseGSSAPIAuthProvider)
    (javax.net.ssl
     TrustManagerFactory
     KeyManagerFactory
@@ -170,12 +168,6 @@
 (defmethod set-cluster-option! :auth-provider
   [_ ^Cluster$Builder builder auth-provider]
   (.withAuthProvider builder auth-provider))
-
-(defmethod set-cluster-option! :kerberos?
-  [_ ^Cluster$Builder builder kerberos?]
-  (when kerberos?
-    (.withAuthProvider builder (DseGSSAPIAuthProvider.)))
-  builder)
 
 (defmethod set-cluster-option! :compression
   [_ ^Cluster$Builder builder option]

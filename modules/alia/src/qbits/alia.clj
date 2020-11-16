@@ -177,9 +177,6 @@
   Overriding default cipher suites is supported via `:cipher-suites`,
   which accepts a sequence of Strings.
 
-* `:kerberos?` : activate Kerberos via DseAuthProvider, see
-  http://www.datastax.com/dev/blog/accessing-secure-dse-clusters-with-cql-native-protocol
-
 * `:pooling-options` : The pooling options used by this builder.
   Options related to connection pooling.
 

@@ -9,8 +9,6 @@
                  [com.datastax.cassandra/cassandra-driver-core "3.6.0"
                   :classifier "shaded"
                   :exclusions [io.netty/*]]
-                 [com.datastax.cassandra/dse-driver "1.1.2"
-                  :exclusions [com.datastax.cassandra/cassandra-driver-core]]
                  [org.hdrhistogram/HdrHistogram "2.1.9"]]
   :jar-exclusions [#"log4j.properties"]
   :codox {:source-uri "https://github.com/mpenet/alia/blob/master/{filepath}#L{line}"
