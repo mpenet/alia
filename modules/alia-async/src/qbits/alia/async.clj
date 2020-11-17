@@ -131,7 +131,8 @@
                                     (Futures/addCallback
                                      (reify FutureCallback
                                        (onSuccess [_ r] (async/put! p [::success r]))
-                                       (onFailure [_ ex] (async/put! p [::error ex])))))
+                                       (onFailure [_ ex] (async/put! p [::error ex])))
+                                     (get-executor executor)))
                                 (let [[state v] (async/<! p)]
                                   ;; on paging error interup streaming
                                   (case state
