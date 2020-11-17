@@ -4,21 +4,20 @@ on: push
 
 jobs:
 
-  cassandra:
+  test:
+    runs-on: ubuntu-latest
+
     services:
       cassandra:
         image: cassandra
         ports:
           - 9042:9042
-    runs-on: [ubuntu-latest]
+
     steps:
       - name: check
         run: |
           docker ps
 
-  test:
-    runs-on: ubuntu-latest
-    steps:
       - name: Check out Git repository
         uses: actions/checkout@v1
 
