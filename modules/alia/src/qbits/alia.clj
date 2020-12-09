@@ -6,8 +6,7 @@
    [qbits.alia.tuple :as tuple]
    [qbits.alia.enum :as enum])
   (:import
-   [com.datastax.oss.driver.api.core
-    CqlSession]
+   [com.datastax.oss.driver.api.core CqlSession]
    [com.datastax.oss.driver.api.core.cql
     Statement
     PreparedStatement

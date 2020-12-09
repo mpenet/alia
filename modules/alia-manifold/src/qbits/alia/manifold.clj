@@ -84,4 +84,4 @@
       stream)))
 
   ([^CqlSession session query]
-   (execute-buffered-pages session query {})))
+   (execute-buffered session query {})))
