@@ -283,6 +283,23 @@
   ([^CqlSession session query]
    (execute session query {})))
 
+(defn handle-completion-stage
+  "java incantation to handle both branches of a completion-stage"
+  [^CompletionStage completion-stage
+   on-success
+   on-error
+   {executor :executor
+    :as opts}]
+  (let [handler-bifn (reify BiFunction
+                       (apply [_ r ex]
+                         (if (some? ex)
+                           (on-error ex)
+                           (on-success r))))]
+
+    (if (some? executor)
+      (.handleAsync completion-stage handler-bifn executor)
+      (.handleAsync completion-stage handler-bifn))))
+
 (defn handle-async-result-set-completion-stage
   "if successful, applies the row-generator to the current page
    if failed, decorates the exception with query and value details"
@@ -292,28 +309,23 @@
            codec
            statement
            values
-           executor]}]
-  (let [handler-bifn (reify BiFunction
-                       (apply [_ async-result-set ex]
-                         (if (some? ex)
-                           (throw
-                            (ex->ex-info ex {:query statement :values values}))
+           executor]
+    :as opts}]
 
-                           (codec/async-result-set
-                            async-result-set
-                            row-generator
-                            codec
-                            next-page-handler))))]
+  (handle-completion-stage
+   completion-stage
+   (fn [async-result-set]
+     (codec/async-result-set
+      async-result-set
+      row-generator
+      codec
+      next-page-handler))
 
-    (if (some? executor)
-      (.handleAsync
-       completion-stage
-       handler-bifn
-       executor)
+   (fn [err]
+     (throw
+      (ex->ex-info err {:query statement :values values})))
 
-      (.handleAsync
-       completion-stage
-       handler-bifn))))
+   opts))
 
 (defn execute-async
   "Same args as execute but executes async and returns a
