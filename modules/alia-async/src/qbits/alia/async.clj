@@ -15,6 +15,7 @@
     values :values
     chan :chan
     executor :executor
+    stop? ::stop?
     :as opts}]
   (alia/handle-completion-stage
    completion-stage
@@ -27,6 +28,10 @@
       current-page
       (fn [put?]
         (cond
+
+          ;; stop requested at this page (probably for promise-chan)
+          stop?
+          (async/close! chan)
 
           ;; last page put ok, and there is another
           (and put? next-page-handler)
@@ -94,9 +99,11 @@
       page-cs
       (merge opts
              {:chan chan
-              :statement query}))
+              :statement query
+              ::stop? true}))
 
      chan))
+
   ([^Session session query]
    (execute-chan session query {})))
 
