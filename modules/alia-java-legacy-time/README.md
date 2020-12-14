@@ -1,12 +1,12 @@
-# alia-java-time
+# alia-java-legacy-time
 
-Adds (basic) java.time support to alia
+Adds java legacy time support to alia
 
 ## Installation
 
 Add this to your dependencies:
 
-[![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-java-time.svg)](https://clojars.org/cc.qbits/alia-java-time)
+[![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-java-legacy-time.svg)](https://clojars.org/cc.qbits/alia-java-legacy-time)
 
 ## License
 
