@@ -7,13 +7,13 @@
 (deftest encode-java-util-date-test
   (let [d (java.util.Date.)
         i (sut/encode-java-util-date d)]
-    (instance? java.time.Instant i)
+    (is (instance? java.time.Instant i))
     (is (= (.getTime d)
            (.toEpochMilli i)))))
 
 (deftest decode-java-util-date-test
   (let [i (java.time.Instant/now)
         d (sut/decode-java-util-date i)]
-    (instance? java.util.Date d)
+    (is (instance? java.util.Date d))
     (is (= (.getTime d)
            (.toEpochMilli i)))))

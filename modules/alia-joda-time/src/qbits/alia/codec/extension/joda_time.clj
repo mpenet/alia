@@ -62,7 +62,7 @@
 
 (defn ^org.joda.time.LocalTime decode-joda-local-time
   [^java.time.LocalTime x]
-  (org.joda.time.LocalTime (.getHour x) (.getMinute x)))
+  (org.joda.time.LocalTime. (.getHour x) (.getMinute x)))
 
 (extend-protocol codec/Decoder
   java.time.LocalTime
