@@ -1,8 +1,8 @@
 (ns qbits.alia
   (:require
-   [qbits.alia.codec :as codec]
    [qbits.alia.codec.default :as default-codec]
    [qbits.alia.result-set :as result-set]
+   [qbits.alia.settable-by-name :as settable-by-name]
    [qbits.alia.udt :as udt]
    [qbits.alia.tuple :as tuple]
    [qbits.alia.enum :as enum])
@@ -57,9 +57,10 @@
                                              statement
                                              (to-array []))]
          (doseq [[k x] values]
-           (codec/set-named-parameter! builder
-                                       (name k)
-                                       (encoder x)))
+           (settable-by-name/set-named-parameter!
+            builder
+            (name k)
+            (encoder x)))
          (.build builder))
        (.bind statement (to-array (map encoder values))))
      (catch Exception ex

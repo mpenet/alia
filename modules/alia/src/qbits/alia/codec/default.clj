@@ -1,6 +1,6 @@
 (ns qbits.alia.codec.default
   (:require
-   [qbits.alia.codec :as codec])
+   [qbits.alia.gettable-by-index :as gettable-by-index])
   (:import
    [java.nio ByteBuffer]
    [com.datastax.oss.driver.api.core
@@ -45,7 +45,7 @@
          (map (fn [i]
                 (let [^CqlIdentifier field-id (.get field-ids i)
                       field-name (-> field-id .asInternal keyword)
-                      val (codec/deserialize udt-value i decode)]
+                      val (gettable-by-index/deserialize udt-value i decode)]
                   [field-name val])))
          (range len)))
      :TupleValue
@@ -56,7 +56,7 @@
           (if (= idx' len)
             (persistent! tuple)
             (recur (conj! tuple
-                          (codec/deserialize tuple-value idx' decode))
+                          (gettable-by-index/deserialize tuple-value idx' decode))
                    (unchecked-inc-int idx')))))
      :Object identity
      :nil (fn [_] nil)}))

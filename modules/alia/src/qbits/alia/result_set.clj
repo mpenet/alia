@@ -1,6 +1,6 @@
 (ns qbits.alia.result-set
   (:require
-   [qbits.alia.codec :as alia.codec])
+   [qbits.alia.gettable-by-index :as gettable-by-index])
   (:import
    [com.datastax.oss.driver.api.core
     CqlIdentifier]
@@ -87,7 +87,7 @@
                (let [^ColumnDefinition cdef (.get cdefs idx)]
                  (conj-row rg r
                            cdef
-                           (alia.codec/deserialize row idx decode))))))))
+                           (gettable-by-index/deserialize row idx decode))))))))
 
 (defn ->result-set
   [^ResultSet rs row-generator codec]

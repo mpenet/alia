@@ -1,17 +1,13 @@
-(ns qbits.alia.codec
+(ns qbits.alia.settable-by-name
   (:import
    [java.nio ByteBuffer]
    [com.datastax.oss.driver.api.core.data
-    GettableByIndex
     SettableByName
     UdtValue
     TupleValue]
    [java.util UUID List Map Set]
    [java.time Instant LocalDate LocalTime]
    [java.net InetAddress]))
-
-(defn deserialize [^GettableByIndex x idx decode]
-  (decode (.getObject x idx)))
 
 (defprotocol PNamedBinding
   "Bind the val onto Settable by name"
