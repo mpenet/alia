@@ -2,6 +2,7 @@
   (:require
    [qbits.alia.codec :as codec]
    [qbits.alia.codec.default :as default-codec]
+   [qbits.alia.result-set :as result-set]
    [qbits.alia.udt :as udt]
    [qbits.alia.tuple :as tuple]
    [qbits.alia.enum :as enum])
@@ -273,10 +274,10 @@
      (set-statement-options! statement opts)
      (try
 
-       (codec/result-set (.execute session statement)
-                         result-set-fn
-                         row-generator
-                         codec)
+       (result-set/result-set (.execute session statement)
+                              result-set-fn
+                              row-generator
+                              codec)
        (catch Exception err
          (throw (ex->ex-info err {:query statement :values values}))))))
   ;; to support old syle api with unrolled args
@@ -315,7 +316,7 @@
   (handle-completion-stage
    completion-stage
    (fn [async-result-set]
-     (codec/async-result-set
+     (result-set/async-result-set
       async-result-set
       row-generator
       codec
