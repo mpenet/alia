@@ -1,7 +1,6 @@
 (ns qbits.alia.codec.udt-aware
   (:require
    [clojure.reflect :as reflect]
-   [qbits.alia.codec :as codec]
    [qbits.alia.codec.default :as default-codec]
    [qbits.alia.udt :as udt])
   (:import
