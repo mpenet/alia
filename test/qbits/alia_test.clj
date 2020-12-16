@@ -2,13 +2,10 @@
   (:require
    [clojure.test :as t :refer [deftest is testing]]
    [clojure.data]
-   [clj-time.core :as clj-time]
    [qbits.alia :as alia]
-   [qbits.alia.cql-session :as cql-session]
    [qbits.alia.manifold :as alia.manifold]
    [qbits.alia.result-set :as result-set]
    [qbits.alia.async :as alia.async]
-   [qbits.alia.codec.default :as codec.default]
    [qbits.alia.codec.udt-aware :as codec.udt-aware]
    ;; [qbits.alia.codec.extension.joda-time :as codec.]
    [qbits.hayt :as h]
@@ -16,11 +13,8 @@
    [manifold.stream :as stream])
   (:import
    [java.time Instant]
-   [com.datastax.oss.driver.api.core
-    DefaultConsistencyLevel]
-   [com.datastax.oss.driver.api.core.cql
-    ExecutionInfo]
-   [com.datastax.oss.driver.api.core.data TupleValue UdtValue]))
+   [com.datastax.oss.driver.api.core.cql ExecutionInfo]
+   [com.datastax.oss.driver.api.core.data UdtValue]))
 
 (try
   (require 'qbits.alia.spec)
@@ -499,7 +493,7 @@
 (defrecord Foo [foo bar])
 (deftest test-udt-registry
   (let [codec qbits.alia.codec.udt-aware/codec]
-    (qbits.alia.codec.udt-aware/register-udt! codec *session* :udt Foo)
+    (codec.udt-aware/register-udt! codec *session* :udt Foo)
     (is
      (= Foo
         (-> (alia/execute *session* "select * from users limit 1"
@@ -507,7 +501,7 @@
             first
             :udt
             type)))
-    (qbits.alia.codec.udt-aware/deregister-udt! codec *session* :udt Foo)))
+    (codec.udt-aware/deregister-udt! codec *session* :udt Foo)))
 
 (deftest test-custom-codec
   (is (-> (alia/execute *session* "select * from users limit 1"
