@@ -1,13 +1,14 @@
 (ns qbits.alia
   (:require
    [qbits.alia.codec.default :as default-codec]
+   [qbits.alia.cql-session :as cql-session]
    [qbits.alia.result-set :as result-set]
    [qbits.alia.settable-by-name :as settable-by-name]
    [qbits.alia.udt :as udt]
    [qbits.alia.tuple :as tuple]
    [qbits.alia.enum :as enum])
   (:import
-   [com.datastax.oss.driver.api.core CqlSession]
+   [com.datastax.oss.driver.api.core CqlSessionBuilder CqlSession]
    [com.datastax.oss.driver.api.core.cql
     Statement
     PreparedStatement
@@ -19,6 +20,21 @@
    [java.nio ByteBuffer]
    [java.util Map]
    [java.util.function BiFunction]))
+
+(defn session
+  "shortcut to create a session-builder and build a session"
+  ([] (session {}))
+  ([config]
+   (let [^CqlSessionBuilder sb (cql-session/cql-session-builder config)]
+     (.build sb))))
+
+(defn shutdown
+  [^CqlSession session]
+  (.close session))
+
+(defn shutdown-async
+  [^CqlSession session]
+  (.closeAsync session))
 
 (defn ^:no-doc get-executor
   [x]
