@@ -16,14 +16,6 @@
     [val settable name el-class]
     [val settable name k-class v-class]))
 
-(defn set-named-parameter!
-  ([^SettableByName settable name val]
-   (-set-named-parameter! val settable name))
-  ([^SettableByName settable name val el-class]
-   (-set-named-parameter! val settable name el-class))
-  ([^SettableByName settable name val k-class v-class]
-   (-set-named-parameter! val settable name k-class v-class)))
-
 (extend-protocol PNamedBinding
   Boolean
   (-set-named-parameter! [val settable name]
@@ -104,3 +96,35 @@
   nil
   (-set-named-parameter! [_ settable name]
     (.setToNull ^SettableByName settable ^String name)))
+
+(defn set-named-parameter!
+  "unfortunately with named params we have no information about the type
+   of the value to be bound, we only have the value we are trying to bind
+
+   if the value is a non-empty collection then use the first element of the
+   collection to guess the element or key/value types
+
+   if the value is an empty collection, bind nilable
+
+   otherwise, use the value type"
+  [^SettableByName settable name val]
+  (cond
+
+    (map? val)
+    (if (empty? val)
+      (-set-named-parameter! nil settable name)
+      (let [[kc vc] (->> val
+                         first
+                         (map #(some-> ^Object % .getClass)))]
+        (-set-named-parameter! val settable name kc vc)))
+
+    (or
+     (sequential? val)
+     (set? val))
+    (if (empty? val)
+      (-set-named-parameter! nil settable name)
+      (let [ec (some->> val first (#(.getClass ^Object %)))]
+        (-set-named-parameter! val settable name ec)))
+
+    :else
+    (-set-named-parameter! val settable name)))

@@ -126,13 +126,13 @@
        (md/default-class (.getValueType ^MapType ct) vc)))
 
     (sequential? x)
-    (let [ec (some->> x  first #(.getClass ^Object %))]
+    (let [ec (some->> x  first (#(.getClass ^Object %)))]
       (when (not (instance? ListType ct))
         (throw (ex-info "not a list!" ct x)))
       (-set-field! x utv k (md/default-class (.getElementType ^ListType ct) ec)))
 
     (set? x)
-    (let [ec (some->> x  first #(.getClass ^Object %))]
+    (let [ec (some->> x  first (#(.getClass ^Object %)))]
       (when (not (instance? SetType ct))
         (throw (ex-info "not a set!" ct x)))
       (-set-field! x utv k (md/default-class (.getElementType ^SetType ct) ec)))
