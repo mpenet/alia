@@ -153,10 +153,13 @@
       (is (= user-data-set
              current-page))))
   (testing "errors"
-    (let [stmt "slect prout from 1;"]
-      (is (:query (try @(alia/execute-async *session* stmt)
-                       (catch Exception ex
-                         (ex-data ex))))))))
+    (let [stmt "slect prout from 1;"
+          exd (try
+                @(alia/execute-async *session* stmt)
+                (catch Exception ex
+                  ;; remove j.u.c.ExecutionException wrapper to get to ex-info
+                  (ex-data (.getCause ex))))]
+      (is (some? (:query exd) )))))
 
 (deftest manifold-test
   (testing "promise"
