@@ -135,60 +135,71 @@
 
       (alia/shutdown *session*))))
 
-(deftest test-sync-execute
-  (is (= user-data-set
-         (alia/execute *session* "select * from users;")))
+(deftest execute-test
+  (testing "string query"
+    (is (= user-data-set
+           (alia/execute *session* "select * from users;"))))
+  (testing "hayt query"
+    (is (= user-data-set
+           (alia/execute *session* (h/select :users))))))
 
-  (is (= user-data-set
-         (alia/execute *session* (h/select :users)))))
+(deftest execute-async-test
+  (let [{current-page :current-page} @(alia/execute-async *session* "select * from users;")]
+    (is (= user-data-set
+           current-page))))
 
-(deftest test-manifold-execute
-  ;; promise
-  (is (= user-data-set
-         @(alia.manifold/execute *session* "select * from users;"))))
+(deftest manifold-test
+  (testing "promise"
+    (is (= user-data-set
+           @(alia.manifold/execute *session* "select * from users;"))))
+  (testing "stream"
+    (let [r-s (alia.manifold/execute-buffered *session* "select * from users;")
+          rs @(manifold.stream/reduce conj [] r-s)]
+      (is (= user-data-set
+             rs)))))
 
-(deftest test-core-async-execute
-  (is (= user-data-set
-         (async/<!! (execute-chan *session* "select * from users;"))))
+(deftest core-async-test
+  (testing "promise-chan"
+    (is (= user-data-set
+           (async/<!! (alia.async/execute-chan *session* "select * from users;")))))
 
-  (let [p (promise)]
-    (execute-async *session* "select * from users;"
-                   {:success (fn [r] (deliver p r))})
-    (is (= user-data-set @p)))
-
-  (let [p (promise)]
-    (async/take! (execute-chan *session* "select * from users;")
-                 (fn [r] (deliver p r)))
-    (is (= user-data-set @p)))
+  (testing "chan of records"
+    (let [r-c (alia.async/execute-chan-buffered *session* "select * from users;")
+          rs-c (async/reduce conj [] r-c)
+          rs (async/<!! rs-c)]
+      (is (= user-data-set
+             rs))))
 
 ;;   ;; Something smarter could be done with alt! (select) but this will
 ;;   ;; do for a test
-  (is (= 3 (count (async/<!! (async/go
-                               (loop [i 0 ret []]
-                                 (if (= 3 i)
-                                   ret
-                                   (recur (inc i)
-                                          (conj ret (async/<! (execute-chan *session* "select * from users limit 1"))))))))))))
+  ;; (is (= 3 (count (async/<!! (async/go
+  ;;                              (loop [i 0 ret []]
+  ;;                                (if (= 3 i)
+  ;;                                  ret
+  ;;                                  (recur (inc i)
+  ;;                                         (conj ret (async/<! (execute-chan *session* "select * from users limit 1")))))))))))
 
-(deftest test-prepared
-  (let [s-simple (prepare *session* "select * from users;")
-        s-parameterized-simple (prepare *session* (h/select :users (h/where {:user_name h/?})))
-        s-parameterized-in (prepare *session* (h/select :users (h/where [[:in :user_name h/?]])))
-        s-prepare-types (prepare *session*  "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")
+  )
+
+(deftest prepare-test
+  (let [s-simple (alia/prepare *session* "select * from users;")
+        s-parameterized-simple (alia/prepare *session* (h/select :users (h/where {:user_name h/?})))
+        s-parameterized-in (alia/prepare *session* (h/select :users (h/where [[:in :user_name h/?]])))
+        s-prepare-types (alia/prepare *session*  "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")
         ;; s-parameterized-set (prepare  "select * from users where emails=?;")
         ;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
         ]
-    (is (= user-data-set (execute *session* s-simple)))
-    (is (= [(first user-data-set)] (execute *session* (h/select :users (h/where {:user_name h/?}))
+    (is (= user-data-set (alia/execute *session* s-simple)))
+    (is (= [(first user-data-set)] (alia/execute *session* (h/select :users (h/where {:user_name h/?}))
                                             {:values ["mpenet"]})))
-    (is (= (sort-result user-data-set) (sort-result (execute *session* s-parameterized-in {:values [["mpenet" "frodo"]]}))))
+    (is (= (sort-result user-data-set) (sort-result (alia/execute *session* s-parameterized-in {:values [["mpenet" "frodo"]]}))))
     (is (= [(first user-data-set)]
-           (execute *session* s-parameterized-simple {:values ["mpenet"]})))
+           (alia/execute *session* s-parameterized-simple {:values ["mpenet"]})))
     ;; manually  bound
     (is (= [(first user-data-set)]
-           (execute *session* (bind s-parameterized-simple ["mpenet"]))))
+           (alia/execute *session* (alia/bind s-parameterized-simple ["mpenet"]))))
 
-    (is (= [] (execute *session* s-prepare-types {:values ["foobar"
+    (is (= [] (alia/execute *session* s-prepare-types {:values ["foobar"
                                                            0
                                                            #uuid "b474e171-7757-449a-87be-d2797d1336e3"
                                                            #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"
@@ -199,10 +210,10 @@
                                                            {"foo" 123}]})))
     (let [delete-q "delete from users where user_name = 'foobar';"]
       (is (= ()
-             (execute *session* (batch (repeat 3 delete-q))))))
+             (alia/execute *session* (alia/batch (repeat 3 delete-q))))))
 
 
-    (is (= [] (try (execute *session* s-prepare-types {:values {:user_name "barfoo"
+    (is (= [] (try (alia/execute *session* s-prepare-types {:values {:user_name "barfoo"
                                                             :birth_year 0
                                                             :auuid #uuid "b474e171-7757-449a-87be-d2797d1336e3"
                                                             :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"
@@ -214,9 +225,9 @@
                    (catch Exception e (.printStackTrace e)))))
     (let [delete-q "delete from users where user_name = 'barfoo';"]
       (is (= ()
-             (execute *session* (batch (repeat 3 delete-q))))))
+             (alia/execute *session* (alia/batch (repeat 3 delete-q))))))
 
-    (is (= [] (try (execute *session* s-prepare-types {:values {:user_name "ffoooobbaarr"
+    (is (= [] (try (alia/execute *session* s-prepare-types {:values {:user_name "ffoooobbaarr"
                                                             :birth_year 0
                                                             :auuid #uuid "b474e171-7757-449a-87be-d2797d1336e3"
                                                             :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"
@@ -229,7 +240,7 @@
 
     (let [delete-q "delete from users where user_name = 'ffoooobbaarr';"]
       (is (= ()
-             (execute *session* (batch (repeat 3 delete-q))))))))
+             (alia/execute *session* (alia/batch (repeat 3 delete-q))))))))
 
 (deftest test-error
   (let [stmt "slect prout from 1;"]
