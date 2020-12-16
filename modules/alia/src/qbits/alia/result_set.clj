@@ -42,7 +42,7 @@
         (let [^CqlIdentifier col-name (.getName ^ColumnDefinition col-def)]
           (assoc!
            row
-           (.asInternal col-name)
+           (keyword (.asInternal col-name))
            v))))
     (finalize-row [_ row]
       (if constructor
