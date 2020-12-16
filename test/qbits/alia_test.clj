@@ -1,19 +1,23 @@
-(ns qbits.alia.test.core
+(ns qbits.alia-test
   (:require
-   [clojure.test :refer :all]
-   [clojure.data :refer :all]
-   [clj-time.core :as t]
-   [qbits.alia :refer :all]
-   [qbits.alia.manifold :as ma]
-   [qbits.alia.async :refer [execute-chan execute-chan-buffered]]
-   [qbits.alia.codec :refer :all]
-   [qbits.alia.codec.default :refer :all]
-   [qbits.alia.codec.udt-aware]
-   [qbits.alia.codec.extension.joda-time :refer :all]
+   [clojure.test :as t :refer [deftest is testing]]
+   [clojure.data]
+   [clj-time.core :as clj-time]
+   [qbits.alia :as alia]
+   [qbits.alia.cql-session :as cql-session]
+   [qbits.alia.manifold :as alia.manifold]
+   [qbits.alia.async :as alia.async]
+   [qbits.alia.codec.default :as codec.default]
+   [qbits.alia.codec.udt-aware :as codec.udt-aware]
+   ;; [qbits.alia.codec.extension.joda-time :as codec.]
    [qbits.hayt :as h]
-   [clojure.core.async :as async])
+   [clojure.core.async :as async]
+   [manifold.stream :as stream])
   (:import
-    (com.datastax.driver.core UDTValue ConsistencyLevel Cluster)))
+   [java.time Instant]
+   [com.datastax.oss.driver.api.core
+    DefaultConsistencyLevel]
+   [com.datastax.oss.driver.api.core.data TupleValue UdtValue]))
 
 (try
   (require 'qbits.alia.spec)
@@ -23,11 +27,10 @@
   (catch Exception e
     (.printStackTrace e)))
 
-(def ^:dynamic *cluster*)
 (def ^:dynamic *session*)
 
 ;; some test data
-(def user-data-set [{:created (t/date-time 2012 4 18 11 23 12 798)
+(def user-data-set [{:created (Instant/parse "2012-04-18T11:23:12.345Z")
                      :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
                      :last_name "Penet",
                      :emails #{"m@p.com" "ma@pe.com"},
@@ -40,7 +43,7 @@
                      :user_name "mpenet"
                      :tup ["a", "b"]
                      :udt {:foo "f" :bar 100}}
-                    {:created (t/date-time 2012 4 18 11 23 12 798)
+                    {:created (Instant/parse "2012-04-19T12:18:09.678Z")
                      :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4",
                      :last_name "Baggins",
                      :emails #{"baggins@gmail.com" "f@baggins.com"},
@@ -58,26 +61,21 @@
 
 (def sort-result (partial sort-by :user_name))
 
-(use-fixtures
-  :once
-  (fn [test-runner]
-    ;; prepare the thing
-    (binding [*cluster* (cluster {:contact-points ["127.0.0.1"]})]
-      (binding [*session* (connect *cluster*)]
-        (try (execute *session* "DROP KEYSPACE alia;")
-             (catch Exception _ nil))
-        (execute *session* "CREATE KEYSPACE alia WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};")
-        (execute *session* "USE alia;")
-        (execute *session* "CREATE TYPE udt (
+(defn setup-test-keyspace
+  [session]
+  (try (alia/execute session "DROP KEYSPACE IF EXISTS alia;") (catch Exception _ nil))
+      (alia/execute session "CREATE KEYSPACE IF NOT EXISTS alia WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};")
+      (alia/execute session "USE alia;")
+      (alia/execute session "CREATE TYPE IF NOT EXISTS udt (
                                 foo text,
                                 bar bigint
                            )")
 
-        (execute *session* "CREATE TYPE udtct (
+      (alia/execute session "CREATE TYPE IF NOT EXISTS udtct (
                                 foo text,
                                 tup frozen<tuple<varchar, varchar>>
                            )")
-        (execute *session* "CREATE TABLE users (
+      (alia/execute session "CREATE TABLE IF NOT EXISTS users (
                 user_name varchar,
                 first_name varchar,
                 last_name varchar,
@@ -93,72 +91,61 @@
                 udt frozen<udt>,
                 PRIMARY KEY (user_name)
               );")
-        (execute *session* "CREATE INDEX ON users (birth_year);")
+      (alia/execute session "CREATE INDEX IF NOT EXISTS ON users (birth_year);")
 
-        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt, created)
-       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], 1f84b56b-5481-4ee4-8236-8a3831ee5892, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'),  {foo: 'f', bar: 100}, '2012-04-18T11:23:12.798-00:00');")
-        (execute *session* "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt, created)
-       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'), {foo: 'f', bar: 100}, '2012-04-18T11:23:12.798-00:00');")
+      (alia/execute session "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt, created)
+       VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], 1f84b56b-5481-4ee4-8236-8a3831ee5892, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'),  {foo: 'f', bar: 100}, '2012-04-19T12:18:09.678Z');")
+      (alia/execute session "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt, created)
+       VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'), {foo: 'f', bar: 100}, '2012-04-18T11:23:12.345Z');")
 
 
-        (execute *session* "CREATE TABLE items (
+      (alia/execute session "CREATE TABLE IF NOT EXISTS items (
                     id int,
                     si int,
                     text varchar,
                     PRIMARY KEY (id)
                   );")
 
-        (execute *session* "CREATE INDEX ON items (si);")
+      (alia/execute session "CREATE INDEX IF NOT EXISTS ON items (si);")
 
-        (dotimes [i 10]
-          (execute *session* (format "INSERT INTO items (id, text, si) VALUES(%s, 'prout', %s);" i i)))
+      (dotimes [i 10]
+        (alia/execute session (format "INSERT INTO items (id, text, si) VALUES(%s, 'prout', %s);" i i)))
 
-        (execute *session* "CREATE TABLE simple (
+      (alia/execute session "CREATE TABLE IF NOT EXISTS simple (
                     id int,
                     text varchar,
                     PRIMARY KEY (id)
-                  );")
+                  );"))
 
-        ;; do the thing
-        (test-runner)
+(defn teardown-test-keyspace
+  [session]
+  (try (alia/execute *session* "DROP KEYSPACE alia;") (catch Exception _ nil)))
 
-        ;; destroy the thing
-        (try (execute *session* "DROP KEYSPACE alia;") (catch Exception _ nil))
-        (shutdown *session*)
-        (shutdown *cluster*)))))
+(t/use-fixtures
+  :once
+  (fn [test-runner]
+    (binding [*session* (alia/session {:session-keyspace "alia"})]
 
-(deftest test-cluster-query-options
-  (let [cluster (.init ^Cluster (cluster {:contact-points ["127.0.0.1"]
-                                          :query-options  {:consistency        :local-quorum
-                                                           :serial-consistency :three
-                                                           :fetch-size         12345}}))]
+      ;; (setup-test-keyspace *session*)
 
-    (is (= ConsistencyLevel/LOCAL_QUORUM (.getConsistencyLevel
-                                           (.getQueryOptions
-                                             (.getConfiguration
-                                               cluster)))))
+      ;; do the thing
+      (test-runner)
 
-    (is (= ConsistencyLevel/THREE (.getSerialConsistencyLevel
-                                    (.getQueryOptions
-                                      (.getConfiguration
-                                        cluster)))))
+      ;; (teardown-test-keyspace *session* )
 
-    (is (= 12345 (.getFetchSize
-                   (.getQueryOptions
-                     (.getConfiguration
-                       cluster)))))))
+      (alia/shutdown *session*))))
 
 (deftest test-sync-execute
   (is (= user-data-set
-         (qbits.alia/execute *session* "select * from users;")))
+         (alia/execute *session* "select * from users;")))
 
   (is (= user-data-set
-         (execute *session* (h/select :users)))))
+         (alia/execute *session* (h/select :users)))))
 
 (deftest test-manifold-execute
   ;; promise
   (is (= user-data-set
-         @(ma/execute *session* "select * from users;"))))
+         @(alia.manifold/execute *session* "select * from users;"))))
 
 (deftest test-core-async-execute
   (is (= user-data-set
@@ -233,7 +220,7 @@
                                                             :birth_year 0
                                                             :auuid #uuid "b474e171-7757-449a-87be-d2797d1336e3"
                                                             :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"
-                                                            :created (t/now)
+                                                            :created (clj-time/now)
                                                             :valid false
                                                             :tags [1 2 3 4]
                                                             :emails  #{"foo" "bar"}
@@ -397,10 +384,10 @@
   (let [encoder (udt-encoder *session* :udt)
         encoder-ct (udt-encoder *session* :udtct)
         tup (tuple-encoder *session* :users :tup)]
-    (is (instance? UDTValue (encoder {:foo "f" "bar" 100})))
-    (is (instance? UDTValue (encoder {:foo nil "bar" 100})))
-    (is (instance? UDTValue (encoder {:foo nil "bar" 100})))
-    (is (instance? UDTValue (encoder-ct {:foo "f" :tup (tup ["a" "b"])})))
+    (is (instance? UdtValue (encoder {:foo "f" "bar" 100})))
+    (is (instance? UdtValue (encoder {:foo nil "bar" 100})))
+    (is (instance? UdtValue (encoder {:foo nil "bar" 100})))
+    (is (instance? UdtValue (encoder-ct {:foo "f" :tup (tup ["a" "b"])})))
     (is (= :qbits.alia.udt/type-not-found
            (-> (try (udt-encoder *session* :invalid-type) (catch Exception e e))
                ex-data
