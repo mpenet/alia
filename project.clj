@@ -9,18 +9,20 @@
                  [cc.qbits/alia-manifold ~alia-version]
                  [cc.qbits/alia-async ~alia-version]
                  [cc.qbits/alia-joda-time ~alia-version]
-                 [cc.qbits/alia-java-time ~alia-version]
+                 [cc.qbits/alia-java-legacy-time ~alia-version]
                  [cc.qbits/alia-spec ~alia-version]
                  [cc.qbits/alia-component ~alia-version]]
   :profiles {:dev
              {:plugins [[codox "0.10.3"]]
               :dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
-                             [cc.qbits/hayt "4.1.0"]
+                             [cc.qbits/hayt "4.1.0"
+                              :exclusions [org.apache.commons/commons-lang3]]
                              [net.jpountz.lz4/lz4 "1.3.0"]
                              [clj-time "0.11.0"]
                              [manifold "0.1.8"]
                              [org.clojure/tools.logging "0.3.1"]
-                             [org.slf4j/slf4j-log4j12 "1.7.25"]]}}
+                             [org.slf4j/slf4j-log4j12 "1.7.25"
+                              :exclusions [org.slf4j/slf4j-api]]]}}
   :jar-exclusions [#"log4j.properties"]
   :monkeypatch-clojure-test false
   :codox {:source-uri "https://github.com/mpenet/alia/blob/master/{filepath}#L{line}"
@@ -29,6 +31,8 @@
                          "modules/alia-manifold/src"
                          "modules/alia-async/src"
                          "modules/alia-joda-time/src"
+                         "modules/alia-java-legacy-time/src"
+                         "modules/alia-spec/src"
                          "modules/alia-component/src"]}
   :global-vars {*warn-on-reflection* true}
   :pedantic? :abort)
