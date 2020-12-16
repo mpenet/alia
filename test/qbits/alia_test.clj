@@ -6,6 +6,7 @@
    [qbits.alia :as alia]
    [qbits.alia.cql-session :as cql-session]
    [qbits.alia.manifold :as alia.manifold]
+   [qbits.alia.result-set :as result-set]
    [qbits.alia.async :as alia.async]
    [qbits.alia.codec.default :as codec.default]
    [qbits.alia.codec.udt-aware :as codec.udt-aware]
@@ -17,6 +18,8 @@
    [java.time Instant]
    [com.datastax.oss.driver.api.core
     DefaultConsistencyLevel]
+   [com.datastax.oss.driver.api.core.cql
+    ExecutionInfo]
    [com.datastax.oss.driver.api.core.data TupleValue UdtValue]))
 
 (try
@@ -141,12 +144,25 @@
            (alia/execute *session* "select * from users;"))))
   (testing "hayt query"
     (is (= user-data-set
-           (alia/execute *session* (h/select :users))))))
+           (alia/execute *session* (h/select :users)))))
+  (testing "errors"
+    (let [stmt "slect prout from 1;"]
+      (is (:query (try (alia/execute *session* stmt)
+                       (catch Exception ex
+                         (ex-data ex))))))))
 
 (deftest execute-async-test
-  (let [{current-page :current-page} @(alia/execute-async *session* "select * from users;")]
-    (is (= user-data-set
-           current-page))))
+  (testing "success"
+    (let [{current-page :current-page} @(alia/execute-async
+                                         *session*
+                                         "select * from users;")]
+      (is (= user-data-set
+             current-page))))
+  (testing "errors"
+    (let [stmt "slect prout from 1;"]
+      (is (:query (try @(alia/execute-async *session* stmt)
+                       (catch Exception ex
+                         (ex-data ex))))))))
 
 (deftest manifold-test
   (testing "promise"
@@ -156,7 +172,26 @@
     (let [r-s (alia.manifold/execute-buffered *session* "select * from users;")
           rs @(manifold.stream/reduce conj [] r-s)]
       (is (= user-data-set
-             rs)))))
+             rs))))
+  (testing "errors"
+    (is (instance? Exception
+                   (try @(alia.manifold/execute *session* "select * from users;"
+                                                {:values ["foo"]})
+                        (catch Exception ex ex))))
+
+    (is (instance? Exception
+                   (try @(alia.manifold/execute *session* "select * from users;"
+                                                {:fetch-size :wtf})
+                        (catch Exception ex
+                          ex))))
+
+    (is (instance? Exception
+                   (try
+                     @(manifold.stream/take!
+                       (alia.manifold/execute-buffered *session* "select * from users;"
+                                                       {:fetch-size :wtf}))
+                     (catch Exception ex
+                       ex))))))
 
 (deftest core-async-test
   (testing "promise-chan"
@@ -179,7 +214,40 @@
   ;;                                  (recur (inc i)
   ;;                                         (conj ret (async/<! (execute-chan *session* "select * from users limit 1")))))))))))
 
-  )
+  (testing "errors"
+    (let [stmt "slect prout from 1;"]
+      (is (instance? clojure.lang.ExceptionInfo
+                   (async/<!! (alia.async/execute-chan *session* stmt))))
+    (is (instance? clojure.lang.ExceptionInfo
+                   (async/<!! (alia.async/execute-chan *session* "select * from users;"
+                                            {:values ["foo"]}))))
+    (is (instance? Exception
+                   (async/<!! (alia.async/execute-chan *session* "select * from users;"
+                                            {:fetch-size :wtf}))))
+
+    (is (instance? clojure.lang.ExceptionInfo
+                   (async/<!! (alia.async/execute-chan-buffered *session* stmt))))
+    (is (instance? clojure.lang.ExceptionInfo
+                   (async/<!! (alia.async/execute-chan-buffered *session* "select * from users;"
+                                            {:values ["foo"]}))))
+    (is (instance? Exception
+                   (async/<!! (alia.async/execute-chan-buffered *session* "select * from users;"
+                                            {:retry-policy :wtf}))))
+
+
+
+    (let [p (promise)]
+      (alia.async/execute-chan *session* "select * from users;"
+                     {:values  ["foo"]
+                      :error (fn [r] (deliver p r))})
+      (is (:query (ex-data @p))))
+
+    (let [p (promise)]
+      (alia.async/execute-chan *session* "select * from users;"
+                          {:fetch-size :wtf
+                           :error (fn [r] (deliver p r))})
+      (instance? Exception @p))
+      )))
 
 (deftest prepare-test
   (testing "simple"
@@ -277,132 +345,106 @@
           ]))
   (testing "parameterized nil"
     (let [;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
-          ])))
+          ]))
 
-(deftest test-error
-  (let [stmt "slect prout from 1;"]
-    (is (:query (try (execute *session* stmt)
-                     (catch Exception ex
-                       (ex-data ex)))))
+  (testing "errors"
+    (let [stmt "slect prout from 1;"]
 
-    (is (:query (try @(prepare *session* stmt)
-                     (catch Exception ex
-                       (ex-data ex)))))
 
-    (let [stmt "select * from foo where bar = ?;" values [1 2]]
-      (is (:query (try @(bind (prepare *session* stmt) values)
+      (is (:query (try @(alia/prepare *session* stmt)
                        (catch Exception ex
-                         (ex-data ex))))))
+                         (ex-data ex)))))
 
-    (is (instance? clojure.lang.ExceptionInfo
-                   (async/<!! (execute-chan *session* stmt))))
-    (is (instance? clojure.lang.ExceptionInfo
-                   (async/<!! (execute-chan *session* "select * from users;"
-                                            {:values ["foo"]}))))
-    (is (instance? Exception
-                   (async/<!! (execute-chan *session* "select * from users;"
-                                            {:fetch-size :wtf}))))
+      (let [stmt "select * from foo where bar = ?;" values [1 2]]
+        (is (:query (try @(alia/bind (alia/prepare *session* stmt) values)
+                         (catch Exception ex
+                           (ex-data ex))))))
 
-    (is (instance? clojure.lang.ExceptionInfo
-                   (async/<!! (execute-chan-buffered *session* stmt))))
-    (is (instance? clojure.lang.ExceptionInfo
-                   (async/<!! (execute-chan-buffered *session* "select * from users;"
-                                            {:values ["foo"]}))))
-    (is (instance? Exception
-                   (async/<!! (execute-chan-buffered *session* "select * from users;"
-                                            {:retry-policy :wtf}))))
-
-    (is (instance? Exception
-                   (try @(ma/execute *session* "select * from users;"
-                                  {:values ["foo"]})
-                     (catch Exception ex ex))))
-
-    (is (instance? Exception
-                   (try @(ma/execute *session* "select * from users;"
-                                     {:fetch-size :wtf})
-                        (catch Exception ex
-                          ex))))
-
-    (let [p (promise)]
-      (execute-async *session* "select * from users;"
-                     {:values  ["foo"]
-                      :error (fn [r] (deliver p r))})
-      (is (:query (ex-data @p))))
-
-    (let [p (promise)]
-      (execute-async *session* "select * from users;"
-                          {:fetch-size :wtf
-                           :error (fn [r] (deliver p r))})
-      (instance? Exception @p))))
-
-(deftest test-lazy-query
-  (is (= 10 (count (take 10 (lazy-query *session*
-                                        (h/select :items
-                                                (h/limit 2)
-                                                (h/where {:si (int 0)}))
-                                        (fn [q coll]
-                                          (merge q (h/where {:si (-> coll last :si inc)}))))))))
-
-  (is (= 4 (count (take 10 (lazy-query *session*
-                                       (h/select :items
-                                               (h/limit 2)
-                                               (h/where {:si (int 0)}))
-                                       (fn [q coll]
-                                         (when (< (-> coll last :si) 3)
-                                           (merge q (h/where {:si (-> coll last :si inc)}))))))))))
+      )))
 
 
-(let [get-private-field
-      (fn [instance field-name]
-        (.get
-         (doto (.getDeclaredField (class instance) field-name)
-           (.setAccessible true))
-         instance))
 
-      result-set-fn-with-execution-infos
+(deftest lazy-query-test
+  (is (= 10
+         (count
+          (take 10
+                (alia/lazy-query
+                 *session*
+                 (h/select :items
+                           (h/limit 2)
+                           (h/where {:si (int 0)}))
+                 (fn [q coll]
+                   (merge q (h/where {:si (-> coll last :si inc)}))))))))
+
+  (is (= 4
+         (count
+          (take 10
+                (alia/lazy-query
+                 *session*
+                 (h/select :items
+                           (h/limit 2)
+                           (h/where {:si (int 0)}))
+                 (fn [q coll]
+                   (when (< (-> coll last :si) 3)
+                     (merge q (h/where {:si (-> coll last :si inc)}))))))))))
+
+
+(let [result-set-fn-with-execution-infos
       (fn [rs]
         (vary-meta rs assoc
-                   :execution-info (execution-info rs)))
+                   :execution-info (result-set/execution-info rs)))
 
       get-fetch-size
       (fn [rs]
-        (-> rs meta :execution-info first
-            (get-private-field "statement")
-            .getFetchSize))]
+        (let [^ExecutionInfo xi (-> rs meta :execution-info first)]
+          (-> xi .getStatement .getPageSize)))]
 
   (deftest test-fetch-size
-    (let [result-set (execute *session*
-                              "select * from items;"
-                              {:fetch-size 3
-                               :result-set-fn result-set-fn-with-execution-infos})]
+    (let [result-set (alia/execute
+                      *session*
+                      "select * from items;"
+                      {:fetch-size 3
+                       :result-set-fn result-set-fn-with-execution-infos})]
       (is (= 3 (get-fetch-size result-set)))))
 
   (deftest test-fetch-size-chan
-    (let [result-ch (execute-chan *session*
-                                       "select * from items;"
-                                       {:fetch-size 5
-                                        :result-set-fn result-set-fn-with-execution-infos})]
+    (let [result-ch (alia.async/execute-chan
+                     *session*
+                     "select * from items;"
+                     {:fetch-size 5
+                      :result-set-fn result-set-fn-with-execution-infos})]
       (is (= 5 (get-fetch-size (async/<!! result-ch)))))))
 
 (deftest test-execute-chan-buffered
-  (let [ch (execute-chan-buffered *session* "select * from items;" {:fetch-size 5})]
+  (let [ch (alia.async/execute-chan-buffered
+            *session*
+            "select * from items;"
+            {:fetch-size 5})]
     (is (= 10 (count (loop [coll []]
                        (if-let [row (async/<!! ch)]
                          (recur (cons row coll))
                          coll))))))
-  (let [ch (execute-chan-buffered *session* "select * from items;")]
+  (let [ch (alia.async/execute-chan-buffered
+            *session*
+            "select * from items;")]
     (is (= 10 (count (loop [coll []]
                        (if-let [row (async/<!! ch)]
                          (recur (cons row coll))
                          coll))))))
 
-  (let [ch (execute-chan-buffered *session* "select * from items;" {:channel (async/chan 5)})]
+  (let [ch (alia.async/execute-chan-buffered
+            *session*
+            "select * from items;"
+            {:channel (async/chan 5)})]
     (is (= 10 (count (loop [coll []]
                        (if-let [row (async/<!! ch)]
                          (recur (cons row coll))
                          coll))))))
 
-  (let [ch (execute-chan-buffered *session* "select * from items;" {:fetch-size 1})]
+  (let [ch (alia.async/execute-chan-buffered
+            *session*
+            "select * from items;"
+            {:fetch-size 1})]
     (is (= 1 (count (loop [coll []]
                       (if-let [row (async/<!! ch)]
                         (do
@@ -411,47 +453,47 @@
                         coll)))))))
 
 (deftest test-named-bindings
-  (let [prep-write (prepare *session* "INSERT INTO simple (id, text) VALUES(:id, :text);")
-        prep-read (prepare *session* "SELECT * FROM simple WHERE id = :id;")
+  (let [prep-write (alia/prepare *session* "INSERT INTO simple (id, text) VALUES(:id, :text);")
+        prep-read (alia/prepare *session* "SELECT * FROM simple WHERE id = :id;")
         an-id (int 100)]
 
     (is (= []
-           (execute *session* prep-write {:values {:id an-id
+           (alia/execute *session* prep-write {:values {:id an-id
                                                    :text "inserted via named bindings"}})))
 
     (is (= [{:id an-id
              :text "inserted via named bindings"}]
-           (execute *session* prep-read {:values {:id an-id}})))
+           (alia/execute *session* prep-read {:values {:id an-id}})))
 
     (is (= [{:id an-id
              :text "inserted via named bindings"}]
-           (execute *session* "SELECT * FROM simple WHERE id = :id;"
+           (alia/execute *session* "SELECT * FROM simple WHERE id = :id;"
                     {:values {:id an-id}})))))
 
-(deftest test-udt-encoder
-  (let [encoder (udt-encoder *session* :udt)
-        encoder-ct (udt-encoder *session* :udtct)
-        tup (tuple-encoder *session* :users :tup)]
+(deftest udt-encoder-test
+  (let [encoder (alia/udt-encoder *session* :udt)
+        encoder-ct (alia/udt-encoder *session* :udtct)
+        tup (alia/tuple-encoder *session* :users :tup)]
     (is (instance? UdtValue (encoder {:foo "f" "bar" 100})))
     (is (instance? UdtValue (encoder {:foo nil "bar" 100})))
     (is (instance? UdtValue (encoder {:foo nil "bar" 100})))
     (is (instance? UdtValue (encoder-ct {:foo "f" :tup (tup ["a" "b"])})))
     (is (= :qbits.alia.udt/type-not-found
-           (-> (try (udt-encoder *session* :invalid-type) (catch Exception e e))
+           (-> (try (alia/udt-encoder *session* :invalid-type) (catch Exception e e))
                ex-data
                :type)))
     (is (= :qbits.alia.tuple/type-not-found
-           (-> (try (tuple-encoder *session* :users :invalid-type) (catch Exception e e))
+           (-> (try (alia/tuple-encoder *session* :users :invalid-type) (catch Exception e e))
                ex-data
                :type)))
     (is (= :qbits.alia.tuple/type-not-found
-           (-> (try (tuple-encoder *session* :invalid-col :invalid-type) (catch Exception e e))
+           (-> (try (alia/tuple-encoder *session* :invalid-col :invalid-type) (catch Exception e e))
                ex-data
                :type)))))
 
 (deftest test-result-set-types
-  (is (instance? clojure.lang.LazySeq (execute *session* "select * from items;")))
-  (is (instance? clojure.lang.PersistentVector (execute *session* "select * from items;"
+  (is (instance? clojure.lang.LazySeq (alia/execute *session* "select * from items;")))
+  (is (instance? clojure.lang.PersistentVector (alia/execute *session* "select * from items;"
                                                         {:result-set-fn #(into [] %)}))))
 
 (defrecord Foo [foo bar])
@@ -460,15 +502,15 @@
     (qbits.alia.codec.udt-aware/register-udt! codec *session* :udt Foo)
     (is
      (= Foo
-        (-> (execute *session* "select * from users limit 1"
-                     {:codec codec})
+        (-> (alia/execute *session* "select * from users limit 1"
+                          {:codec codec})
             first
             :udt
             type)))
     (qbits.alia.codec.udt-aware/deregister-udt! codec *session* :udt Foo)))
 
 (deftest test-custom-codec
-  (is (-> (execute *session* "select * from users limit 1"
+  (is (-> (alia/execute *session* "select * from users limit 1"
                    {:codec {:decoder (constantly 42)
                             :encoder identity}})
           first
