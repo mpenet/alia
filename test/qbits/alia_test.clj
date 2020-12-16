@@ -63,19 +63,19 @@
 
 (defn setup-test-keyspace
   [session]
-  (try (alia/execute session "DROP KEYSPACE IF EXISTS alia;") (catch Exception _ nil))
-      (alia/execute session "CREATE KEYSPACE IF NOT EXISTS alia WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};")
-      (alia/execute session "USE alia;")
-      (alia/execute session "CREATE TYPE IF NOT EXISTS udt (
+  ;; (try (alia/execute session "DROP KEYSPACE IF EXISTS alia;") (catch Exception _ nil))
+  (alia/execute session "CREATE KEYSPACE IF NOT EXISTS alia WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};")
+  (alia/execute session "USE alia;")
+  (alia/execute session "CREATE TYPE IF NOT EXISTS udt (
                                 foo text,
                                 bar bigint
                            )")
 
-      (alia/execute session "CREATE TYPE IF NOT EXISTS udtct (
+  (alia/execute session "CREATE TYPE IF NOT EXISTS udtct (
                                 foo text,
                                 tup frozen<tuple<varchar, varchar>>
                            )")
-      (alia/execute session "CREATE TABLE IF NOT EXISTS users (
+  (alia/execute session "CREATE TABLE IF NOT EXISTS users (
                 user_name varchar,
                 first_name varchar,
                 last_name varchar,
@@ -91,27 +91,27 @@
                 udt frozen<udt>,
                 PRIMARY KEY (user_name)
               );")
-      (alia/execute session "CREATE INDEX IF NOT EXISTS ON users (birth_year);")
+  (alia/execute session "CREATE INDEX IF NOT EXISTS ON users (birth_year);")
 
-      (alia/execute session "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt, created)
+  (alia/execute session "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt, created)
        VALUES('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'}, 1, {'foo': 1, 'bar': 2}, [4, 5, 6], 1f84b56b-5481-4ee4-8236-8a3831ee5892, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'),  {foo: 'f', bar: 100}, '2012-04-19T12:18:09.678Z');")
-      (alia/execute session "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt, created)
+  (alia/execute session "INSERT INTO users (user_name, first_name, last_name, emails, birth_year, amap, tags, auuid, tuuid, valid, tup, udt, created)
        VALUES('mpenet', 'Max', 'Penet', {'m@p.com', 'ma@pe.com'}, 0, {'foo': 1, 'bar': 2}, [1, 2, 3], 42048d2d-c135-4c18-aa3a-e38a6d3be7f1, e34288d0-7617-11e2-9243-0024d70cf6c4, true, ('a', 'b'), {foo: 'f', bar: 100}, '2012-04-18T11:23:12.345Z');")
 
 
-      (alia/execute session "CREATE TABLE IF NOT EXISTS items (
+  (alia/execute session "CREATE TABLE IF NOT EXISTS items (
                     id int,
                     si int,
                     text varchar,
                     PRIMARY KEY (id)
                   );")
 
-      (alia/execute session "CREATE INDEX IF NOT EXISTS ON items (si);")
+  (alia/execute session "CREATE INDEX IF NOT EXISTS ON items (si);")
 
-      (dotimes [i 10]
-        (alia/execute session (format "INSERT INTO items (id, text, si) VALUES(%s, 'prout', %s);" i i)))
+  (dotimes [i 10]
+    (alia/execute session (format "INSERT INTO items (id, text, si) VALUES(%s, 'prout', %s);" i i)))
 
-      (alia/execute session "CREATE TABLE IF NOT EXISTS simple (
+  (alia/execute session "CREATE TABLE IF NOT EXISTS simple (
                     id int,
                     text varchar,
                     PRIMARY KEY (id)
@@ -126,7 +126,7 @@
   (fn [test-runner]
     (binding [*session* (alia/session {:session-keyspace "alia"})]
 
-      ;; (setup-test-keyspace *session*)
+      (setup-test-keyspace *session*)
 
       ;; do the thing
       (test-runner)
@@ -182,65 +182,102 @@
   )
 
 (deftest prepare-test
-  (let [s-simple (alia/prepare *session* "select * from users;")
-        s-parameterized-simple (alia/prepare *session* (h/select :users (h/where {:user_name h/?})))
-        s-parameterized-in (alia/prepare *session* (h/select :users (h/where [[:in :user_name h/?]])))
-        s-prepare-types (alia/prepare *session*  "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")
-        ;; s-parameterized-set (prepare  "select * from users where emails=?;")
-        ;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
-        ]
-    (is (= user-data-set (alia/execute *session* s-simple)))
-    (is (= [(first user-data-set)] (alia/execute *session* (h/select :users (h/where {:user_name h/?}))
-                                            {:values ["mpenet"]})))
-    (is (= (sort-result user-data-set) (sort-result (alia/execute *session* s-parameterized-in {:values [["mpenet" "frodo"]]}))))
+  (testing "simple"
+    (let [s-simple (alia/prepare *session* "select * from users;")]
+      (is (= user-data-set (alia/execute *session* s-simple)))))
+
+  (testing "paramterized simple"
     (is (= [(first user-data-set)]
-           (alia/execute *session* s-parameterized-simple {:values ["mpenet"]})))
-    ;; manually  bound
-    (is (= [(first user-data-set)]
-           (alia/execute *session* (alia/bind s-parameterized-simple ["mpenet"]))))
+           (alia/execute *session*
+                         (h/select :users (h/where {:user_name h/?}))
+                         {:values ["mpenet"]})))
+    (let [s-parameterized-simple (alia/prepare
+                                  *session*
+                                  (h/select :users (h/where {:user_name h/?})))]
 
-    (is (= [] (alia/execute *session* s-prepare-types {:values ["foobar"
-                                                           0
-                                                           #uuid "b474e171-7757-449a-87be-d2797d1336e3"
-                                                           #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"
-                                                           (java.util.Date.)
-                                                           false
-                                                           [1 2 3 4]
-                                                           #{"foo" "bar"}
-                                                           {"foo" 123}]})))
-    (let [delete-q "delete from users where user_name = 'foobar';"]
-      (is (= ()
-             (alia/execute *session* (alia/batch (repeat 3 delete-q))))))
+      (is (= [(first user-data-set)]
+             (alia/execute *session*
+                           s-parameterized-simple
+                           {:values ["mpenet"]})))
+      ;; manually bound
+      (is (= [(first user-data-set)]
+             (alia/execute *session*
+                           (alia/bind s-parameterized-simple ["mpenet"]))))))
 
+  (testing "parameterized in"
+    (let [s-parameterized-in (alia/prepare
+                              *session*
+                              (h/select :users (h/where [[:in :user_name h/?]])))]
+      (is (= (sort-result user-data-set)
+             (sort-result
+              (alia/execute *session*
+                            s-parameterized-in
+                            {:values [["mpenet" "frodo"]]}))))))
 
-    (is (= [] (try (alia/execute *session* s-prepare-types {:values {:user_name "barfoo"
-                                                            :birth_year 0
-                                                            :auuid #uuid "b474e171-7757-449a-87be-d2797d1336e3"
-                                                            :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"
-                                                            :created (java.util.Date.)
-                                                            :valid false
-                                                            :tags [1 2 3 4]
-                                                            :emails  #{"foo" "bar"}
-                                                            :amap {"foo" 123}}})
-                   (catch Exception e (.printStackTrace e)))))
-    (let [delete-q "delete from users where user_name = 'barfoo';"]
-      (is (= ()
-             (alia/execute *session* (alia/batch (repeat 3 delete-q))))))
+  (testing "prepare types"
+    (let [s-prepare-types (alia/prepare
+                           *session*
+                           "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")]
 
-    (is (= [] (try (alia/execute *session* s-prepare-types {:values {:user_name "ffoooobbaarr"
-                                                            :birth_year 0
-                                                            :auuid #uuid "b474e171-7757-449a-87be-d2797d1336e3"
-                                                            :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"
-                                                            :created (clj-time/now)
-                                                            :valid false
-                                                            :tags [1 2 3 4]
-                                                            :emails  #{"foo" "bar"}
-                                                            :amap {"foo" 123}}})
-                   (catch Exception e (.printStackTrace e)))))
+      (testing "seq of values"
+        (is (= [] (alia/execute
+                   *session*
+                   s-prepare-types
+                   {:values ["foobar"
+                             0
+                             #uuid "b474e171-7757-449a-87be-d2797d1336e3"
+                             #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"
+                             (Instant/now)
+                             false
+                             [1 2 3 4]
+                             #{"foo" "bar"}
+                             {"foo" 123}]})))
+        (let [delete-q "delete from users where user_name = 'foobar';"]
+          (is (= ()
+                 (alia/execute *session* (alia/batch (repeat 3 delete-q)))))))
 
-    (let [delete-q "delete from users where user_name = 'ffoooobbaarr';"]
-      (is (= ()
-             (alia/execute *session* (alia/batch (repeat 3 delete-q))))))))
+      (testing "map of values"
+        (is (= ()
+               (alia/execute
+                *session*
+                s-prepare-types
+                {:values {:user_name "barfoo"
+                          :birth_year 0
+                          :auuid #uuid "b474e171-7757-449a-87be-d2797d1336e3"
+                          :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"
+                          :created (Instant/now)
+                          :valid false
+                          :tags [1 2 3 4]
+                          :emails  #{"foo" "bar"}
+                          :amap {"foo" 123}}})))
+        (let [delete-q "delete from users where user_name = 'barfoo';"]
+          (is (= ()
+                 (alia/execute *session* (alia/batch (repeat 3 delete-q))))))
+
+        (is (= []
+               (alia/execute
+                *session*
+                s-prepare-types
+                {:values {:user_name "ffoooobbaarr"
+                          :birth_year 0
+                          :auuid #uuid "b474e171-7757-449a-87be-d2797d1336e3"
+                          :tuuid #uuid "e34288d0-7617-11e2-9243-0024d70cf6c4"
+                          :created (Instant/now)
+                          :valid false
+                          :tags [1 2 3 4]
+                          :emails  #{"foo" "bar"}
+                          :amap {"foo" 123}}})))
+
+        (let [delete-q "delete from users where user_name = 'ffoooobbaarr';"]
+          (is (= ()
+                 (alia/execute *session* (alia/batch (repeat 3 delete-q)))))))))
+
+  (testing "parameterized set"
+    (let [;; s-parameterized-set (prepare  "select * from users where emails=?;")
+          ]))
+  (testing "parameterized nil"
+    (let [;; s-parameterized-nil (prepare  "select * from users where session_token=?;")
+          ])))
 
 (deftest test-error
   (let [stmt "slect prout from 1;"]
