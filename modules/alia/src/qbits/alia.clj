@@ -166,10 +166,12 @@
   ([qs type]
    (batch qs type default-codec/codec))
   ([qs type codec]
-   (let [bs (BatchStatement/newInstance (enum/batch-type type))]
-     (doseq [q qs]
-       (.add bs (query->statement q nil codec)))
-     bs)))
+   ;; note that the default BatchStatement impl is now immutable
+   (reduce
+    (fn [^BatchStatement bs q]
+      (.add bs (query->statement q nil codec)))
+    (BatchStatement/newInstance (enum/batch-type type))
+    qs)))
 
 (defn ^:no-doc set-statement-options!
   [^Statement statement
