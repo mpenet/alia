@@ -165,7 +165,12 @@
   (testing "promise"
     (is (= user-data-set
            @(alia.manifold/execute *session* "select * from users;"))))
-  (testing "stream"
+  (testing "stream of pages"
+    (let [r-s (alia.manifold/execute-buffered-pages *session* "select * from users;")
+          rs @(manifold.stream/take! r-s)]
+      (is (= user-data-set
+             rs))))
+  (testing "stream of records"
     (let [r-s (alia.manifold/execute-buffered *session* "select * from users;")
           rs @(manifold.stream/reduce conj [] r-s)]
       (is (= user-data-set
@@ -179,8 +184,10 @@
                         (catch Exception ex ex))))
 
     (is (instance? Exception
-                   (try @(alia.manifold/execute *session* "select * from users;"
-                                                {:page-size :wtf})
+                   (try @(alia.manifold/execute
+                          *session*
+                          "select * from users;"
+                          {:page-size :wtf})
                         (catch Exception ex
                           ex))))
 
@@ -193,13 +200,21 @@
 
     (is (instance? Exception
                    @(manifold.stream/take!
-                     (alia.manifold/execute-buffered *session* "select * from users;"
-                                                     {:page-size :wtf}))))))
+                     (alia.manifold/execute-buffered
+                      *session*
+                      "select * from users;"
+                      {:page-size :wtf}))))))
 
 (deftest core-async-test
   (testing "promise-chan"
     (is (= user-data-set
            (async/<!! (alia.async/execute-chan *session* "select * from users;")))))
+
+  (testing "chan of pages"
+    (let [r-c (alia.async/execute-chan-pages *session* "select * from users;")
+          rs (async/<!! r-c)]
+      (is (= user-data-set
+             rs))))
 
   (testing "chan of records"
     (let [r-c (alia.async/execute-chan-buffered *session* "select * from users;")
@@ -208,8 +223,8 @@
       (is (= user-data-set
              rs))))
 
-;;   ;; Something smarter could be done with alt! (select) but this will
-;;   ;; do for a test
+  ;;   ;; Something smarter could be done with alt! (select) but this will
+  ;;   ;; do for a test
   ;; (is (= 3 (count (async/<!! (async/go
   ;;                              (loop [i 0 ret []]
   ;;                                (if (= 3 i)
@@ -218,39 +233,53 @@
   ;;                                         (conj ret (async/<! (execute-chan *session* "select * from users limit 1")))))))))))
 
   (testing "errors"
-    (let [stmt "slect prout from 1;"]
-      (is (instance? clojure.lang.ExceptionInfo
-                   (async/<!! (alia.async/execute-chan *session* stmt))))
     (is (instance? clojure.lang.ExceptionInfo
-                   (async/<!! (alia.async/execute-chan *session* "select * from users;"
-                                            {:values ["foo"]}))))
+                   (async/<!! (alia.async/execute-chan
+                               *session*
+                               "slect prout from 1;"))))
+
+    (is (instance? clojure.lang.ExceptionInfo
+                   (async/<!! (alia.async/execute-chan
+                               *session*
+                               "select * from users;"
+                               {:values ["foo"]}))))
     (is (instance? Exception
-                   (async/<!! (alia.async/execute-chan *session* "select * from users;"
-                                            {:fetch-size :wtf}))))
+                   (async/<!! (alia.async/execute-chan
+                               *session*
+                               "select * from users;"
+                               {:page-size :wtf}))))
 
-    (is (instance? clojure.lang.ExceptionInfo
-                   (async/<!! (alia.async/execute-chan-buffered *session* stmt))))
-    (is (instance? clojure.lang.ExceptionInfo
-                   (async/<!! (alia.async/execute-chan-buffered *session* "select * from users;"
-                                            {:values ["foo"]}))))
-    (is (instance? Exception
-                   (async/<!! (alia.async/execute-chan-buffered *session* "select * from users;"
-                                            {:retry-policy :wtf}))))
+    ;; (is (instance? clojure.lang.ExceptionInfo
+    ;;                (async/<!! (alia.async/execute-chan-buffered
+    ;;                            *session*
+    ;;                            "slect prout from 1;"))))
+    ;; (is (instance? clojure.lang.ExceptionInfo
+    ;;                (async/<!! (alia.async/execute-chan-buffered
+    ;;                            *session*
+    ;;                            "select * from users;"
+    ;;                            {:values ["foo"]}))))
+    ;; (is (instance? Exception
+    ;;                (async/<!! (alia.async/execute-chan-buffered
+    ;;                            *session*
+    ;;                            "select * from users;"
+    ;;                            {:retry-policy :wtf}))))
 
 
 
-    (let [p (promise)]
-      (alia.async/execute-chan *session* "select * from users;"
-                     {:values  ["foo"]
-                      :error (fn [r] (deliver p r))})
-      (is (:query (ex-data @p))))
+    ;; (let [p (promise)]
+    ;;   (alia.async/execute-chan *session* "select * from users;"
+    ;;                            {:values  ["foo"]
+    ;;                             :error (fn [r] (deliver p r))})
+    ;;   (is (:query (ex-data @p))))
 
-    (let [p (promise)]
-      (alia.async/execute-chan *session* "select * from users;"
-                          {:fetch-size :wtf
-                           :error (fn [r] (deliver p r))})
-      (instance? Exception @p))
-      )))
+    ;; (let [p (promise)]
+    ;;   (alia.async/execute-chan *session* "select * from users;"
+    ;;                            {:page-size :wtf
+    ;;                             :error (fn [r] (deliver p r))})
+    ;;   (instance? Exception @p))
+    )
+
+  )
 
 (deftest prepare-test
   (testing "simple"
@@ -402,11 +431,11 @@
         (let [^ExecutionInfo xi (-> rs meta :execution-info first)]
           (-> xi .getStatement .getPageSize)))]
 
-  (deftest test-fetch-size
+  (deftest test-page-size
     (let [result-set (alia/execute
                       *session*
                       "select * from items;"
-                      {:fetch-size 3
+                      {:page-size 3
                        :result-set-fn result-set-fn-with-execution-infos})]
       (is (= 3 (get-fetch-size result-set)))))
 
@@ -414,7 +443,7 @@
     (let [result-ch (alia.async/execute-chan
                      *session*
                      "select * from items;"
-                     {:fetch-size 5
+                     {:page-size 5
                       :result-set-fn result-set-fn-with-execution-infos})]
       (is (= 5 (get-fetch-size (async/<!! result-ch)))))))
 
@@ -422,7 +451,7 @@
   (let [ch (alia.async/execute-chan-buffered
             *session*
             "select * from items;"
-            {:fetch-size 5})]
+            {:page-size 5})]
     (is (= 10 (count (loop [coll []]
                        (if-let [row (async/<!! ch)]
                          (recur (cons row coll))
@@ -447,7 +476,7 @@
   (let [ch (alia.async/execute-chan-buffered
             *session*
             "select * from items;"
-            {:fetch-size 1})]
+            {:page-size 1})]
     (is (= 1 (count (loop [coll []]
                       (if-let [row (async/<!! ch)]
                         (do
