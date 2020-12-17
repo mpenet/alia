@@ -10,14 +10,14 @@
    [com.datastax.oss.driver.api.core.cql AsyncResultSet]
    [java.util.concurrent CompletionStage]))
 
-(defn execute
+(defn execute-deferred
   "Same as qbits.alia/execute, but returns just the first page of results"
   ([^CqlSession session query {:as opts}]
    (d/chain
     (alia/execute-async session query opts)
     :current-page))
   ([^Session session query]
-     (execute session query {})))
+     (execute-deferred session query {})))
 
 (defn handle-page-completion-stage
   [^CompletionStage completion-stage
@@ -66,13 +66,13 @@
 
    opts))
 
-(defn execute-buffered-pages
+(defn execute-stream-pages
   ([^CqlSession session query {stream :stream
-                               buffer-size :buffer-size
+                               page-buffer-size :page-buffer-size
                                :as opts}]
    (let [stream (or stream
                     ;; fetch one page ahead by default
-                    (s/stream (or buffer-size 1)))
+                    (s/stream (or page-buffer-size 1)))
 
          page-cs (alia/execute-async session query opts)]
 
@@ -85,7 +85,7 @@
      stream))
 
   ([^CqlSession session query]
-   (execute-buffered-pages session query {})))
+   (execute-stream-pages session query {})))
 
 (defn ^:private safe-identity
   "if the page should happen to be an Exception, wrap
@@ -94,13 +94,13 @@
   [v]
   (if (sequential? v) v [v]))
 
-(defn execute-buffered
+(defn execute-stream-records
   ([^CqlSession session query {:as opts}]
-   (let [stream (execute-buffered-pages session query opts)]
+   (let [stream (execute-stream-pages session query opts)]
 
      (s/transform
       (mapcat safe-identity)
       stream)))
 
   ([^CqlSession session query]
-   (execute-buffered session query {})))
+   (execute-stream-records session query {})))

@@ -63,11 +63,11 @@
 
 (defn execute-chan-pages
   ([^CqlSession session query {chan :chan
-                               buffer-size :buffer-size
+                               page-buffer-size :page-buffer-size
                                :as opts}]
    (let [chan (or chan
                   ;; fetch one page ahead by default
-                  (async/chan (or buffer-size 1)))
+                  (async/chan (or page-buffer-size 1)))
 
          page-cs (alia/execute-async session query opts)]
 
@@ -115,7 +115,7 @@
   [v]
   (if (sequential? v) v [v]))
 
-(defn execute-chan-buffered
+(defn execute-chan-records
   "Allows to execute a query and have rows returned in a
   `clojure.core.async/chan`. Every value in the chan is a single
   row. By default the query `:page-size` inherits from the cluster
@@ -144,4 +144,4 @@
        record-chan)))
 
   ([^Session session query]
-   (execute-chan-buffered session query {})))
+   (execute-chan-records session query {})))
