@@ -143,9 +143,7 @@
 (defn encoder
   "Takes a Session, optionally keyspace name, UDT name and returns a
   function that can be used to encode a map into a UdtValue suitable
-  to be used in PreparedStatements
-
-  TODO broken for collection values - java-driver-4 changed the API"
+  to be used in PreparedStatements"
   ([^Session session typename codec]
    (encoder session nil typename codec))
   ([^Session session ks typename codec]

@@ -149,9 +149,7 @@
 (defn encoder
   "Takes a Session, optionally keyspace name, table name and column
   name and returns a function that can be used to encode a collection into
-  a TupleValue suitable to be used in PreparedStatements
-
-  TODO broken for collection components - java-driver-4 changed the API"
+  a TupleValue suitable to be used in PreparedStatements"
   ([^Session session table column codec]
    (encoder session nil table column codec))
   ([^Session session ks table column codec]

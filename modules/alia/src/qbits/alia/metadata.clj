@@ -21,6 +21,10 @@
     (.get opt)
     nil))
 
+(defn ^String quoted-name
+  [n]
+  (str "\"" (name n)"\""))
+
 (defn get-keyspace-metadata
   "ks - keyspace name, if nil then default session keyspace will be used"
   [^Session session ks]
@@ -30,7 +34,7 @@
         (cond
           (some? ks)
           (some-> metadata
-                  (.getKeyspace (name ks))
+                  (.getKeyspace (quoted-name ks))
                   (safe-get))
 
           :else
@@ -47,7 +51,7 @@
 
         ^UserDefinedType udt
         (some-> ks-metadata
-                (.getUserDefinedType (name type))
+                (.getUserDefinedType (quoted-name type))
                 (safe-get))]
     udt))
 
@@ -58,7 +62,7 @@
 
         ^TableMetadata table-metadata
         (some-> ks-metadata
-                (.getTable (name table))
+                (.getTable (quoted-name table))
                 (safe-get))]
 
     table-metadata))
@@ -70,7 +74,7 @@
 
         ^ColumnMetadata column-metadata
         (some-> table-metadata
-                (.getColumn (name column))
+                (.getColumn (quoted-name column))
                 (safe-get))]
 
     column-metadata))

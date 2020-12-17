@@ -14,7 +14,7 @@
   (:import
    [java.time Instant]
    [com.datastax.oss.driver.api.core.cql ExecutionInfo]
-   [com.datastax.oss.driver.api.core.data UdtValue]))
+   [com.datastax.oss.driver.api.core.data UdtValue TupleValue]))
 
 (try
   (require 'qbits.alia.spec)
@@ -511,15 +511,20 @@
     (is (instance? UdtValue (encoder {:foo nil "bar" 100})))
     (is (instance? UdtValue (encoder {:foo nil "bar" 100})))
     (is (instance? UdtValue (encoder-ct {:foo "f" :tup (tup ["a" "b"])})))
-    (is (= :qbits.alia.udt/type-not-found
+    (is (= :qbits.alia.udt/udt-not-found
            (-> (try (alia/udt-encoder *session* :invalid-type) (catch Exception e e))
                ex-data
                :type)))
-    (is (= :qbits.alia.tuple/type-not-found
+    (is (= :qbits.alia.tuple/tuple-not-found
            (-> (try (alia/tuple-encoder *session* :users :invalid-type) (catch Exception e e))
                ex-data
-               :type)))
-    (is (= :qbits.alia.tuple/type-not-found
+               :type)))))
+
+(deftest tuple-encoder-test
+  (let [tup (alia/tuple-encoder *session* :users :tup)]
+    (is (instance? TupleValue (tup  ["a" "b"])))
+
+    (is (= :qbits.alia.tuple/tuple-not-found
            (-> (try (alia/tuple-encoder *session* :invalid-col :invalid-type) (catch Exception e e))
                ex-data
                :type)))))
