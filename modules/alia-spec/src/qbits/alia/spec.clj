@@ -57,34 +57,25 @@
 (alias 'alia.statement-options 'qbits.alia.statement-options)
 (s/def ::alia.statement-options/consistency-level ::enum/consistency-level)
 (s/def ::alia.statement-options/idempotent? boolean?)
-
 (s/def ::alia.statement-options/page-size pos-int?)
 (s/def ::alia.statement-options/paging-state #(instance? ByteBuffer %))
-
 (s/def ::alia.statement-options/query-timestamp pos-int?)
-
 (s/def ::alia.statement-options/routing-key #(instance? ByteBuffer %))
-
-(s/def ::alia.statement-options/retry-policy #(instance? RetryPolicy %))
-
-
 (s/def ::alia.statement-options/serial-consistency-level ::enum/consistency-level)
-
 (s/def ::alia.statement-options/timeout pos-int?)
-(s/def ::alia.statement-options/tracing boolean?)
+(s/def ::alia.statement-options/tracing? boolean?)
 
 (s/def ::alia/statement-options
   (s/keys :opts-un
-          [::alia.statement-options/routing-key
-           ::alia.statement-options/retry-policy
-           ::alia.statement-options/tracing?
+          [::alia.statement-options/consistency-level
            ::alia.statement-options/idempotent?
-           ::alia.statement-options/consistency
-           ::alia.statement-options/serial-consistency
-           ::alia.statement-options/fetch-size
-           ::alia.statement-options/timesamp
+           ::alia.statement-options/page-size
            ::alia.statement-options/paging-state
-           ::alia.statement-options/read-timeout]))
+           ::alia.statement-options/query-timesamp
+           ::alia.statement-options/routing-key
+           ::alia.statement-options/serial-consistency-level
+           ::alia.statement-options/timeout
+           ::alia.statement-options/tracing?]))
 
 (create-ns 'qbits.alia.execute-opts)
 (alias 'alia.execute-opts 'qbits.alia.execute-opts)
