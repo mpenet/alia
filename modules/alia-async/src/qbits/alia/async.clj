@@ -108,14 +108,21 @@
   ([^Session session query]
    (execute-chan session query {})))
 
+(defn ^:private safe-identity
+  "if the page should happen to be an Exception, wrap
+   it in a vector so that it can be concatenated to the
+   value channel"
+  [v]
+  (if (sequential? v) v [v]))
+
 (defn execute-chan-buffered
   "Allows to execute a query and have rows returned in a
   `clojure.core.async/chan`. Every value in the chan is a single
-  row. By default the query `:fetch-size` inherits from the cluster
-  setting, unless you specify a different `:fetch-size` at query level
+  row. By default the query `:page-size` inherits from the cluster
+  setting, unless you specify a different `:page-size` at query level
   and the channel is a regular `clojure.core.async/chan`, unless you
   pass your own `:channel` with its own sizing
-  caracteristics. `:fetch-size` dicts the chunking of the rows
+  caracteristics. `:page-size` dicts the chunking of the rows
   returned, allowing to stream rows into the channel in a controlled
   manner.
   If you close the channel the streaming process ends.
@@ -126,7 +133,7 @@
                                :as opts}]
 
    (let [page-chan (execute-chan-pages session query (dissoc opts :chan))
-         record-chan (async/chan 1 (mapcat identity))]
+         record-chan (async/chan 1 (mapcat safe-identity))]
 
      (async/pipe page-chan record-chan)
 
