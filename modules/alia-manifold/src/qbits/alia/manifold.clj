@@ -2,7 +2,8 @@
   (:require
    [manifold.deferred :as d]
    [manifold.stream :as s]
-   [qbits.alia :as alia])
+   [qbits.alia :as alia]
+   [qbits.alia.completable-future :as cf])
   (:import
    [com.datastax.oss.driver.api.core.session Session]
    [com.datastax.oss.driver.api.core CqlSession]
@@ -25,7 +26,7 @@
     stream :stream
     executor :executor
     :as opts}]
-  (alia/handle-completion-stage
+  (cf/handle-completion-stage
    completion-stage
 
    (fn [{current-page :current-page

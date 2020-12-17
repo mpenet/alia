@@ -1,7 +1,8 @@
 (ns qbits.alia.async
   (:require
    [clojure.core.async :as async]
-   [qbits.alia :as alia])
+   [qbits.alia :as alia]
+   [qbits.alia.completable-future :as cf])
   (:import
    [com.datastax.oss.driver.api.core.session Session]
    [com.datastax.oss.driver.api.core CqlSession]
@@ -17,7 +18,7 @@
     executor :executor
     stop? ::stop?
     :as opts}]
-  (alia/handle-completion-stage
+  (cf/handle-completion-stage
    completion-stage
    (fn [{current-page :current-page
         ^AsyncResultSet async-result-set :async-result-set

@@ -1,6 +1,7 @@
 (ns qbits.alia
   (:require
    [qbits.alia.codec.default :as default-codec]
+   [qbits.alia.completable-future :as cf]
    [qbits.alia.cql-session :as cql-session]
    [qbits.alia.result-set :as result-set]
    [qbits.alia.settable-by-name :as settable-by-name]
@@ -13,13 +14,11 @@
     Statement
     PreparedStatement
     BatchStatement
-    BoundStatement
     BoundStatementBuilder
     SimpleStatement]
-   [java.util.concurrent Executor CompletionStage CompletableFuture]
+   [java.util.concurrent Executor CompletionStage]
    [java.nio ByteBuffer]
-   [java.util Map]
-   [java.util.function BiFunction]))
+   [java.util Map]))
 
 (defn session
   "shortcut to create a session-builder and build a session"
@@ -200,8 +199,8 @@
            routing-token
            serial-consistency-level
            timeout
-           tracing?]}]
-
+           tracing?]
+    :as opts}]
   (when (some? consistency-level)
     (.setConsistencyLevel statement (enum/consistency-level consistency-level)))
   (when (some? execution-profile)
@@ -213,7 +212,7 @@
   (when (some? node)
     (.setNode statement node))
   (when (some? page-size)
-   (.setPageSize statement page-size))
+    (.setPageSize statement page-size))
   (when (some? paging-state)
     (.setPagingState statement paging-state))
   (when (some? query-timestamp)
@@ -301,23 +300,6 @@
   ([^CqlSession session query]
    (execute session query {})))
 
-(defn handle-completion-stage
-  "java incantation to handle both branches of a completion-stage"
-  [^CompletionStage completion-stage
-   on-success
-   on-error
-   {executor :executor
-    :as opts}]
-  (let [handler-bifn (reify BiFunction
-                       (apply [_ r ex]
-                         (if (some? ex)
-                           (on-error ex)
-                           (on-success r))))]
-
-    (if (some? executor)
-      (.handleAsync completion-stage handler-bifn executor)
-      (.handleAsync completion-stage handler-bifn))))
-
 (defn handle-async-result-set-completion-stage
   "if successful, applies the row-generator to the current page
    if failed, decorates the exception with query and value details"
@@ -330,7 +312,7 @@
            executor]
     :as opts}]
 
-  (handle-completion-stage
+  (cf/handle-completion-stage
    completion-stage
    (fn [async-result-set]
      (result-set/async-result-set
@@ -373,7 +355,7 @@
              ^CompletionStage async-result-set-cs (.executeAsync session statement)]
          (handler async-result-set-cs)))
      (catch Exception ex
-       (CompletableFuture/completedFuture
+       (cf/failed-future
         (ex->ex-info ex {:query query :values values})))))
   ([^CqlSession session query]
    (execute-async session query {})))
