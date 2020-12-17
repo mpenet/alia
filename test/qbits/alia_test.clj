@@ -132,7 +132,6 @@
 
       (alia/shutdown *session*))))
 
-
 (deftest execute-test
   (testing "string query"
     (is (= user-data-set
@@ -170,7 +169,17 @@
                       "select * from items;"
                       {:page-size 3
                        :result-set-fn result-set-fn-with-execution-infos})]
-      (is (= 3 (get-page-size result-set))))))
+      (is (= 3 (get-page-size result-set)))))
+
+  (testing "test-custom-codec"
+    (is (-> (alia/execute *session* "select * from users limit 1"
+                          {:codec {:decoder (constantly 42)
+                                   :encoder identity}})
+            first
+            :valid
+            (= 42)))
+    ;; TODO test encoder
+    ))
 
 (deftest execute-async-test
   (testing "success"
@@ -471,8 +480,7 @@
       (let [stmt "select * from foo where bar = ?;" values [1 2]]
         (is (:query (try @(alia/bind (alia/prepare *session* stmt) values)
                          (catch Exception ex
-                           (ex-data ex))))))
-      )))
+                           (ex-data ex)))))))))
 
 (deftest lazy-query-test
   (is (= 10
@@ -498,27 +506,40 @@
                    (when (< (-> coll last :si) 3)
                      (merge q (h/where {:si (-> coll last :si inc)}))))))))))
 
-
-
-
-
+(defrecord Foo [foo bar])
 
 (deftest udt-encoder-test
-  (let [encoder (alia/udt-encoder *session* :udt)
-        encoder-ct (alia/udt-encoder *session* :udtct)
-        tup (alia/tuple-encoder *session* :users :tup)]
-    (is (instance? UdtValue (encoder {:foo "f" "bar" 100})))
-    (is (instance? UdtValue (encoder {:foo nil "bar" 100})))
-    (is (instance? UdtValue (encoder {:foo nil "bar" 100})))
-    (is (instance? UdtValue (encoder-ct {:foo "f" :tup (tup ["a" "b"])})))
-    (is (= :qbits.alia.udt/udt-not-found
-           (-> (try (alia/udt-encoder *session* :invalid-type) (catch Exception e e))
-               ex-data
-               :type)))
-    (is (= :qbits.alia.tuple/tuple-not-found
-           (-> (try (alia/tuple-encoder *session* :users :invalid-type) (catch Exception e e))
-               ex-data
-               :type)))))
+  (testing "explicit udt-encoder"
+    (let [encoder (alia/udt-encoder *session* :udt)
+          encoder-ct (alia/udt-encoder *session* :udtct)
+          tup (alia/tuple-encoder *session* :users :tup)]
+      (is (instance? UdtValue (encoder {:foo "f" "bar" 100})))
+      (is (instance? UdtValue (encoder {:foo nil "bar" 100})))
+      (is (instance? UdtValue (encoder {:foo nil "bar" 100})))
+      (is (instance? UdtValue (encoder-ct {:foo "f" :tup (tup ["a" "b"])})))
+      (is (= :qbits.alia.udt/udt-not-found
+             (-> (try (alia/udt-encoder *session* :invalid-type) (catch Exception e e))
+                 ex-data
+                 :type)))
+      (is (= :qbits.alia.tuple/tuple-not-found
+             (-> (try (alia/tuple-encoder *session* :users :invalid-type) (catch Exception e e))
+                 ex-data
+                 :type)))))
+
+  (testing "udt-registry"
+    (let [codec qbits.alia.codec.udt-aware/codec]
+      (codec.udt-aware/register-udt! codec *session* :udt Foo)
+
+      (is
+       (= Foo
+          (-> (alia/execute *session* "select * from users limit 1"
+                            {:codec codec})
+              first
+              :udt
+              type)))
+
+      (codec.udt-aware/deregister-udt! codec *session* :udt Foo))))
+
 
 (deftest tuple-encoder-test
   (let [tup (alia/tuple-encoder *session* :users :tup)]
@@ -528,26 +549,3 @@
            (-> (try (alia/tuple-encoder *session* :invalid-col :invalid-type) (catch Exception e e))
                ex-data
                :type)))))
-
-(defrecord Foo [foo bar])
-(deftest test-udt-registry
-  (let [codec qbits.alia.codec.udt-aware/codec]
-    (codec.udt-aware/register-udt! codec *session* :udt Foo)
-    (is
-     (= Foo
-        (-> (alia/execute *session* "select * from users limit 1"
-                          {:codec codec})
-            first
-            :udt
-            type)))
-    (codec.udt-aware/deregister-udt! codec *session* :udt Foo)))
-
-(deftest test-custom-codec
-  (is (-> (alia/execute *session* "select * from users limit 1"
-                   {:codec {:decoder (constantly 42)
-                            :encoder identity}})
-          first
-          :valid
-          (= 42)))
-    ;; todo test encoder
-  )

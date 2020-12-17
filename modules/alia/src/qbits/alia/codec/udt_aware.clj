@@ -1,6 +1,7 @@
 (ns qbits.alia.codec.udt-aware
   (:require
    [clojure.reflect :as reflect]
+   [clojure.string :as string]
    [qbits.alia.codec.default :as default-codec]
    [qbits.alia.udt :as udt])
   (:import
@@ -65,7 +66,10 @@
 (def default-encoders (encoders #'encode))
 
 (defn record-map-ctor [rec-sym]
-  (let [[_ ns' kls] (re-find #"(.*)\.([^.]*)$" (str (reflect/typename rec-sym)))]
+  (let [[_ ns' kls] (re-find #"(.*)\.([^.]*?)$"
+                             (str (reflect/typename rec-sym)))
+        ;; reverse transform for classnames in namespaces with dashes
+        ns' (string/replace ns' #"_" "-")]
     (resolve (symbol (str ns' "/map->" kls)))))
 
 (defrecord DefaultCodec [encoder decoder udt-registry]
@@ -79,14 +83,19 @@
   (register-udt! [this session udt-name record-ctor]
     ;; we register both ways as we need inverted index depending on if
     ;; it's for decoding/encoding
-    (vswap! udt-registry assoc
-            ;; name -> record-ctor
-            (name udt-name) (record-map-ctor record-ctor)
-            ;; record-type -> udtencoder
-            record-ctor
-            (udt/encoder session
-                         udt-name
-                         codec)))
+    (let [rmctor (record-map-ctor record-ctor)]
+      (when (nil? rmctor)
+        (throw (ex-info
+                "can't find map constructor"
+                {:record-ctor record-ctor})))
+      (vswap! udt-registry assoc
+              ;; name -> record-ctor
+              (name udt-name) rmctor
+              ;; record-type -> udtencoder
+              record-ctor
+              (udt/encoder session
+                           udt-name
+                           codec))))
   (get-udt-codec [this udt-name-or-rec-type]
     (get @udt-registry udt-name-or-rec-type)))
 
