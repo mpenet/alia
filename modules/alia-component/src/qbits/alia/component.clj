@@ -20,8 +20,8 @@
   "Retrieve a `Session` instance set to use a specific keyspace.
    keyspace may be a keyword or string."
   [registry k keyspace]
-  (if-let [cluster (get (:clusters registry) (keyword k))]
-    (alia/connect cluster keyspace)
+  (if-let [config (get (:configs registry) (keyword k))]
+    (alia/session (merge config {:session-keyspace keyspace}))
     (throw (IllegalArgumentException. (str "no such cluster: " k)))))
 
 (defn ->opts
@@ -96,22 +96,20 @@
   ([registry keyspace queries]
    (query-functions registry ::unnamed keyspace queries)))
 
-(defrecord CassandraMultiClusterRegistry [cluster-opts query-opts configs
-                                          clusters sessions]
+(defrecord CassandraMultiClusterRegistry [cluster-opts
+                                          query-opts
+                                          configs
+                                          clusters
+                                          sessions]
   component/Lifecycle
   (start [this]
     (doseq [[_ config] configs]
-      (s/assert ::alia/cluster-options config))
-    (let [clusters (reduce-kv #(assoc %1 %2 (alia/cluster %3)) {} configs)]
-      (assoc this :clusters clusters :sessions (atom []))))
+      (s/assert ::alia/cluster-options config)))
   (stop [this]
     (when (some? sessions)
-      (doseq [^com.datastax.driver.core.Session session @sessions]
-        (.close session)))
-    (when (some? clusters)
-      (doseq [[_ cluster] clusters]
-        (.close ^com.datastax.driver.core.Cluster cluster)))
-    (assoc this :clusters nil :sessions nil)))
+      (doseq [session @sessions]
+        (alia/shutdown session)))
+    (assoc this :sessions nil)))
 
 (defn cassandra-registry
   "A single cluster version of CassandraMultiClusterRegistry"
