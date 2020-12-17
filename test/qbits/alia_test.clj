@@ -143,7 +143,15 @@
     (let [stmt "slect prout from 1;"]
       (is (:query (try (alia/execute *session* stmt)
                        (catch Exception ex
-                         (ex-data ex))))))))
+                         (ex-data ex)))))))
+  (testing "test-result-set-types"
+    (is (instance? clojure.lang.LazySeq
+                   (alia/execute *session* "select * from items;")))
+    (is (instance? clojure.lang.PersistentVector
+                   (alia/execute
+                    *session*
+                    "select * from items;"
+                    {:result-set-fn #(into [] %)})))))
 
 (deftest execute-async-test
   (testing "success"
@@ -211,6 +219,9 @@
                       "select * from users;"
                       {:page-size :wtf}))))))
 
+(deftest test-execute-chan-records
+  )
+
 (deftest core-async-test
   (testing "promise-chan"
     (is (= user-data-set
@@ -227,7 +238,46 @@
           rs-c (async/reduce conj [] r-c)
           rs (async/<!! rs-c)]
       (is (= user-data-set
-             rs))))
+             rs)))
+
+    (let [ch (alia.async/execute-chan-records
+              *session*
+              "select * from items;")]
+      (is (= 10 (count (loop [coll []]
+                         (if-let [row (async/<!! ch)]
+                           (recur (cons row coll))
+                           coll))))))
+
+    (testing "supplied channel"
+      (let [ch (alia.async/execute-chan-records
+                *session*
+                "select * from items;"
+                {:channel (async/chan 5)})]
+        (is (= 10 (count (loop [coll []]
+                           (if-let [row (async/<!! ch)]
+                             (recur (cons row coll))
+                             coll)))))))
+
+    (testing "page-sizes"
+      (let [ch (alia.async/execute-chan-records
+                *session*
+                "select * from items;"
+                {:page-size 5})]
+        (is (= 10 (count (loop [coll []]
+                           (if-let [row (async/<!! ch)]
+                             (recur (cons row coll))
+                             coll))))))
+
+      (let [ch (alia.async/execute-chan-records
+                *session*
+                "select * from items;"
+                {:page-size 1})]
+        (is (= 1 (count (loop [coll []]
+                          (if-let [row (async/<!! ch)]
+                            (do
+                              (async/close! ch)
+                              (recur (cons row coll)))
+                            coll))))))))
 
   ;;   ;; Something smarter could be done with alt! (select) but this will
   ;;   ;; do for a test
@@ -237,6 +287,8 @@
   ;;                                  ret
   ;;                                  (recur (inc i)
   ;;                                         (conj ret (async/<! (execute-chan *session* "select * from users limit 1")))))))))))
+
+
 
   (testing "errors"
     (is (instance? clojure.lang.ExceptionInfo
@@ -358,6 +410,24 @@
           (is (= ()
                  (alia/execute *session* (alia/batch (repeat 3 delete-q)))))))))
 
+  (testing "named-bindings"
+    (let [prep-write (alia/prepare *session* "INSERT INTO simple (id, text) VALUES(:id, :text);")
+          prep-read (alia/prepare *session* "SELECT * FROM simple WHERE id = :id;")
+          an-id (int 100)]
+
+      (is (= []
+             (alia/execute *session* prep-write {:values {:id an-id
+                                                          :text "inserted via named bindings"}})))
+
+      (is (= [{:id an-id
+               :text "inserted via named bindings"}]
+             (alia/execute *session* prep-read {:values {:id an-id}})))
+
+      (is (= [{:id an-id
+               :text "inserted via named bindings"}]
+             (alia/execute *session* "SELECT * FROM simple WHERE id = :id;"
+                           {:values {:id an-id}})))))
+
   (testing "parameterized set"
     (let [;; s-parameterized-set (prepare  "select * from users where emails=?;")
           ]))
@@ -377,10 +447,7 @@
         (is (:query (try @(alia/bind (alia/prepare *session* stmt) values)
                          (catch Exception ex
                            (ex-data ex))))))
-
       )))
-
-
 
 (deftest lazy-query-test
   (is (= 10
@@ -412,7 +479,7 @@
         (vary-meta rs assoc
                    :execution-info (result-set/execution-info rs)))
 
-      get-fetch-size
+      get-page-size
       (fn [rs]
         (let [^ExecutionInfo xi (-> rs meta :execution-info first)]
           (-> xi .getStatement .getPageSize)))]
@@ -423,7 +490,7 @@
                       "select * from items;"
                       {:page-size 3
                        :result-set-fn result-set-fn-with-execution-infos})]
-      (is (= 3 (get-fetch-size result-set)))))
+      (is (= 3 (get-page-size result-set)))))
 
   (deftest test-fetch-size-chan
     (let [result-ch (alia.async/execute-chan
@@ -431,62 +498,11 @@
                      "select * from items;"
                      {:page-size 5
                       :result-set-fn result-set-fn-with-execution-infos})]
-      (is (= 5 (get-fetch-size (async/<!! result-ch)))))))
+      (is (= 5 (get-page-size (async/<!! result-ch)))))))
 
-(deftest test-execute-chan-records
-  (let [ch (alia.async/execute-chan-records
-            *session*
-            "select * from items;"
-            {:page-size 5})]
-    (is (= 10 (count (loop [coll []]
-                       (if-let [row (async/<!! ch)]
-                         (recur (cons row coll))
-                         coll))))))
-  (let [ch (alia.async/execute-chan-records
-            *session*
-            "select * from items;")]
-    (is (= 10 (count (loop [coll []]
-                       (if-let [row (async/<!! ch)]
-                         (recur (cons row coll))
-                         coll))))))
 
-  (let [ch (alia.async/execute-chan-records
-            *session*
-            "select * from items;"
-            {:channel (async/chan 5)})]
-    (is (= 10 (count (loop [coll []]
-                       (if-let [row (async/<!! ch)]
-                         (recur (cons row coll))
-                         coll))))))
 
-  (let [ch (alia.async/execute-chan-records
-            *session*
-            "select * from items;"
-            {:page-size 1})]
-    (is (= 1 (count (loop [coll []]
-                      (if-let [row (async/<!! ch)]
-                        (do
-                          (async/close! ch)
-                          (recur (cons row coll)))
-                        coll)))))))
 
-(deftest test-named-bindings
-  (let [prep-write (alia/prepare *session* "INSERT INTO simple (id, text) VALUES(:id, :text);")
-        prep-read (alia/prepare *session* "SELECT * FROM simple WHERE id = :id;")
-        an-id (int 100)]
-
-    (is (= []
-           (alia/execute *session* prep-write {:values {:id an-id
-                                                   :text "inserted via named bindings"}})))
-
-    (is (= [{:id an-id
-             :text "inserted via named bindings"}]
-           (alia/execute *session* prep-read {:values {:id an-id}})))
-
-    (is (= [{:id an-id
-             :text "inserted via named bindings"}]
-           (alia/execute *session* "SELECT * FROM simple WHERE id = :id;"
-                    {:values {:id an-id}})))))
 
 (deftest udt-encoder-test
   (let [encoder (alia/udt-encoder *session* :udt)
@@ -508,11 +524,6 @@
            (-> (try (alia/tuple-encoder *session* :invalid-col :invalid-type) (catch Exception e e))
                ex-data
                :type)))))
-
-(deftest test-result-set-types
-  (is (instance? clojure.lang.LazySeq (alia/execute *session* "select * from items;")))
-  (is (instance? clojure.lang.PersistentVector (alia/execute *session* "select * from items;"
-                                                        {:result-set-fn #(into [] %)}))))
 
 (defrecord Foo [foo bar])
 (deftest test-udt-registry

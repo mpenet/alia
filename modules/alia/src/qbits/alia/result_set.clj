@@ -115,7 +115,10 @@
             ret))))))
 
 (defn result-set
-  [^ResultSet rs result-set-fn row-generator codec]
+  [^ResultSet rs
+   result-set-fn
+   row-generator
+   codec]
   ((or result-set-fn seq) (->result-set rs row-generator codec)))
 
 (defrecord AliaAsyncResultSetPage [current-page
@@ -128,6 +131,7 @@
   PAsyncResultSetPage
   (current-page [this]
     (:current-page this))
+
   (fetch-next-page [this]
     (when next-page-handler
       (next-page-handler

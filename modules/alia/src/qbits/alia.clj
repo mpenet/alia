@@ -173,7 +173,7 @@
     (BatchStatement/newInstance (enum/batch-type type))
     qs)))
 
-(defn ^:no-doc set-statement-options!
+(defn ^:no-doc ^Statement set-statement-options!
   [^Statement statement
    {:keys [consistency-level
            execution-profile
@@ -190,38 +190,52 @@
            timeout
            tracing?]
     :as opts}]
-  (when (some? consistency-level)
-    (.setConsistencyLevel statement (enum/consistency-level consistency-level)))
-  (when (some? execution-profile)
-    (.setExecutionProfile statement execution-profile))
-  (when (some? execution-profile-name)
-    (.setExecutionProfileName statement execution-profile-name))
-  (when (some? idempotent?)
-    (.setIdempotent statement idempotent?))
-  (when (some? node)
-    (.setNode statement node))
-  (when (some? page-size)
-    (.setPageSize statement page-size))
-  (when (some? paging-state)
-    (.setPagingState statement paging-state))
-  (when (some? query-timestamp)
-    (.setQueryTimestamp statement query-timestamp))
-  (when (some? routing-key)
-    (.setRoutingKey ^SimpleStatement statement
-                    ^ByteBuffer routing-key))
-  (when (some? routing-keyspace)
-    (.setRoutingKeyspace ^SimpleStatement statement
-                         ^String routing-keyspace))
-  (when (some? routing-token)
-    (.setRoutingToken statement routing-token))
-  (when (some? serial-consistency-level)
-    (.setSerialConsistencyLevel
-     statement
-     (enum/consistency-level serial-consistency-level)))
-  (when (some? timeout)
-    (.setTimeout statement timeout))
-  (when (some? tracing?)
-    (.setTracing statement tracing?)))
+
+  ;; note Statement objects are immutable now
+
+  (cond-> statement
+
+    (some? consistency-level)
+    (.setConsistencyLevel (enum/consistency-level consistency-level))
+
+    (some? execution-profile)
+    (.setExecutionProfile execution-profile)
+
+    (some? execution-profile-name)
+    (.setExecutionProfileName execution-profile-name)
+
+    (some? idempotent?)
+    (.setIdempotent idempotent?)
+
+    (some? node)
+    (.setNode node)
+
+    (some? page-size)
+    (.setPageSize page-size)
+
+    (some? paging-state)
+    (.setPagingState paging-state)
+
+    (some? query-timestamp)
+    (.setQueryTimestamp query-timestamp)
+
+    (some? routing-key)
+    (.setRoutingKey ^ByteBuffer routing-key)
+
+    (some? routing-keyspace)
+    (.setRoutingKeyspace ^String routing-keyspace)
+
+    (some? routing-token)
+    (.setRoutingToken routing-token)
+
+    (some? serial-consistency-level)
+    (.setSerialConsistencyLevel (enum/consistency-level serial-consistency-level))
+
+    (some? timeout)
+    (.setTimeout timeout)
+
+    (some? tracing?)
+    (.setTracing tracing?)))
 
 (defn execute
   "Executes a query against a session.
@@ -275,8 +289,8 @@
                                       row-generator]
                                :as opts}]
    (let [codec (or codec default-codec/codec)
-         ^Statement statement (query->statement query values codec)]
-     (set-statement-options! statement opts)
+         ^Statement statement (query->statement query values codec)
+         statement (set-statement-options! statement opts)]
      (try
 
        (result-set/result-set (.execute session statement)
@@ -331,8 +345,8 @@
                                :as opts}]
    (try
      (let [codec (or codec default-codec/codec)
-           ^Statement statement (query->statement query values codec)]
-       (set-statement-options! statement opts)
+           ^Statement statement (query->statement query values codec)
+           statement (set-statement-options! statement opts)]
 
        (let [handler (fn arscs-handler
                        [completion-stage]
