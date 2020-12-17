@@ -7,8 +7,7 @@
    [com.datastax.oss.driver.api.core.session Session]
    [com.datastax.oss.driver.api.core CqlSession]
    [com.datastax.oss.driver.api.core.cql AsyncResultSet]
-   [java.util.concurrent CompletionStage]
-   [java.util.function BiFunction]))
+   [java.util.concurrent CompletionStage]))
 
 (defn handle-page-completion-stage
   [^CompletionStage completion-stage
@@ -61,27 +60,6 @@
 
    opts))
 
-(defn execute-chan-pages
-  ([^CqlSession session query {chan :chan
-                               page-buffer-size :page-buffer-size
-                               :as opts}]
-   (let [chan (or chan
-                  ;; fetch one page ahead by default
-                  (async/chan (or page-buffer-size 1)))
-
-         page-cs (alia/execute-async session query opts)]
-
-     (handle-page-completion-stage
-      page-cs
-      (merge opts
-             {:chan chan
-              :statement query}))
-
-     chan))
-
-  ([^CqlSession session query]
-   (execute-chan-pages session query {})))
-
 (defn execute-chan
   "Same as execute, but returns a clojure.core.async/promise-chan that is
   wired to the underlying ResultSetFuture. This means this is usable
@@ -107,6 +85,27 @@
 
   ([^Session session query]
    (execute-chan session query {})))
+
+(defn execute-chan-pages
+  ([^CqlSession session query {chan :chan
+                               page-buffer-size :page-buffer-size
+                               :as opts}]
+   (let [chan (or chan
+                  ;; fetch one page ahead by default
+                  (async/chan (or page-buffer-size 1)))
+
+         page-cs (alia/execute-async session query opts)]
+
+     (handle-page-completion-stage
+      page-cs
+      (merge opts
+             {:chan chan
+              :statement query}))
+
+     chan))
+
+  ([^CqlSession session query]
+   (execute-chan-pages session query {})))
 
 (defn ^:private safe-identity
   "if the page should happen to be an Exception, wrap
