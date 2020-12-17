@@ -60,10 +60,9 @@
             (merge val (select-keys opts [:statement :values]))))))))
 
    (fn [err]
-     (d/chain
-      (s/put! stream err)
-      (d/finally
-        (fn [] (s/close! stream)))))
+     (d/finally
+       (s/put! stream err)
+       (fn [] (s/close! stream))))
 
    opts))
 
@@ -88,12 +87,19 @@
   ([^CqlSession session query]
    (execute-buffered-pages session query {})))
 
+(defn ^:private safe-identity
+  "if the page should happen to be an Exception, wrap
+   it in a vector so that it can be concatenated to the
+   value stream"
+  [v]
+  (if (sequential? v) v [v]))
+
 (defn execute-buffered
   ([^CqlSession session query {:as opts}]
    (let [stream (execute-buffered-pages session query opts)]
 
      (s/transform
-      (mapcat identity)
+      (mapcat safe-identity)
       stream)))
 
   ([^CqlSession session query]

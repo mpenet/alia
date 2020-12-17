@@ -172,23 +172,29 @@
              rs))))
   (testing "errors"
     (is (instance? Exception
-                   (try @(alia.manifold/execute *session* "select * from users;"
-                                                {:values ["foo"]})
+                   (try @(alia.manifold/execute
+                          *session*
+                          "select * from users;"
+                          {:values ["foo"]})
                         (catch Exception ex ex))))
 
     (is (instance? Exception
                    (try @(alia.manifold/execute *session* "select * from users;"
-                                                {:fetch-size :wtf})
+                                                {:page-size :wtf})
                         (catch Exception ex
                           ex))))
 
     (is (instance? Exception
-                   (try
-                     @(manifold.stream/take!
-                       (alia.manifold/execute-buffered *session* "select * from users;"
-                                                       {:fetch-size :wtf}))
-                     (catch Exception ex
-                       ex))))))
+                   @(manifold.stream/take!
+                     (alia.manifold/execute-buffered-pages
+                      *session*
+                      "select * from users;"
+                      {:page-size :wtf}))))
+
+    (is (instance? Exception
+                   @(manifold.stream/take!
+                     (alia.manifold/execute-buffered *session* "select * from users;"
+                                                     {:page-size :wtf}))))))
 
 (deftest core-async-test
   (testing "promise-chan"
