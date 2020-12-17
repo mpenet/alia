@@ -16,7 +16,7 @@
     BatchStatement
     BoundStatementBuilder
     SimpleStatement]
-   [java.util.concurrent Executor CompletionStage]
+   [java.util.concurrent Executor CompletionStage ExecutionException]
    [java.nio ByteBuffer]
    [java.util Map]))
 
@@ -49,7 +49,9 @@
             (merge {:type ::execute
                     :exception ex}
                    data)
-            (.getCause ex)))
+            (if (instance? ExecutionException ex)
+              (.getCause ex)
+              ex)))
   ([ex data]
    (ex->ex-info ex data "Query execution failed")))
 
@@ -141,34 +143,19 @@
 
 (defn prepare-async
   "Takes a session, a query (raw string or hayt) and success and
-   error callbacks and prepares a statement asynchronously. If
-   successful the success callback will receive the
-   com.datastax.driver.core.PreparedStatement instance, otherwise
-   the error callback will receive an Exception"
-  [^CqlSession session query {:keys [executor success error]}]
+   error callbacks and prepares a statement asynchronously.
+
+   returns CompletionState<PreparedStatement>"
+  [^CqlSession session query {:keys [executor] :as opts}]
   (let [^SimpleStatement q (query->statement query nil nil)]
     (try
-      (let [^CompletionStage prep-stage (.prepareAsync session q)]
-        (.handleAsync
-         prep-stage
-         (fn [result ex]
-           (if (some? ex)
-             (when error
-               (error (ex->ex-info ex {:type ::prepare-error
-                                       :query q})))
-             (when success
-               (try
-                 (success result)
-                 (catch Exception err
-                   (when error
-                     (error (ex->ex-info err {:type ::prepare-error
-                                              :query q}))))))))
-         (get-executor executor)))
+      (.prepareAsync session q)
       (catch Exception ex
-        (throw (ex->ex-info ex
-                            {:type ::prepare-error
-                             :query q}
-                            "Query prepare failed"))))))
+        (cf/failed-future
+         (ex->ex-info ex
+                      {:type ::prepare-error
+                       :query q}
+                      "xQuery prepare failed"))))))
 
 (defn batch
   "Takes a sequence of statements to be executed in batch.
@@ -314,6 +301,7 @@
 
   (cf/handle-completion-stage
    completion-stage
+
    (fn [async-result-set]
      (result-set/async-result-set
       async-result-set
