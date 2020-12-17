@@ -132,6 +132,7 @@
 
       (alia/shutdown *session*))))
 
+
 (deftest execute-test
   (testing "string query"
     (is (= user-data-set
@@ -151,7 +152,25 @@
                    (alia/execute
                     *session*
                     "select * from items;"
-                    {:result-set-fn #(into [] %)})))))
+                    {:result-set-fn #(into [] %)}))))
+
+  (testing "page-size"
+    (let [result-set-fn-with-execution-infos
+          (fn [rs]
+            (vary-meta rs assoc
+                       :execution-info (result-set/execution-info rs)))
+
+          get-page-size
+          (fn [rs]
+            (let [^ExecutionInfo xi (-> rs meta :execution-info first)]
+              (-> xi .getStatement .getPageSize)))
+
+          result-set (alia/execute
+                      *session*
+                      "select * from items;"
+                      {:page-size 3
+                       :result-set-fn result-set-fn-with-execution-infos})]
+      (is (= 3 (get-page-size result-set))))))
 
 (deftest execute-async-test
   (testing "success"
@@ -167,7 +186,16 @@
                 (catch Exception ex
                   ;; remove j.u.c.ExecutionException wrapper to get to ex-info
                   (ex-data (.getCause ex))))]
-      (is (some? (:query exd) )))))
+      (is (some? (:query exd) ))))
+
+  (testing "page-size"
+    (let [r @(alia/execute-async
+              *session*
+              "select * from items"
+              {:page-size 3})
+          ^ExecutionInfo xi (result-set/execution-info r)
+          page-size (-> xi .getStatement .getPageSize)]
+      (is (= 3 page-size)))))
 
 (deftest manifold-test
   (testing "deferred"
@@ -218,9 +246,6 @@
                       *session*
                       "select * from users;"
                       {:page-size :wtf}))))))
-
-(deftest test-execute-chan-records
-  )
 
 (deftest core-async-test
   (testing "promise-chan"
@@ -473,32 +498,6 @@
                    (when (< (-> coll last :si) 3)
                      (merge q (h/where {:si (-> coll last :si inc)}))))))))))
 
-
-(let [result-set-fn-with-execution-infos
-      (fn [rs]
-        (vary-meta rs assoc
-                   :execution-info (result-set/execution-info rs)))
-
-      get-page-size
-      (fn [rs]
-        (let [^ExecutionInfo xi (-> rs meta :execution-info first)]
-          (-> xi .getStatement .getPageSize)))]
-
-  (deftest test-page-size
-    (let [result-set (alia/execute
-                      *session*
-                      "select * from items;"
-                      {:page-size 3
-                       :result-set-fn result-set-fn-with-execution-infos})]
-      (is (= 3 (get-page-size result-set)))))
-
-  (deftest test-fetch-size-chan
-    (let [result-ch (alia.async/execute-chan
-                     *session*
-                     "select * from items;"
-                     {:page-size 5
-                      :result-set-fn result-set-fn-with-execution-infos})]
-      (is (= 5 (get-page-size (async/<!! result-ch)))))))
 
 
 
