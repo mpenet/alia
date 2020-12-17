@@ -60,7 +60,7 @@
 
 (defn setup-test-keyspace
   [session]
-  (try (alia/execute session "DROP KEYSPACE IF EXISTS alia;") (catch Exception _ nil))
+  ;; (try (alia/execute session "DROP KEYSPACE IF EXISTS alia;") (catch Exception _ nil))
   (alia/execute session "CREATE KEYSPACE IF NOT EXISTS alia WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};")
   (alia/execute session "USE alia;")
   (alia/execute session "CREATE TYPE IF NOT EXISTS udt (
@@ -179,7 +179,20 @@
             :valid
             (= 42)))
     ;; TODO test encoder
-    ))
+    )
+
+  (testing "specify a row-generator"
+    (let [records (alia/execute
+                   *session*
+                   "select * from items where id in (1,3)"
+                   {:row-generator result-set/row-gen->ns-map})]
+      (is (= #{{:items/id 1
+                :items/si 1
+                :items/text "prout"}
+               {:items/id 3
+                :items/si 3
+                :items/text "prout"}}
+             (set records))))))
 
 (deftest execute-async-test
   (testing "success"
