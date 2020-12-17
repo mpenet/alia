@@ -60,7 +60,7 @@
 
 (defn setup-test-keyspace
   [session]
-  ;; (try (alia/execute session "DROP KEYSPACE IF EXISTS alia;") (catch Exception _ nil))
+  (try (alia/execute session "DROP KEYSPACE IF EXISTS alia;") (catch Exception _ nil))
   (alia/execute session "CREATE KEYSPACE IF NOT EXISTS alia WITH replication = {'class': 'SimpleStrategy', 'replication_factor' : 1};")
   (alia/execute session "USE alia;")
   (alia/execute session "CREATE TYPE IF NOT EXISTS udt (
