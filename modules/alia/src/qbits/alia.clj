@@ -214,7 +214,7 @@
     (.setPageSize page-size)
 
     (some? paging-state)
-    (.setPagingState paging-state)
+    (.setPagingState ^ByteBuffer paging-state)
 
     (some? query-timestamp)
     (.setQueryTimestamp query-timestamp)
