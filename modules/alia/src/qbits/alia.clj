@@ -21,7 +21,16 @@
    [java.util Map]))
 
 (defn session
-  "shortcut to create a session-builder and build a session"
+  "shortcut to build a session from a config map
+
+   config map keys are keywords from the
+   qbits.alia.enum of
+   com.datastax.oss.driver.api.core.config.DefaultDriverOption
+   and appropriate scalar or collection values e.g.
+
+   {:session-keyspace \"alia\"
+    :contact-points [\"localhost:9042\"]
+    :load-balancing-local-datacenter \"Analytics\"}"
   ([] (session {}))
   ([config]
    (let [^CqlSessionBuilder sb (cql-session/cql-session-builder config)]
