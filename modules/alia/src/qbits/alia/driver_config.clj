@@ -70,7 +70,6 @@
   (-with-config [l
                  ^ProgrammaticDriverConfigLoaderBuilder builder
                  ^DriverOption driver-option]
-    (prn "list-config" l)
     (if (> (.size l) 0)
       (let [cl (-> l (.get 0) class .getName)
             _ (check-element-classes cl l)]
