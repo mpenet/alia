@@ -8,7 +8,7 @@
     ProgrammaticDriverConfigLoaderBuilder]
    [java.util List Map]))
 
-(defn programmatic-driver-config-loader
+(defn programmatic-driver-config-loader-builder
   []
   (DriverConfigLoader/programmaticBuilder))
 
@@ -70,6 +70,7 @@
   (-with-config [l
                  ^ProgrammaticDriverConfigLoaderBuilder builder
                  ^DriverOption driver-option]
+    (prn "list-config" l)
     (if (> (.size l) 0)
       (let [cl (-> l (.get 0) class .getName)
             _ (check-element-classes cl l)]
@@ -94,7 +95,7 @@
    and builds a DriverConfigLoader"
   [config]
   (let [^ProgrammaticDriverConfigLoaderBuilder
-        builder (programmatic-driver-config-loader)
+        builder (programmatic-driver-config-loader-builder)
 
         ^ProgrammaticDriverConfigLoaderBuilder
         builder (reduce
