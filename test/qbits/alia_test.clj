@@ -130,7 +130,7 @@
 
       ;; (teardown-test-keyspace *session* )
 
-      (alia/shutdown *session*))))
+      (alia/close *session*))))
 
 (deftest execute-test
   (testing "string query"

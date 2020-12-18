@@ -108,7 +108,7 @@
   (stop [this]
     (when (some? sessions)
       (doseq [session @sessions]
-        (alia/shutdown session)))
+        (alia/close session)))
     (assoc this :sessions nil)))
 
 (defn cassandra-registry

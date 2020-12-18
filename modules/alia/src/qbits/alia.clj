@@ -36,11 +36,11 @@
    (let [^CqlSessionBuilder sb (cql-session/cql-session-builder config)]
      (.build sb))))
 
-(defn shutdown
+(defn close
   [^CqlSession session]
   (.close session))
 
-(defn shutdown-async
+(defn close-async
   [^CqlSession session]
   (.closeAsync session))
 

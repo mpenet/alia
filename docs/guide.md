@@ -424,17 +424,11 @@ punctually override the default policy for this request.
 ## Shutting down
 
 To clean up the resources used by alia once you are done, you can call
-`alia/shutdown` on both/either the cluster and the session.
+`alia/close` on the session.
 
 ```clojure
-(alia/shutdown session)
+(alia/close session)
 ```
-or
-
-```clojure
-(alia/shutdown cluster)
-```
-
 ## Extending data type support
 
 If you want alia to be able to encode custom data types without having
