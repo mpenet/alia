@@ -404,7 +404,7 @@
                            "INSERT INTO users (user_name, birth_year, auuid, tuuid, created, valid, tags, emails, amap) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);")]
 
       (testing "seq of values"
-        (is (= [] (alia/execute
+        (is (= nil (alia/execute
                    *session*
                    s-prepare-types
                    {:values ["foobar"
@@ -417,11 +417,11 @@
                              #{"foo" "bar"}
                              {"foo" 123}]})))
         (let [delete-q "delete from users where user_name = 'foobar';"]
-          (is (= ()
+          (is (= nil
                  (alia/execute *session* (alia/batch (repeat 3 delete-q)))))))
 
       (testing "map of values"
-        (is (= ()
+        (is (= nil
                (alia/execute
                 *session*
                 s-prepare-types
@@ -435,10 +435,10 @@
                           :emails  #{"foo" "bar"}
                           :amap {"foo" 123}}})))
         (let [delete-q "delete from users where user_name = 'barfoo';"]
-          (is (= ()
+          (is (= nil
                  (alia/execute *session* (alia/batch (repeat 3 delete-q))))))
 
-        (is (= []
+        (is (= nil
                (alia/execute
                 *session*
                 s-prepare-types
@@ -453,7 +453,7 @@
                           :amap {"foo" 123}}})))
 
         (let [delete-q "delete from users where user_name = 'ffoooobbaarr';"]
-          (is (= ()
+          (is (= nil
                  (alia/execute *session* (alia/batch (repeat 3 delete-q)))))))))
 
   (testing "named-bindings"
@@ -461,7 +461,7 @@
           prep-read (alia/prepare *session* "SELECT * FROM simple WHERE id = :id;")
           an-id (int 100)]
 
-      (is (= []
+      (is (= nil
              (alia/execute *session* prep-write {:values {:id an-id
                                                           :text "inserted via named bindings"}})))
 
