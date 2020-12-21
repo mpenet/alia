@@ -303,12 +303,10 @@
 
 (defn execute-async
   "Same args as execute but executes async and returns a
-   CompletableFuture<{:qbits.alia/current-page <records>
-                      :qbits.alia/async-result-set-page <async-result-set>
-                      :next-page-handler <handler>}>
+   CompletableFuture<AliaAsyncResultSetPage>
 
-   to fetch and decode the next page do
-   (next-page-handler (.fetchNextPage async-result-set))"
+   to fetch and decode the next page use
+   qbits.alia.result-set/fetch-next-page on the AliaAsyncResultSetPage>"
   ([^CqlSession session query {:keys [values
                                       codec
                                       result-set-fn
