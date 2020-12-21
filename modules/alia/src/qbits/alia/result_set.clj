@@ -17,12 +17,13 @@
 ;; defintes the interface of the object given to the :result-set-fn
 ;; for execute-sync queries, along with ISeqable and IReduceInit
 (defprotocol PResultSet
-  (execution-info [this]))
+  (execution-infos [this]))
 
 ;; defines the interface of the object given to the :result-set-fn
 ;; for each page of execute-async queries, along with
 ;; PResultSet, ISeqable and IReduceInit
-(defprotocol PSeqableAsyncResultSet)
+(defprotocol PAsyncResultSet
+  (execution-info [this]))
 
 ;; defines the type returned by execute-async
 (defprotocol PAsyncResultSetPage
@@ -100,67 +101,75 @@
                            cdef
                            (gettable-by-index/deserialize row idx decode))))))))
 
+(defn row-decoder-xform
+  [row-generator
+   {decoder :decoder :as codec}]
+  (map
+   #(decode-row % (or row-generator row-gen->map) decoder)))
+
 (defn ->result-set
-  [^ResultSet rs row-generator codec]
-  (let [row-generator (or row-generator row-gen->map)
-        decode (:decoder codec)]
-    (reify ResultSet
+  "ISeqable and IReduceInit support for a ResultSet, to
+   be given to the :result-set-fn for sync query results
 
-      PResultSet
-      (execution-info [this]
-        (.getExecutionInfos rs))
+   cf: clojure.lang.Eduction - the returned object is similar, but
+   also permits the retrieval of execution-infos"
+  [^ResultSet rs decoder-xform]
+  (reify ResultSet
 
-      clojure.lang.Seqable
-      (seq [this]
-        (map #(decode-row % row-generator decode)
-             rs))
+    PResultSet
+    (execution-infos [this]
+      (.getExecutionInfos rs))
 
-      clojure.lang.IReduceInit
-      (reduce [this f init]
-        (loop [ret init]
-          (if-let [row (.one rs)]
-            (let [ret (f ret (decode-row row row-generator decode))]
-              (if (reduced? ret)
-                @ret
-                (recur ret)))
-            ret))))))
+    java.lang.Iterable
+    (iterator [this]
+      (clojure.lang.TransformerIterator/create
+       decoder-xform
+       (clojure.lang.RT/iter rs)))
+
+    clojure.lang.IReduceInit
+    (reduce [this f init]
+      (transduce decoder-xform (completing f) init rs))
+
+    clojure.lang.Sequential))
 
 (defn result-set
   [^ResultSet rs
    result-set-fn
    row-generator
    codec]
-  ((or result-set-fn seq) (->result-set rs row-generator codec)))
+  ((or result-set-fn seq) (->result-set
+                           rs
+                           (row-decoder-xform row-generator codec))))
 
 (defn ->seqable-async-result-set
   "ISeqable and IReduceInit support for an AsyncResultSet, to
-   be given to the :result-set-fn to create the :current-page object"
-  [^AsyncResultSet async-result-set row-generator codec]
-  (let [row-generator (or row-generator row-gen->map)
-        decode (:decoder codec)]
+   be given to the :result-set-fn to create the :current-page object
 
-    (reify
+   cf: clojure.lang.Eduction - the returned object is similar, but
+   also permits the retrieval of execution-info"
+  [^AsyncResultSet async-result-set decoder-xform]
+  (reify
 
-      PSeqableAsyncResultSet
+    PAsyncResultSet
+    (execution-info [this]
+      (.getExecutionInfo async-result-set))
 
-      PResultSet
-      (execution-info [this]
-        (.getExecutionInfo async-result-set))
+    java.lang.Iterable
+    (iterator [this]
+      (clojure.lang.TransformerIterator/create
+       decoder-xform
+       (clojure.lang.RT/iter
+        (.currentPage async-result-set))))
 
-      clojure.lang.Seqable
-      (seq [this]
-        (map #(decode-row % row-generator decode)
-             (.currentPage async-result-set)))
+    clojure.lang.IReduceInit
+    (reduce [this f init]
+      (transduce
+       decoder-xform
+       (completing f)
+       init
+       (.currentPage async-result-set)))
 
-      clojure.lang.IReduceInit
-      (reduce [this f init]
-        (loop [ret init]
-          (if-let [row (.one async-result-set)]
-            (let [ret (f ret (decode-row row row-generator decode))]
-              (if (reduced? ret)
-                @ret
-                (recur ret)))
-            ret))))))
+    clojure.lang.Sequential))
 
 (declare handle-async-result-set-completion-stage)
 
@@ -169,7 +178,7 @@
                                    current-page
                                    opts]
 
-  PResultSet
+  PAsyncResultSet
   (execution-info [this]
     (.getExecutionInfo async-result-set))
 
@@ -202,7 +211,10 @@
     row-generator :row-generator
     codec :codec
     :as opts}]
-  (let [seqable-ars (->seqable-async-result-set ars row-generator codec)
+  (let [seqable-ars (->seqable-async-result-set
+                     ars
+                     (row-decoder-xform row-generator codec))
+
         current-page ((or result-set-fn seq) seqable-ars)]
 
     (map->AliaAsyncResultSetPage

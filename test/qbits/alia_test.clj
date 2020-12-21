@@ -157,11 +157,11 @@
     (let [result-set-fn-with-execution-infos
           (fn [rs]
             (vary-meta rs assoc
-                       :execution-info (result-set/execution-info rs)))
+                       :execution-infos (result-set/execution-infos rs)))
 
           get-page-size
           (fn [rs]
-            (let [^ExecutionInfo xi (-> rs meta :execution-info first)]
+            (let [^ExecutionInfo xi (-> rs meta :execution-infos first)]
               (-> xi .getStatement .getPageSize)))
 
           result-set (alia/execute
