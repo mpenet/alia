@@ -20,32 +20,38 @@
    completion-stage
    (fn [{current-page :current-page
         :as async-result-set-page}]
-     (async/put!
-      chan
-      current-page
-      (fn [put?]
-        (cond
 
-          ;; stop requested at this page (probably for promise-chan)
-          stop?
-          (async/close! chan)
+     (if (some? async-result-set-page)
+       (async/put!
+        chan
+        current-page
+        (fn [put?]
+          (cond
 
-          ;; last page put ok, and there is another
-          (and put?
-               (true? (result-set/has-more-pages? async-result-set-page)))
-          (handle-page-completion-stage
-           (result-set/fetch-next-page async-result-set-page)
-           opts)
+            ;; stop requested at this page (probably for promise-chan)
+            stop?
+            (async/close! chan)
 
-          ;; last page put ok, and was the last
-          put?
-          (async/close! chan)
+            ;; last page put ok, and there is another
+            (and put?
+                 (true? (result-set/has-more-pages? async-result-set-page)))
+            (handle-page-completion-stage
+             (result-set/fetch-next-page async-result-set-page)
+             opts)
 
-          :else
-          (throw
-           (ex-info
-            "qbits.alia.async/handle-page-completion-stage"
-            (merge val (select-keys opts [:statement :values]))))))))
+            ;; last page put ok, and was the last
+            put?
+            (async/close! chan)
+
+            :else
+            (throw
+             (ex-info
+              "qbits.alia.async/handle-page-completion-stage"
+              (merge val (select-keys opts [:statement :values])))))))
+
+       ;; edge-case - when :page-size lines up with result size,
+       ;; the final page is empty, resulting in a nil async-result-set
+       (async/close! chan)))
 
    (fn [err]
      (async/put!

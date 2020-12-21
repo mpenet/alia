@@ -336,7 +336,6 @@
   ;;                                         (conj ret (async/<! (execute-chan *session* "select * from users limit 1")))))))))))
 
 
-
   (testing "errors"
     (is (instance? clojure.lang.ExceptionInfo
                    (async/<!! (alia.async/execute-chan

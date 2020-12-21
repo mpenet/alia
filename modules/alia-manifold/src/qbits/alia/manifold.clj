@@ -30,29 +30,35 @@
    (fn [{current-page :current-page
         :as async-result-set-page}]
 
-     (d/chain
-      (s/put! stream current-page)
-      (fn [put?]
-        (cond
+     (if (some? async-result-set-page)
 
-          ;; last page put ok and there is another
-          (and put?
-               (true? (result-set/has-more-pages? async-result-set-page)))
-          (handle-page-completion-stage
-           (result-set/fetch-next-page async-result-set-page)
-           opts)
+       (d/chain
+        (s/put! stream current-page)
+        (fn [put?]
+          (cond
 
-          ;; last page put ok and was the last
-          put?
-          (s/close! stream)
+            ;; last page put ok and there is another
+            (and put?
+                 (true? (result-set/has-more-pages? async-result-set-page)))
+            (handle-page-completion-stage
+             (result-set/fetch-next-page async-result-set-page)
+             opts)
 
-          ;; bork! last page did not put.
-          ;; maybe the stream was closed?
-          :else
-          (throw
-           (ex-info
-            "qbits.alia.manifold/stream-put!-fail"
-            (merge val (select-keys opts [:statement :values]))))))))
+            ;; last page put ok and was the last
+            put?
+            (s/close! stream)
+
+            ;; bork! last page did not put.
+            ;; maybe the stream was closed?
+            :else
+            (throw
+             (ex-info
+              "qbits.alia.manifold/stream-put!-fail"
+              (merge val (select-keys opts [:statement :values])))))))
+
+       ;; edge-case - when :page-size lines up with result size,
+       ;; the final page is empty, resulting in a nil async-result-set
+       (s/close! stream)))
 
    (fn [err]
      (d/finally
