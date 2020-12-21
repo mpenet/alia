@@ -211,34 +211,33 @@
     row-generator :row-generator
     codec :codec
     :as opts}]
-  (let [hmp? (.hasMorePages ars)
-        seqable-ars (->seqable-async-result-set
-                     ars
-                     (row-decoder-xform row-generator codec))
-
-        current-page ((or result-set-fn seq) seqable-ars)]
+  (let [empty-page? (= 0 (.remaining ars))
+        hmp? (.hasMorePages ars)]
 
     (cond
-      (some? current-page)
-      (map->AliaAsyncResultSetPage
-       {:async-result-set ars
-        :current-page current-page
-        :opts opts})
-
-      ;; if the :page-size lines up with the total result size then
-      ;; an empty page is possible - in which case just return a nil
-      (and (nil? current-page)
+      ;; if the :page-size lines up with the result-set size, then
+      ;; an empty page happens
+      (and (true? empty-page?)
            (false? hmp?))
       nil
 
-      ;; otherwise, a nil :current-page will cause problems with
-      ;; core.async, so make it an error
+      (false? empty-page?)
+      (let [seqable-ars (->seqable-async-result-set
+                         ars
+                         (row-decoder-xform row-generator codec))
+
+            current-page ((or result-set-fn seq) seqable-ars)]
+
+        (map->AliaAsyncResultSetPage
+         {:async-result-set ars
+          :current-page current-page
+          :opts opts}))
+
       :else
       (throw
-       (ex-info ":current-page is nil"
-                {:async-result-set ars
-                 :current-page current-page
-                 :opts opts})))))
+       (ex-info
+        "empty page before end of results?"
+        {:async-result-set ars})))))
 
 (defn handle-async-result-set-completion-stage
   "handle a CompletionStage resulting from an .executeAsync of a query
