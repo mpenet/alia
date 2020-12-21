@@ -22,7 +22,7 @@
 ;; defines the interface of the object given to the :result-set-fn
 ;; for each page of execute-async queries, along with
 ;; PResultSet, ISeqable and IReduceInit
-(defprotocol PAsyncResultSet)
+(defprotocol PSeqableAsyncResultSet)
 
 ;; defines the type returned by execute-async
 (defprotocol PAsyncResultSetPage
@@ -141,7 +141,7 @@
 
     (reify
 
-      PAsyncResultSet
+      PSeqableAsyncResultSet
 
       PResultSet
       (execution-info [this]
@@ -168,6 +168,10 @@
 (defrecord AliaAsyncResultSetPage [^AsyncResultSet async-result-set
                                    current-page
                                    opts]
+
+  PResultSet
+  (execution-info [this]
+    (.getExecutionInfo async-result-set))
 
   PAsyncResultSetPage
 
