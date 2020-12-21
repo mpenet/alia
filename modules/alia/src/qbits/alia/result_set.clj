@@ -132,7 +132,7 @@
    codec]
   ((or result-set-fn seq) (->result-set rs row-generator codec)))
 
-(defn ->async-result-set
+(defn ->seqable-async-result-set
   "ISeqable and IReduceInit support for an AsyncResultSet, to
    be given to the :result-set-fn to create the :current-page object"
   [^AsyncResultSet async-result-set row-generator codec]
@@ -202,7 +202,7 @@
     row-generator :row-generator
     codec :codec
     :as opts}]
-  (let [seqable-ars (->async-result-set ars row-generator codec)
+  (let [seqable-ars (->seqable-async-result-set ars row-generator codec)
         current-page ((or result-set-fn seq) seqable-ars)]
 
     (map->AliaAsyncResultSetPage
