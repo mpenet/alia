@@ -1,6 +1,8 @@
 (ns qbits.alia.result-set
   (:require
-   [qbits.alia.gettable-by-index :as gettable-by-index])
+   [qbits.alia.gettable-by-index :as gettable-by-index]
+   [qbits.alia.completable-future :as cf]
+   [qbits.alia.error :as err])
   (:import
    [com.datastax.oss.driver.api.core
     CqlIdentifier]
@@ -9,13 +11,22 @@
     AsyncResultSet
     Row
     ColumnDefinitions
-    ColumnDefinition]))
+    ColumnDefinition]
+   [java.util.concurrent Executor CompletionStage ExecutionException]))
 
+;; defintes the interface of the object given to the :result-set-fn
+;; for execute-sync queries, along with ISeqable and IReduceInit
 (defprotocol PResultSet
   (execution-info [this]))
 
+;; defines the interface of the object given to the :result-set-fn
+;; for each page of execute-async queries, along with
+;; PResultSet, ISeqable and IReduceInit
+(defprotocol PAsyncResultSet)
+
+;; defines the type returned by execute-async
 (defprotocol PAsyncResultSetPage
-  (current-page [this])
+  (has-more-pages? [this])
   (fetch-next-page [this]))
 
 ;; Shamelessly inspired from https://github.com/ghadishayban/squee's
@@ -121,37 +132,102 @@
    codec]
   ((or result-set-fn seq) (->result-set rs row-generator codec)))
 
-(defrecord AliaAsyncResultSetPage [current-page
-                                   ^AsyncResultSet async-result-set
-                                   next-page-handler]
-  PResultSet
-  (execution-info [this]
-    (.getExecutionInfo async-result-set))
+(defn ->async-result-set
+  "ISeqable and IReduceInit support for an AsyncResultSet, to
+   be given to the :result-set-fn to create the :current-page object"
+  [^AsyncResultSet async-result-set row-generator codec]
+  (let [row-generator (or row-generator row-gen->map)
+        decode (:decoder codec)]
+
+    (reify
+
+      PAsyncResultSet
+
+      PResultSet
+      (execution-info [this]
+        (.getExecutionInfo async-result-set))
+
+      clojure.lang.Seqable
+      (seq [this]
+        (map #(decode-row % row-generator decode)
+             (.currentPage async-result-set)))
+
+      clojure.lang.IReduceInit
+      (reduce [this f init]
+        (loop [ret init]
+          (if-let [row (.one async-result-set)]
+            (let [ret (f ret (decode-row row row-generator decode))]
+              (if (reduced? ret)
+                @ret
+                (recur ret)))
+            ret))))))
+
+(declare handle-async-result-set-completion-stage)
+
+;; the primary type returned by execute-async
+(defrecord AliaAsyncResultSetPage [^AsyncResultSet async-result-set
+                                   current-page
+                                   opts]
 
   PAsyncResultSetPage
-  (current-page [this]
-    (:current-page this))
+
+  (has-more-pages? [this]
+    (.hasMorePages async-result-set))
 
   (fetch-next-page [this]
-    (when next-page-handler
-      (next-page-handler
-       (.fetchNextPage async-result-set)))))
+    (if (true? (.hasMorePages async-result-set))
+      (handle-async-result-set-completion-stage
+       (.fetchNextPage async-result-set)
+       opts)
 
-(defn async-result-set
-  [^AsyncResultSet rs
-   row-generator
-   codec
-   next-page-handler]
-  (let [row-generator (or row-generator row-gen->map)
-        decode (:decoder codec)
-        current-page (.currentPage rs)
-        page-rows (map
-                   #(decode-row % row-generator decode)
-                   current-page)
-        has-more-pages? (.hasMorePages rs)]
+      ;; return a CompletedFuture<nil> rather than plain nil
+      ;; so the consumer get to expect a uniform type
+      (cf/completed-future nil))))
+
+(defn async-result-set-page
+  "make a single page of an execute-async result
+
+   the records from the current page are in the :current-page field
+   which is constructed from the AsyncResultSet by the :result-set-fn
+
+   subsequent pages can be fetched with PAsyncResultSetPage/fetch-next-page
+
+   it's defined as a record rather than an opaque type to aid with debugging"
+  [^AsyncResultSet ars
+   {result-set-fn :result-set-fn
+    row-generator :row-generator
+    codec :codec
+    :as opts}]
+  (let [seqable-ars (->async-result-set ars row-generator codec)
+        current-page ((or result-set-fn seq) seqable-ars)]
 
     (map->AliaAsyncResultSetPage
-     {:current-page page-rows
-      :async-result-set rs
-      :next-page-handler (when has-more-pages?
-                           next-page-handler)})))
+     {:async-result-set ars
+      :current-page current-page
+      :opts opts})))
+
+(defn handle-async-result-set-completion-stage
+  "handle a CompletionStage resulting from an .executeAsync of a query
+
+   when successful, applies the row-generator and result-set-fn to the current page
+   when failed, decorates the exception with query and value details"
+  [^CompletionStage completion-stage
+   {:keys [codec
+           result-set-fn
+           row-generator
+           executor
+           statement
+           values]
+    :as opts}]
+
+  (cf/handle-completion-stage
+   completion-stage
+
+   (fn [async-result-set]
+     (async-result-set-page async-result-set opts))
+
+   (fn [err]
+     (throw
+      (err/ex->ex-info err {:query statement :values values})))
+
+   opts))

@@ -3,6 +3,7 @@
    [qbits.alia.codec.default :as default-codec]
    [qbits.alia.completable-future :as cf]
    [qbits.alia.cql-session :as cql-session]
+   [qbits.alia.error :as err]
    [qbits.alia.result-set :as result-set]
    [qbits.alia.settable-by-name :as settable-by-name]
    [qbits.alia.udt :as udt]
@@ -52,18 +53,6 @@
         (execute [_ runnable]
           (.run runnable)))))
 
-(defn ^:no-doc ex->ex-info
-  ([^Exception ex data msg]
-   (ex-info msg
-            (merge {:type ::execute
-                    :exception ex}
-                   data)
-            (if (instance? ExecutionException ex)
-              (.getCause ex)
-              ex)))
-  ([ex data]
-   (ex->ex-info ex data "Query execution failed")))
-
 (defn bind
   "Takes a statement and a collection of values and returns a
   com.datastax.driver.core.BoundStatement instance to be used with
@@ -90,7 +79,7 @@
          (.build builder))
        (.bind statement (to-array (map encoder values))))
      (catch Exception ex
-       (throw (ex->ex-info ex {:query statement
+       (throw (err/ex->ex-info ex {:query statement
                                :type ::bind-error
                                :values values}
                            "Query binding failed"))))))
@@ -145,7 +134,7 @@
     (try
       (.prepare session q)
       (catch Exception ex
-        (throw (ex->ex-info ex
+        (throw (err/ex->ex-info ex
                             {:type ::prepare-error
                              :query q}
                             "Query prepare failed"))))))
@@ -161,7 +150,7 @@
       (.prepareAsync session q)
       (catch Exception ex
         (cf/failed-future
-         (ex->ex-info ex
+         (err/ex->ex-info ex
                       {:type ::prepare-error
                        :query q}
                       "xQuery prepare failed"))))))
@@ -307,69 +296,41 @@
                               row-generator
                               codec)
        (catch Exception err
-         (throw (ex->ex-info err {:query statement :values values}))))))
+         (throw (err/ex->ex-info err {:query statement :values values}))))))
   ;; to support old syle api with unrolled args
   ([^CqlSession session query]
    (execute session query {})))
 
-(defn handle-async-result-set-completion-stage
-  "if successful, applies the row-generator to the current page
-   if failed, decorates the exception with query and value details"
-  [^CompletionStage completion-stage
-   {:keys [next-page-handler
-           row-generator
-           codec
-           statement
-           values
-           executor]
-    :as opts}]
-
-  (cf/handle-completion-stage
-   completion-stage
-
-   (fn [async-result-set]
-     (result-set/async-result-set
-      async-result-set
-      row-generator
-      codec
-      next-page-handler))
-
-   (fn [err]
-     (throw
-      (ex->ex-info err {:query statement :values values})))
-
-   opts))
-
 (defn execute-async
   "Same args as execute but executes async and returns a
-   CompletableFuture<{:current-page <records>
-                      :async-result-set <async-result-set>
+   CompletableFuture<{:qbits.alia/current-page <records>
+                      :qbits.alia/async-result-set-page <async-result-set>
                       :next-page-handler <handler>}>
 
    to fetch and decode the next page do
    (next-page-handler (.fetchNextPage async-result-set))"
   ([^CqlSession session query {:keys [values
                                       codec
+                                      result-set-fn
+                                      row-generator
                                       executor]
                                :as opts}]
    (try
      (let [codec (or codec default-codec/codec)
            ^Statement statement (query->statement query values codec)
-           statement (set-statement-options! statement opts)]
+           statement (set-statement-options! statement opts)
+           ^CompletionStage async-result-set-cs (.executeAsync session statement)]
 
-       (let [handler (fn arscs-handler
-                       [completion-stage]
-                       (handle-async-result-set-completion-stage
-                        completion-stage
-                        (assoc opts
-                               :codec codec
-                               :statement statement
-                               :next-page-handler arscs-handler)))
-             ^CompletionStage async-result-set-cs (.executeAsync session statement)]
-         (handler async-result-set-cs)))
+       (result-set/handle-async-result-set-completion-stage
+        async-result-set-cs
+        (assoc opts
+               :codec codec
+               :statement statement)))
+
      (catch Exception ex
        (cf/failed-future
-        (ex->ex-info ex {:query query :values values})))))
+        (err/ex->ex-info ex {:query query :values values})))))
+
   ([^CqlSession session query]
    (execute-async session query {})))
 

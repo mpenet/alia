@@ -2,7 +2,8 @@
   (:require
    [clojure.core.async :as async]
    [qbits.alia :as alia]
-   [qbits.alia.completable-future :as cf])
+   [qbits.alia.completable-future :as cf]
+   [qbits.alia.error :as err])
   (:import
    [com.datastax.oss.driver.api.core.session Session]
    [com.datastax.oss.driver.api.core CqlSession]
@@ -52,7 +53,7 @@
    (fn [err]
      (async/put!
       chan
-      (alia/ex->ex-info
+      (err/ex->ex-info
        err
        (select-keys opts [:statement :values]))
       (fn [_]
