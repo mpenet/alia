@@ -3,7 +3,8 @@
    [clojure.core.async :as async]
    [qbits.alia :as alia]
    [qbits.alia.completable-future :as cf]
-   [qbits.alia.error :as err])
+   [qbits.alia.error :as err]
+   [qbits.alia.result-set :as result-set])
   (:import
    [com.datastax.oss.driver.api.core.session Session]
    [com.datastax.oss.driver.api.core CqlSession]
@@ -12,18 +13,13 @@
 
 (defn handle-page-completion-stage
   [^CompletionStage completion-stage
-   {statement :statement
-    values :values
-    chan :chan
-    executor :executor
+   {chan :chan
     stop? ::stop?
     :as opts}]
   (cf/handle-completion-stage
    completion-stage
    (fn [{current-page :current-page
-        ^AsyncResultSet async-result-set :async-result-set
-        next-page-handler :next-page-handler
-        :as val}]
+        :as async-result-set-page}]
      (async/put!
       chan
       current-page
@@ -35,10 +31,11 @@
           (async/close! chan)
 
           ;; last page put ok, and there is another
-          (and put? next-page-handler)
-          (-> (.fetchNextPage async-result-set)
-              next-page-handler
-              (handle-page-completion-stage opts))
+          (and put?
+               (true? (result-set/has-more-pages? async-result-set-page)))
+          (handle-page-completion-stage
+           (result-set/fetch-next-page async-result-set-page)
+           opts)
 
           ;; last page put ok, and was the last
           put?
