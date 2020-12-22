@@ -1,10 +1,20 @@
-(load-file "../../.deps-versions.clj")
-(defproject cc.qbits/alia-async alia-version
+(defproject cc.qbits/alia-async "_"
+  :plugins [[lein-parent "0.3.8"]]
+
+  :parent-project {:path "../../project.clj"
+                   :inherit [:version
+                             :managed-dependencies
+                             :license
+                             :url
+                             :scm
+                             :deploy-repositories
+                             :profiles
+                             :pedantic?
+                             :jar-exclusions
+                             :global-vars]}
+
   :description "core.async interface for Alia"
-  :url "https://github.com/mpenet/alia"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure ~clj-version]
-                 [cc.qbits/alia ~alia-version]
-                 [org.clojure/core.async "0.4.474"]]
-  :global-vars {*warn-on-reflection* true})
+
+  :dependencies [[org.clojure/clojure]
+                 [cc.qbits/alia]
+                 [org.clojure/core.async "0.4.474"]])

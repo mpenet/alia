@@ -1,17 +1,40 @@
-(load-file ".deps-versions.clj")
-(defproject cc.qbits/alia-all alia-version
+(defproject cc.qbits/alia-all "5.0.0"
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
   :url "https://github.com/mpenet/alia"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure ~clj-version]
-                 [cc.qbits/alia ~alia-version]
-                 [cc.qbits/alia-manifold ~alia-version]
-                 [cc.qbits/alia-async ~alia-version]
-                 [cc.qbits/alia-joda-time ~alia-version]
-                 [cc.qbits/alia-java-legacy-time ~alia-version]
-                 [cc.qbits/alia-spec ~alia-version]
-                 [cc.qbits/alia-component ~alia-version]]
+
+  :plugins [[lein-sub "0.3.0"]]
+
+  :deploy-repositories [["releases" :clojars]
+                        ["snapshots" :clojars]]
+
+  :managed-dependencies [[org.clojure/clojure "1.10.1"]
+                         [cc.qbits/alia "5.0.0"]
+                         [cc.qbits/alia-manifold "5.0.0"]
+                         [cc.qbits/alia-async "5.0.0"]
+                         [cc.qbits/alia-joda-time "5.0.0"]
+                         [cc.qbits/alia-java-legacy-time "5.0.0"]
+                         [cc.qbits/alia-spec "5.0.0"]
+                         [cc.qbits/alia-component "5.0.0"]]
+
+  :dependencies [[org.clojure/clojure]
+                 [cc.qbits/alia]
+                 [cc.qbits/alia-manifold]
+                 [cc.qbits/alia-async]
+                 [cc.qbits/alia-joda-time]
+                 [cc.qbits/alia-java-legacy-time]
+                 [cc.qbits/alia-spec]
+                 [cc.qbits/alia-component]]
+
+  :sub ["modules/alia"
+        "modules/alia-async"
+        "modules/alia-java-legacy-time"
+        "modules/alia-joda-time"
+        "modules/alia-manifold"
+        "modules/alia-spec"
+        "modules/alia-component"]
+
   :profiles {:dev
              {:plugins [[codox "0.10.3"]]
               :dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
@@ -34,5 +57,18 @@
                          "modules/alia-java-legacy-time/src"
                          "modules/alia-spec/src"
                          "modules/alia-component/src"]}
+
   :global-vars {*warn-on-reflection* true}
-  :pedantic? :abort)
+  :pedantic? :abort
+
+  :release-tasks [["vcs" "assert-committed"]
+                  ["change" "version" "leiningen.release/bump-version" "release"]
+                  ["vcs" "commit"]
+                  ["vcs" "tag" "--no-sign"]
+                  ["sub" "install"]
+                  ["install"]
+                  ["sub" "deploy" "clojars"]
+                  ["deploy" "clojars"]
+                  ["change" "version" "leiningen.release/bump-version"]
+                  ["vcs" "commit"]
+                  ["vcs" "push"]])

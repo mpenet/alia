@@ -1,11 +1,21 @@
-(load-file "../../.deps-versions.clj")
-(defproject cc.qbits/alia-component alia-version
+(defproject cc.qbits/alia-component "_"
+  :plugins [[lein-parent "0.3.8"]]
+
+  :parent-project {:path "../../project.clj"
+                   :inherit [:version
+                             :managed-dependencies
+                             :license
+                             :url
+                             :scm
+                             :deploy-repositories
+                             :profiles
+                             :pedantic?
+                             :jar-exclusions
+                             :global-vars]}
+
   :description "Component integration for Alia"
-  :url "https://github.com/mpenet/alia/alia-component"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure ~clj-version]
+
+  :dependencies [[org.clojure/clojure]
                  [com.stuartsierra/component "0.3.2"]
-                 [cc.qbits/alia ~alia-version]
-                 [cc.qbits/alia-spec ~alia-version]]
-  :global-vars {*warn-on-reflection* true})
+                 [cc.qbits/alia]
+                 [cc.qbits/alia-spec]])

@@ -1,9 +1,19 @@
-(load-file "../../.deps-versions.clj")
-(defproject cc.qbits/alia-java-legacy-time alia-version
+(defproject cc.qbits/alia-java-legacy-time "_"
+  :plugins [[lein-parent "0.3.8"]]
+
+  :parent-project {:path "../../project.clj"
+                   :inherit [:version
+                             :managed-dependencies
+                             :license
+                             :url
+                             :scm
+                             :deploy-repositories
+                             :profiles
+                             :pedantic?
+                             :jar-exclusions
+                             :global-vars]}
+
   :description "Alia extension for java legacy time codec"
-  :url "https://github.com/mpenet/alia/alia-java-legacy-time"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure ~clj-version]
-                 [cc.qbits/alia ~alia-version]]
-  :global-vars {*warn-on-reflection* true})
+
+  :dependencies [[org.clojure/clojure]
+                 [cc.qbits/alia]])
