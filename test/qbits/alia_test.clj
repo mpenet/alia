@@ -121,7 +121,11 @@
 (t/use-fixtures
   :once
   (fn [test-runner]
-    (binding [*session* (alia/session {:session-keyspace "alia"})]
+    (binding [*session* (alia/session
+                         {
+                          ;; don't specify the keyspace - it doesn't exist yet on CI
+                          ;; :session-keyspace "alia"
+                          })]
 
       (setup-test-keyspace *session*)
 
