@@ -22,26 +22,30 @@
    [java.util Map]))
 
 (defn session
-  "shortcut to build a session from a config map
+  "shortcut to build a `CqlSession` from a config map
 
    config map keys are keywords from the
-   qbits.alia.enum of
-   com.datastax.oss.driver.api.core.config.DefaultDriverOption
+   `qbits.alia.enum` of
+   `com.datastax.oss.driver.api.core.config.DefaultDriverOption`
    and appropriate scalar or collection values e.g.
 
+   ```
    {:session-keyspace \"alia\"
     :contact-points [\"localhost:9042\"]
-    :load-balancing-local-datacenter \"Analytics\"}"
+    :load-balancing-local-datacenter \"Analytics\"}
+   ```"
   ([] (session {}))
   ([config]
    (let [^CqlSessionBuilder sb (cql-session/cql-session-builder config)]
      (.build sb))))
 
 (defn close
+  "close a `CqlSession`"
   [^CqlSession session]
   (.close session))
 
 (defn close-async
+  "close `CqlSession` async"
   [^CqlSession session]
   (.closeAsync session))
 
@@ -55,7 +59,7 @@
 
 (defn bind
   "Takes a statement and a collection of values and returns a
-  com.datastax.driver.core.BoundStatement instance to be used with
+  `com.datastax.oss.driver.api.core.cql.BoundStatement` instance to be used with
   `execute` (or one of its variants)
 
    Where values:
@@ -117,16 +121,17 @@
   BatchStatement
   (query->statement [bs values _]
     (when values
-      (throw (ex-info {:type ::bind-error}
-                      "You cannot bind values to batch statements directly,
-               if you need to do so use qbits.alia/bind on your statements
-               separately")))
+      (throw
+       (ex-info {:type ::bind-error}
+                "You cannot bind values to batch statements directly,
+                 if you need to do so use qbits.alia/bind on your statements
+                 separately")))
     bs))
 
 (defn prepare
-  "Takes a session and a query (raw string or hayt) and returns a
-  com.datastax.driver.core.PreparedStatement instance to be used in
-  `execute` after it's been bound with `bind`. Hayt query parameter
+  "Takes a `CqlSession` and a query (raw string or hayt) and returns a
+  `com.datastax.oss.driver.api.core.cql.PreparedStatement` instance to be used
+  in `execute` after it's been bound with `bind`. Hayt query parameter
   will be compiled with qbits.hayt/->raw internaly
   ex: (prepare session (select :foo (where {:bar ?})))"
   [^CqlSession session query]
@@ -140,20 +145,21 @@
                             "Query prepare failed"))))))
 
 (defn prepare-async
-  "Takes a session, a query (raw string or hayt) and success and
-   error callbacks and prepares a statement asynchronously.
+  "Takes a `CqlSession`, a query (raw string or hayt) and
+   prepares a statement asynchronously.
 
    returns CompletionState<PreparedStatement>"
   [^CqlSession session query {:keys [executor] :as opts}]
   (let [^SimpleStatement q (query->statement query nil nil)]
-    (try
-      (.prepareAsync session q)
-      (catch Exception ex
-        (cf/failed-future
-         (err/ex->ex-info ex
-                      {:type ::prepare-error
-                       :query q}
-                      "xQuery prepare failed"))))))
+    (cf/handle-completion-stage
+     (.prepareAsync session q)
+     identity
+     (fn [ex]
+       (throw
+        (err/ex->ex-info ex
+                         {:type ::prepare-error
+                          :query q}
+                         "xQuery prepare failed"))))))
 
 (defn batch
   "Takes a sequence of statements to be executed in batch.
@@ -236,51 +242,68 @@
     (.setTracing tracing?)))
 
 (defn execute
-  "Executes a query against a session.
+  "Executes a query against a `CqlSession`.
   Returns a collection of rows.
 
   The query can be a raw string, a PreparedStatement (returned by
   `prepare`) with values passed via the `:values` option key will be bound by
   `execute`, BoundStatement (returned by `qbits.alia/bind`).
 
-  The following options are supported:
+  The following `com.datastax.oss.driver.api.core.cql.Statement` options
+  are supported:
 
-* `:values` : values to be bound to a prepared query
+  * `:values` : values to be bound to a prepared query
   * `:consistency-level` : Keyword, consistency
+  * `:execution-profile` : `com.datastax.oss.driver.api.core.config.DriverExecutionProfile`
+    instance
+  * `:execution-profile-name` : `String`, execution profile name
+  * `:idempotent?` : `Boolean`, Whether this statement is idempotent, i.e. whether
+    it can be applied multiple times without changing the result beyond
+    the initial application
+  * `:node` : `com.datastax.oss.driver.api.core.metadata.Node` instance,
+    the node to handle the query
+  * `:page-size` : Number, sets the number of rows in each page of the results
+  * `:paging-state` : `com.datastax.oss.driver.api.core.cql.PagingState` or
+    `ByteBuffer` instance. This will cause the next execution of this statement
+    to fetch results from a given page, rather than restarting from the
+    beginning
+  * `:query-timestamp` : Number, sets the timestamp for query
+    (if not specified in CQL)
+  * `:routing-key` : `ByteBuffer`, the key to use for token-aware routing
+  * `:routing-keyspace` : `com.datastax.oss.driver.api.core.CqlIdentifier` or
+     `String` instance, setting the keyspace for token-aware routing
+  * `:routing-token` : `com.datastax.oss.driver.api.core.metadata.token.Token`,
+    the token to use for token-aware routing
   * `:serial-consistency-level` : Keyword, consistency
-* `:routing-key` : ByteBuffer
-  * `:routing-keyspace` : ByteBuffer
-  * `:routing-token` : ByteBuffer
-* `:tracing?` : Bool, toggles query tracing (available via query result metadata)
-  * `:page-size` : Number, sets query fetching size
-  * `:query-timestamp` : Number, sets the timestamp for query (if not specified in CQL)
-* `:idempotent?` : Whether this statement is idempotent, i.e. whether
-  it can be applied multiple times without changing the result beyond
-  the initial application
-* `:paging-state` : Expects a com.datastax.driver.core.PagingState
-  instance. This will cause the next execution of this statement to
-  fetch results from a given page, rather than restarting from the
-  beginning
-* `:result-set-fn` : Defaults to `clojure.core/seq` By default a
-  result-set is an unchunked lazy seq, you can control this using this
-  option. If you pass a function that supports IReduceInit you can
-  have full control over how the resultset is formed (chunked,
-  unchunked, eager or not, etc). A common use is to pass `#(into [] %)`
-  as result-set-fn, you then get an eager value, with minimal copies,
-  no intermediary seq and potentially better performance. This can be
-  very powerfull when used right (for instance with transducers
-  `#(into [] xform %))`.
-* `:row-generator` : implements alia.codec/RowGenerator, Defaults to
-  `alia.codec/row-gen->map` : A RowGenerator dicts how we construct rows.
-* `:codec` : map of `:encoder` `:decoder` functions that control how to
-  apply extra modifications on data sent/received (defaults to
-  `qbits.alia.codec/default`).
-* `:timeout` : Read timeout in milliseconds
+  * `:timeout` : `java.time.Duration`, the read timeout
+  * `:tracing?` : `Bool`, toggles query tracing (available via query result
+    metadata)
+
+  and these additional options specify how results are to be handled:
+
+  * `:result-set-fn` : Defaults to `clojure.core/seq` By default a
+    result-set is an unchunked lazy seq, you can control this using this
+    option. the `:result-set-fn` will be passed a version of the java-driver
+    `com.datastax.oss.driver.api.core.cql.ResultSet` object
+    which supports `Iterable` and `IReduceInit` giving you full control
+    over how the resultset is formed (chunked,
+    unchunked, eager or not, etc). A common use is to pass `#(into [] %)`
+    as result-set-fn, you then get an eager value, with minimal copies,
+    no intermediary seq and potentially better performance. This can be
+    very powerfull when used right (for instance with transducers
+    `#(into [] xform %))`.
+  * `:row-generator` : implements `qbits.alia.result-set/RowGenerator`,
+    Defaults to `qbits.alia.codec/row-gen->map` : A RowGenerator dictates
+    how we construct rows.
+  * `:codec` : map of `:encoder` `:decoder` functions that control how to
+    apply extra modifications on data sent/received (defaults to
+    `qbits.alia.codec/default`).
 
   Possible values for consistency:
 
-:all :any :each-quorum :local-one :local-quorum :local-serial :one :quorum
-:serial :three :two"
+   `:all` `:any` `:each-quorum` `:local-one` `:local-quorum` `:local-serial`
+   `:one` `:quorum` `:serial` `:three` `:two`
+   "
   ([^CqlSession session query {:keys [values
                                       codec
                                       result-set-fn
@@ -302,11 +325,11 @@
    (execute session query {})))
 
 (defn execute-async
-  "Same args as execute but executes async and returns a
-   CompletableFuture<AliaAsyncResultSetPage>
+  "Same args as `execute` but executes async and returns a
+   `CompletableFuture<AliaAsyncResultSetPage>`
 
    to fetch and decode the next page use
-   qbits.alia.result-set/fetch-next-page on the AliaAsyncResultSetPage>"
+   `qbits.alia.result-set/fetch-next-page` on the `AliaAsyncResultSetPage`"
   ([^CqlSession session query {:keys [values
                                       codec
                                       result-set-fn
