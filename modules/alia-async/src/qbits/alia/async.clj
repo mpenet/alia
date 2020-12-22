@@ -148,3 +148,6 @@
 
   ([^Session session query]
    (execute-chan-records session query {})))
+
+;; backwards compatible name
+(def execute-buffered execute-chan-records)

@@ -105,3 +105,6 @@
 
   ([^CqlSession session query]
    (execute-stream-records session query {})))
+
+;; backwards compatible fn name
+(def execute-buffered execute-stream-records)
