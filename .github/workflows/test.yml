@@ -38,5 +38,8 @@ jobs:
           restore-keys: |
             m2-
 
+      - name: Local install
+        run: ./scripts/local_install.sh
+
       - name: Test
         run: lein test
