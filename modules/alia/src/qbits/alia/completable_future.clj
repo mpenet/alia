@@ -32,7 +32,7 @@
   ([^CompletionStage completion-stage
     on-success
     on-error
-    {executor :executor
+    {^Executor executor :executor
      :as opts}]
    (let [handler-bifn (reify BiFunction
                         (apply [_ r ex]
