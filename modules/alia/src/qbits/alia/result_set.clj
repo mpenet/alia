@@ -15,20 +15,24 @@
    [java.util.concurrent Executor CompletionStage ExecutionException]))
 
 ;; defintes the interface of the object given to the :result-set-fn
-;; for execute-sync queries, along with ISeqable and IReduceInit
+;; for `qbits.alia/execute` queries, along with ISeqable and IReduceInit
 (defprotocol PResultSet
   (execution-infos [this]))
 
 ;; defines the interface of the object given to the :result-set-fn
-;; for each page of execute-async queries, along with
-;; PResultSet, ISeqable and IReduceInit
+;; for each page of `qbits.alia/execute-async` queries, along with
+;; ISeqable and IReduceInit
 (defprotocol PAsyncResultSet
   (execution-info [this]))
 
 ;; defines the type returned by execute-async
 (defprotocol PAsyncResultSetPage
-  (has-more-pages? [this])
-  (fetch-next-page [this]))
+  (has-more-pages? [this]
+    "returns true when there are more pages to fetch")
+  (fetch-next-page [this]
+    "returns a `CompletedFuture<PAsyncResultSetPage>` of the next
+     page, or, if `this` was the final page, or the next page
+     is empty, returns `CompletedFuture<nil>`"))
 
 ;; Shamelessly inspired from https://github.com/ghadishayban/squee's
 ;; monoid'ish appoach
@@ -198,14 +202,16 @@
       (cf/completed-future nil))))
 
 (defn async-result-set-page
-  "make a single page of an execute-async result
+  "make a single `AliaAsyncResultSetPage` of an `execute-async` result
 
-   the records from the current page are in the :current-page field
-   which is constructed from the AsyncResultSet by the :result-set-fn
+   if the current-page is the last page and is empty then `nil` is returned
 
-   subsequent pages can be fetched with PAsyncResultSetPage/fetch-next-page
+   the records from the current page are in the `:current-page` field
+   which is constructed from an `Iterable`/`IReduceInit` `AsyncResultSet`
+   wrapper by the `:result-set-fn` (which defaults to `clojure.core/seq`)
 
-   it's defined as a record rather than an opaque type to aid with debugging"
+   subsequent pages can be fetched with `PAsyncResultSetPage/fetch-next-page`,
+   which is defined as a record rather than an opaque type to aid with debugging"
   [^AsyncResultSet ars
    {result-set-fn :result-set-fn
     row-generator :row-generator
@@ -240,9 +246,10 @@
         {:async-result-set ars})))))
 
 (defn handle-async-result-set-completion-stage
-  "handle a CompletionStage resulting from an .executeAsync of a query
+  "handle a `CompletionStage` resulting from an `.executeAsync` of a query
 
-   when successful, applies the row-generator and result-set-fn to the current page
+   when successful, applies the `:row-generator` and `:result-set-fn`
+   to the current page
    when failed, decorates the exception with query and value details"
   [^CompletionStage completion-stage
    {:keys [codec
