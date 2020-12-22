@@ -207,7 +207,7 @@
                 @(alia/execute-async *session* stmt)
                 (catch Exception ex
                   ;; remove j.u.c.ExecutionException wrapper to get to ex-info
-                  (ex-data (.getCause ex))))]
+                  (ex-data (ex-cause ex))))]
       (is (some? (:query exd) ))))
 
   (testing "page-size"

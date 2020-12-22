@@ -10,7 +10,7 @@
                     :exception ex}
                    data)
             (if (instance? ExecutionException ex)
-              (.getCause ex)
+              (ex-cause ex)
               ex)))
   ([ex data]
    (ex->ex-info ex data "Query execution failed")))
