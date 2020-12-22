@@ -222,33 +222,33 @@
 (deftest manifold-test
   (testing "deferred"
     (is (= user-data-set
-           @(alia.manifold/execute-deferred *session* "select * from users;"))))
+           @(alia.manifold/execute *session* "select * from users;"))))
   (testing "stream of pages"
     (let [r-s (alia.manifold/execute-stream-pages *session* "select * from users;")
           rs @(manifold.stream/take! r-s)]
       (is (= user-data-set
              rs))))
   (testing "stream of records"
-    (let [r-s (alia.manifold/execute-stream-records *session* "select * from users;")
+    (let [r-s (alia.manifold/execute-stream *session* "select * from users;")
           rs @(manifold.stream/reduce conj [] r-s)]
       (is (= user-data-set
              rs))))
   (testing "errors"
     (is (instance? Exception
-                   (try @(alia.manifold/execute-deferred
+                   (try @(alia.manifold/execute
                           *session*
                           "slect prout from 1;")
                         (catch Exception ex ex))))
 
     (is (instance? Exception
-                   (try @(alia.manifold/execute-deferred
+                   (try @(alia.manifold/execute
                           *session*
                           "select * from users;"
                           {:values ["foo"]})
                         (catch Exception ex ex))))
 
     (is (instance? Exception
-                   (try @(alia.manifold/execute-deferred
+                   (try @(alia.manifold/execute
                           *session*
                           "select * from users;"
                           {:page-size :wtf})
@@ -264,7 +264,7 @@
 
     (is (instance? Exception
                    @(manifold.stream/take!
-                     (alia.manifold/execute-stream-records
+                     (alia.manifold/execute-stream
                       *session*
                       "select * from users;"
                       {:page-size :wtf}))))))
@@ -272,7 +272,7 @@
 (deftest core-async-test
   (testing "promise-chan"
     (is (= user-data-set
-           (async/<!! (alia.async/execute-chan *session* "select * from users;")))))
+           (async/<!! (alia.async/execute *session* "select * from users;")))))
 
   (testing "chan of pages"
     (let [r-c (alia.async/execute-chan-pages *session* "select * from users;")
@@ -281,13 +281,13 @@
              rs))))
 
   (testing "chan of records"
-    (let [r-c (alia.async/execute-chan-records *session* "select * from users;")
+    (let [r-c (alia.async/execute-chan *session* "select * from users;")
           rs-c (async/reduce conj [] r-c)
           rs (async/<!! rs-c)]
       (is (= user-data-set
              rs)))
 
-    (let [ch (alia.async/execute-chan-records
+    (let [ch (alia.async/execute-chan
               *session*
               "select * from items;")]
       (is (= 10 (count (loop [coll []]
@@ -296,7 +296,7 @@
                            coll))))))
 
     (testing "supplied channel"
-      (let [ch (alia.async/execute-chan-records
+      (let [ch (alia.async/execute-chan
                 *session*
                 "select * from items;"
                 {:channel (async/chan 5)})]
@@ -306,7 +306,7 @@
                              coll)))))))
 
     (testing "page-sizes"
-      (let [ch (alia.async/execute-chan-records
+      (let [ch (alia.async/execute-chan
                 *session*
                 "select * from items;"
                 {:page-size 5})]
@@ -315,7 +315,7 @@
                              (recur (cons row coll))
                              coll))))))
 
-      (let [ch (alia.async/execute-chan-records
+      (let [ch (alia.async/execute-chan
                 *session*
                 "select * from items;"
                 {:page-size 1})]
@@ -360,7 +360,7 @@
                                {:page-size :wtf}))))
 
     (is (instance? clojure.lang.ExceptionInfo
-                   (async/<!! (alia.async/execute-chan-records
+                   (async/<!! (alia.async/execute-chan
                                *session*
                                "select * from users;"
                                {:page-size :wtf}))))))

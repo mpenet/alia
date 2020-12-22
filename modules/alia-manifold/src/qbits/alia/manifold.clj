@@ -10,7 +10,7 @@
    [com.datastax.oss.driver.api.core CqlSession]
    [java.util.concurrent CompletionStage]))
 
-(defn execute-deferred
+(defn execute
   "similar to `qbits.alia/execute`, but executes async and returns
    just the first page of results in a `Deferred`"
   ([^CqlSession session query {:as opts}]
@@ -18,7 +18,7 @@
     (alia/execute-async session query opts)
     :current-page))
   ([^Session session query]
-     (execute-deferred session query {})))
+     (execute session query {})))
 
 (defn handle-page-completion-stage
   [^CompletionStage completion-stage
@@ -108,7 +108,7 @@
   [v]
   (if (sequential? v) v [v]))
 
-(defn execute-stream-records
+(defn execute-stream
   "like `execute-stream-pages`, but returns a `Stream<row>`
 
    supports all the args of `execute-stream-pages`"
@@ -120,7 +120,7 @@
       stream)))
 
   ([^CqlSession session query]
-   (execute-stream-records session query {})))
+   (execute-stream session query {})))
 
 ;; backwards compatible fn name
-(def execute-buffered execute-stream-records)
+(def execute-buffered execute-stream)

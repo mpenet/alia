@@ -63,7 +63,7 @@
 
    opts))
 
-(defn execute-chan
+(defn execute
   "similar to `qbits.alia/execute`, but returns a
    `clojure.core.async/promise-chan` with just the first page of
    results. Exceptions are sent to the channel as a
@@ -87,7 +87,7 @@
      chan))
 
   ([^Session session query]
-   (execute-chan session query {})))
+   (execute session query {})))
 
 (defn execute-chan-pages
   "similar to `qbits.alia/execute`, but executes async and returns a
@@ -130,7 +130,7 @@
   [v]
   (if (sequential? v) v [v]))
 
-(defn execute-chan-records
+(defn execute-chan
   "like `execute-chan-pages`, but returns a `clojure.core.async/chan<row>`
 
    supports all the args of `execute-chan-pages`"
@@ -149,7 +149,7 @@
        record-chan)))
 
   ([^Session session query]
-   (execute-chan-records session query {})))
+   (execute-chan session query {})))
 
 ;; backwards compatible name
-(def execute-buffered execute-chan-records)
+(def execute-buffered execute-chan)
