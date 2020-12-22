@@ -8,7 +8,6 @@
   (:import
    [com.datastax.oss.driver.api.core.session Session]
    [com.datastax.oss.driver.api.core CqlSession]
-   [com.datastax.oss.driver.api.core.cql AsyncResultSet]
    [java.util.concurrent CompletionStage]))
 
 (defn handle-page-completion-stage
@@ -65,13 +64,13 @@
    opts))
 
 (defn execute-chan
-  "Same as execute, but returns a clojure.core.async/promise-chan that is
-  wired to the underlying ResultSetFuture. This means this is usable
-  with `go` blocks or `take!`. Exceptions are sent to the channel as a
-  value, it's your responsability to handle these how you deem
-  appropriate.
+  "similar to `qbits.alia/execute`, but returns a
+   `clojure.core.async/promise-chan` with just the first page of
+   results. Exceptions are sent to the channel as a
+   value, it's your responsability to handle these how you deem
+   appropriate.
 
-  For options refer to `qbits.alia/execute` doc"
+   For options refer to `qbits.alia/execute` doc"
   ([^CqlSession session query {chan :chan
                                :as opts}]
    (let [chan (or chan (async/promise-chan))
@@ -91,6 +90,19 @@
    (execute-chan session query {})))
 
 (defn execute-chan-pages
+  "similar to `qbits.alia/execute`, but executes async and returns a
+   `clojure.core.async/chan<AliaAsyncResultSetPage>`
+
+   the `:current-page` of each `AliaAsyncResultSetPage` is built by
+   applying `:result-set-fn` (default `clojure.core/seq`) to an
+   `Iterable` + `IReduceInit` supporting version of the `AsyncResultSet`
+
+   supports all the args of `qbits.alia/execute` and:
+
+   - `:page-buffer-size` determines the number of pages to buffer ahead,
+      defaults to 1
+   - `:chan` - optional - the channel to copy records to, defaults to a new
+      `clojure.core.async/chan` with buffer size `:page-buffer-size`"
   ([^CqlSession session query {chan :chan
                                page-buffer-size :page-buffer-size
                                :as opts}]
@@ -119,19 +131,9 @@
   (if (sequential? v) v [v]))
 
 (defn execute-chan-records
-  "Allows to execute a query and have rows returned in a
-  `clojure.core.async/chan`. Every value in the chan is a single
-  row. By default the query `:page-size` inherits from the cluster
-  setting, unless you specify a different `:page-size` at query level
-  and the channel is a regular `clojure.core.async/chan`, unless you
-  pass your own `:channel` with its own sizing
-  caracteristics. `:page-size` dicts the chunking of the rows
-  returned, allowing to stream rows into the channel in a controlled
-  manner.
-  If you close the channel the streaming process ends.
-  Exceptions are sent to the channel as a value, it's your
-  responsability to handle these how you deem appropriate. For options
-  refer to `qbits.alia/execute` doc"
+  "like `execute-chan-pages`, but returns a `clojure.core.async/chan<row>`
+
+   supports all the args of `execute-chan-pages`"
   ([^CqlSession session query {out-chan :chan
                                :as opts}]
 

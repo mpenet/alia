@@ -8,11 +8,11 @@
   (:import
    [com.datastax.oss.driver.api.core.session Session]
    [com.datastax.oss.driver.api.core CqlSession]
-   [com.datastax.oss.driver.api.core.cql AsyncResultSet]
    [java.util.concurrent CompletionStage]))
 
 (defn execute-deferred
-  "Same as qbits.alia/execute, but returns just the first page of results"
+  "similar to `qbits.alia/execute`, but executes async and returns
+   just the first page of results in a `Deferred`"
   ([^CqlSession session query {:as opts}]
    (d/chain
     (alia/execute-async session query opts)
@@ -68,6 +68,19 @@
    opts))
 
 (defn execute-stream-pages
+  "similar to `qbits.alia/execute`, but executes async and returns a
+   `Stream<AliaAsyncResultSetPage>`
+
+   the `:current-page` of each `AliaAsyncResultSetPage` is built by
+   applying `:result-set-fn` (default `clojure.core/seq`) to an
+   `Iterable` + `IReduceInit` supporting version of the `AsyncResultSet`
+
+   supports all the args of `qbits.alia/execute` and:
+
+   - `:page-buffer-size` determines the number of pages to buffer ahead,
+      defaults to 1
+   - `:stream` - optional - the stream to copy records to, defaults to a new
+      stream with buffer size `:page-buffer-size`"
   ([^CqlSession session query {stream :stream
                                page-buffer-size :page-buffer-size
                                :as opts}]
@@ -96,6 +109,9 @@
   (if (sequential? v) v [v]))
 
 (defn execute-stream-records
+  "like `execute-stream-pages`, but returns a `Stream<row>`
+
+   supports all the args of `execute-stream-pages`"
   ([^CqlSession session query {:as opts}]
    (let [stream (execute-stream-pages session query opts)]
 
