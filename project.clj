@@ -35,17 +35,33 @@
         "modules/alia-spec"
         "modules/alia-component"]
 
-  :profiles {:dev
-             {:plugins [[codox "0.10.3"]]
-              :dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
-                             [cc.qbits/hayt "4.1.0"
-                              :exclusions [org.apache.commons/commons-lang3]]
-                             [net.jpountz.lz4/lz4 "1.3.0"]
-                             [clj-time "0.11.0"]
-                             [manifold "0.1.8"]
-                             [org.clojure/tools.logging "0.3.1"]
-                             [org.slf4j/slf4j-log4j12 "1.7.25"
-                              :exclusions [org.slf4j/slf4j-api]]]}}
+  :profiles {:dev {:dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
+                                  [cc.qbits/hayt "4.1.0"
+                                   :exclusions [org.apache.commons/commons-lang3]]
+                                  [net.jpountz.lz4/lz4 "1.3.0"]
+                                  [clj-time "0.11.0"]
+                                  [manifold "0.1.8"]
+                                  [org.clojure/tools.logging "0.3.1"]
+                                  [org.slf4j/slf4j-log4j12 "1.7.25"
+                                   :exclusions [org.slf4j/slf4j-api]]]}
+
+             ;; lein-codox adds a [codox] dep programmatically,
+             ;; unless it's already in the project, and the codox dep
+             ;; clashes badly with the java-driver-core asm deps, so put codox
+             ;; in a separate profile
+             :codox {:plugins [[lein-codox "0.10.7"]]
+                     :managed-dependencies [[codox "0.10.7"
+                                             :exclusions [org.clojure/tools.reader]]
+                                            [com.datastax.oss/java-driver-core-shaded "4.9.0"
+                                             :exclusions [org.ow2.asm/asm-analysis
+                                                          org.ow2.asm/asm-tree
+                                                          org.ow2.asm/asm-util
+                                                          org.ow2.asm/asm]]]
+                     :dependencies [[codox]]
+                     :pedantic? :ranges}}
+
+  :aliases {"codox" ["with-profile" "+codox" "codox"]}
+
   :jar-exclusions [#"log4j.properties"]
   :monkeypatch-clojure-test false
   :codox {:source-uri "https://github.com/mpenet/alia/blob/master/{filepath}#L{line}"
