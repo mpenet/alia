@@ -14,8 +14,7 @@
   :deploy-repositories [["releases" :clojars]
                         ["snapshots" :clojars]]
 
-  :managed-dependencies [[org.clojure/clojure "1.10.1"]
-                         [cc.qbits/alia :version]
+  :managed-dependencies [[cc.qbits/alia :version]
                          [cc.qbits/alia-manifold :version]
                          [cc.qbits/alia-async :version]
                          [cc.qbits/alia-joda-time :version]
@@ -24,7 +23,7 @@
                          [cc.qbits/alia-component :version]]
 
   ;; cljdoc needs explicit versions on top-level deps
-  :dependencies [[org.clojure/clojure "1.10.1"]
+  :dependencies [[org.clojure/clojure "1.10.1" :scope "provided"]
                  [cc.qbits/alia :version]
                  [cc.qbits/alia-manifold :version]
                  [cc.qbits/alia-async :version]
@@ -41,7 +40,8 @@
         "modules/alia-spec"
         "modules/alia-component"]
 
-  :profiles {:dev {:dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.10.1"]
+                                  [org.xerial.snappy/snappy-java "1.0.5"]
                                   [cc.qbits/hayt "4.1.0"
                                    :exclusions [org.apache.commons/commons-lang3
                                                 cc.qbits/commons]]
