@@ -9,7 +9,6 @@ pom.xml
 .lein-deps-sum
 .lein-failures
 .lein-plugins
-/doc
 /src/qbits/perf.clj
 /pom.xml.asc
 /.lein-env

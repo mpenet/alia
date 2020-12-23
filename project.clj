@@ -1,6 +1,10 @@
 (defproject cc.qbits/alia-all "5.0.0-alpha2-SNAPSHOT"
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
   :url "https://github.com/mpenet/alia"
+  :scm {:name "git"
+        :url "https://github.com/mpenet/alia"}
+
+
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 

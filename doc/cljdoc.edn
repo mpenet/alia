@@ -1,0 +1,16 @@
+{:cljdoc/include-namespaces-from-dependencies
+ [qbits.alia
+  qbits.alia.cql-session
+  qbits.alia.enum
+  qbits.alia.result-set
+  qbits.alia.tuple
+  qbits.alia.udt
+  qbits.alia.uuid
+  qbits.alia.async
+  qbits.alia.manifold
+  qbits.alia.component
+  qbits.alia.codec.extension.java-legacy-time
+  qbits.alia.codec.extension.joda-time]
+ :cljdoc.doc/tree
+ [["Introduction" {:file "README.md"}]
+  ["Guide" {:file "doc/guide.md"}]]}
