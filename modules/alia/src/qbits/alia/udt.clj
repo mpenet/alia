@@ -1,124 +1,175 @@
 (ns qbits.alia.udt
+  (:require
+   [qbits.alia.metadata :as md])
   (:import
-   (com.datastax.driver.core
-    Session
-    TupleValue
-    UDTValue)
-   (java.util
-    UUID
-    List
-    Map
-    Set
-    Date)
-   (java.net InetAddress)
-   (java.nio ByteBuffer)))
+   [com.datastax.oss.driver.api.core.session Session]
+   [com.datastax.oss.driver.api.core.type
+    DataType
+    UserDefinedType
+    MapType
+    SetType
+    ListType]
+   [com.datastax.oss.driver.api.core.data TupleValue UdtValue]
+   [com.datastax.oss.driver.api.core.metadata.schema KeyspaceMetadata]
+   [java.util UUID List Map Set]
+   [java.time Instant LocalDate LocalTime]
+   [java.net InetAddress]
+   [java.nio ByteBuffer]))
 
 (defprotocol Encoder
-  (-set-field! [x u k]))
+  (-set-field!
+    [x u k]
+    [x u k ec]
+    [x u k kc vc]))
 
 (extend-protocol Encoder
 
   BigInteger
   (-set-field! [b u k]
-    (.setVarint ^UDTValue u ^String k b))
+    (.setBigInteger ^UdtValue u ^String k b))
 
   Boolean
   (-set-field! [b u k]
-    (.setBool ^UDTValue u ^String k  b))
+    (.setBoolean ^UdtValue u ^String k  b))
 
   ByteBuffer
   (-set-field! [b u k]
-    (.setBytes ^UDTValue u ^String k  b))
+    (.setByteBuffer ^UdtValue u ^String k  b))
 
-  Date
+  LocalDate
   (-set-field! [d u k]
-    (.setTimestamp ^UDTValue u ^String k  d))
+    (.setLocalDate ^UdtValue u ^String k  d))
+
+  LocalTime
+  (-set-field! [t u k]
+    (.setLocalTime ^UdtValue u ^String k t))
+
+  Instant
+  (-set-field! [i u k]
+    (.setInstant ^UdtValue u ^String k i))
 
   BigDecimal
   (-set-field! [d u k]
-    (.setDecimal ^UDTValue u ^String k  d))
+    (.setBigDecimal ^UdtValue u ^String k  d))
 
   Double
   (-set-field! [d u k]
-    (.setDouble ^UDTValue u ^String k  d))
+    (.setDouble ^UdtValue u ^String k  d))
 
   Float
   (-set-field! [f u k]
-    (.setFloat ^UDTValue u ^String k  f))
+    (.setFloat ^UdtValue u ^String k  f))
 
   InetAddress
   (-set-field! [i u k]
-    (.setInet ^UDTValue u ^String k  i))
+    (.setInetAddress ^UdtValue u ^String k  i))
 
   Integer
   (-set-field! [i u k]
-    (.setInt ^UDTValue u ^String k  i))
+    (.setInt ^UdtValue u ^String k  i))
 
   List
-  (-set-field! [l u k]
-    (.setList ^UDTValue u ^String k  l))
+  (-set-field! [l u k ec]
+    (.setList ^UdtValue u ^String k  l ^Class ec))
 
   Long
   (-set-field! [l u k]
-    (.setLong ^UDTValue u ^String k  l))
+    (.setLong ^UdtValue u ^String k  l))
 
   Map
-  (-set-field! [m u k]
-    (.setMap ^UDTValue u ^String k  m))
+  (-set-field! [m u k kc vc]
+    (.setMap ^UdtValue u ^String k  m ^Class kc ^Class vc))
 
   Set
-  (-set-field! [s u k]
-    (.setSet ^UDTValue u ^String k  s))
+  (-set-field! [s u k ec]
+    (.setSet ^UdtValue u ^String k  s ^Class ec))
 
   String
   (-set-field! [x u k]
-    (.setString ^UDTValue u ^String k  x))
+    (.setString ^UdtValue u ^String k  x))
 
   nil
   (-set-field! [n u k]
-    (.setToNull ^UDTValue u ^String k))
+    (.setToNull ^UdtValue u ^String k))
 
   String
   (-set-field! [x u k]
-    (.setString ^UDTValue u ^String k  x))
+    (.setString ^UdtValue u ^String k  x))
 
   TupleValue
   (-set-field! [t u k]
-    (.setTupleValue ^UDTValue u ^String k  t))
+    (.setTupleValue ^UdtValue u ^String k  t))
 
-  UDTValue
+  UdtValue
   (-set-field! [x u k]
-    (.setUDTValue ^UDTValue u ^String k  x))
+    (.setUdtValue ^UdtValue u ^String k  x))
 
   UUID
   (-set-field! [uuid u k]
-    (.setUUID ^UDTValue u ^String k  uuid)))
+    (.setUuid ^UdtValue u ^String k  uuid)))
 
 (defn set-field!
   "Where's flip when you need it"
-  [u k x]
-  (-set-field! x u k))
+  [ct utv k x]
+  (cond
+    (map? x)
+    (let [[kc vc] (->> x
+                       first
+                       (map #(some-> ^Object % .getClass)))]
+      (when (not (instance? MapType ct))
+        (throw (ex-info "not a map!" ct x)))
+      (-set-field!
+       x
+       utv
+       k
+       (md/default-class (.getKeyType ^MapType ct)  kc)
+       (md/default-class (.getValueType ^MapType ct) vc)))
+
+    (sequential? x)
+    (let [ec (some->> x  first (#(.getClass ^Object %)))]
+      (when (not (instance? ListType ct))
+        (throw (ex-info "not a list!" ct x)))
+      (-set-field! x utv k (md/default-class (.getElementType ^ListType ct) ec)))
+
+    (set? x)
+    (let [ec (some->> x  first (#(.getClass ^Object %)))]
+      (when (not (instance? SetType ct))
+        (throw (ex-info "not a set!" ct x)))
+      (-set-field! x utv k (md/default-class (.getElementType ^SetType ct) ec)))
+
+    :else
+    (-set-field! x utv k)))
 
 (defn encoder
-  "Takes a Session, optionaly keyspace name, UDT name and returns a
-  function that can be used to encode a map into a UDTValue suitable
+  "Takes a Session, optionally keyspace name, UDT name and returns a
+  function that can be used to encode a map into a UdtValue suitable
   to be used in PreparedStatements"
-  ([^Session session type codec]
-   (encoder session (.getLoggedKeyspace session) type codec))
-  ([^Session session ks type codec]
-   (let [t (some-> session
-                   .getCluster
-                   .getMetadata
-                   (.getKeyspace (name (or ks (.getLoggedKeyspace session))))
-                   (.getUserType (name type)))
-         encode (:encoder codec)]
+  ([^Session session typename codec]
+   (encoder session nil typename codec))
+  ([^Session session ks typename codec]
+   (let [^KeyspaceMetadata ksm (md/get-keyspace-metadata session ks)
+         ^UserDefinedType t (md/get-udt-metadata session ks typename)]
+
      (when-not t
-       (throw (ex-info (format "User Type '%s' not found on Keyspace '%s'"
-                               (name type)
-                               (name ks))
-                       {:type ::type-not-found})))
-     (fn [x]
-       (let [utv (.newValue t)]
-         (doseq [[k v] x]
-           (set-field! utv (name k) (encode v)))
-         utv)))))
+       (throw (ex-info
+               "UDT not found"
+               {:type ::udt-not-found
+                :keyspace (-> ksm .getName .asInternal)
+                :udt typename})))
+
+     (let [field-names (->> (.getFieldNames t)
+                            (map md/cql-id->kw))
+           field-types (.getFieldTypes t)
+
+           types-by-name (into {} (map vector field-names field-types))
+
+           encode (:encoder codec)]
+       (fn [x]
+         (let [utv (.newValue t)]
+           (doseq [[k v] x]
+             (set-field!
+              (get types-by-name (keyword k))
+              utv
+              (name k)
+              (encode v)))
+           utv))))))

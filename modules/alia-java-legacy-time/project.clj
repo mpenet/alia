@@ -1,4 +1,4 @@
-(defproject cc.qbits/alia-spec "_"
+(defproject cc.qbits/alia-java-legacy-time "_"
   :plugins [[lein-parent "0.3.8"]]
 
   :parent-project {:path "../../project.clj"
@@ -13,8 +13,7 @@
                              :jar-exclusions
                              :global-vars]}
 
-  :description "clojure.spec for Alia"
+  :description "Alia extension for java legacy time codec"
 
   :dependencies [[org.clojure/clojure]
-                 [cc.qbits/alia]
-                 [org.clojure/test.check "1.1.0"]])
+                 [cc.qbits/alia]])

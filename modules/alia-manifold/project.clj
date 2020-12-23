@@ -1,9 +1,20 @@
-(load-file "../../.deps-versions.clj")
-(defproject cc.qbits/alia-manifold alia-version
-  :url "https://github.com/mpenet/alia"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure ~clj-version]
-                 [cc.qbits/alia ~alia-version]
-                 [manifold "0.1.8"]]
-  :global-vars {*warn-on-reflection* true})
+(defproject cc.qbits/alia-manifold "_"
+  :plugins [[lein-parent "0.3.8"]]
+
+  :parent-project {:path "../../project.clj"
+                   :inherit [:version
+                             :managed-dependencies
+                             :license
+                             :url
+                             :scm
+                             :deploy-repositories
+                             :profiles
+                             :pedantic?
+                             :jar-exclusions
+                             :global-vars]}
+
+  :description "manifold interface for Alia"
+
+  :dependencies [[org.clojure/clojure]
+                 [cc.qbits/alia]
+                 [manifold "0.1.8"]])

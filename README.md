@@ -27,7 +27,7 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 * Extensible **Clojure data types support** & **clojure.core/ex-data**
   integration
 * **Lazy and potentialy chunked sequences over queries**
-* Controled rows **streaming** via core.async channels
+* Controled pages and rows **streaming** via core.async channels and manifold streams
 * First class support for cassandra **collections**, **User defined
   types**, that includes **nesting**.
 * **Lazy row decoding by default**, but also **optional cheap user
@@ -65,6 +65,11 @@ from alia's [modules](https://github.com/mpenet/alia/tree/master/modules):
   Manifold interface: query as streamed rows over manifold stream, query as deferred, etc
 
   [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-manifold.svg)](https://clojars.org/cc.qbits/alia-manifold)
+
+* [cc.qbits/alia-joda-time](https://github.com/mpenet/alia/tree/master/modules/alia-java-legacy-time):
+  Codec for java legacy time types.
+
+  [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-java-legacy-time.svg)](https://clojars.org/cc.qbits/alia-java-legacy-time)
 
 * [cc.qbits/alia-joda-time](https://github.com/mpenet/alia/tree/master/modules/alia-joda-time):
   Codec for joda-time types.
@@ -112,7 +117,9 @@ raw queries.
 ```clojure
 (require '[qbits.alia :as alia])
 
-(def cluster (alia/cluster {:contact-points ["localhost"]}))
+(def session (alia/session {:session-keyspace "alia"
+                            :contact-points ["localhost:9042"]
+                            :load-balancing-local-datacenter "Analytics"}))
 ```
 
 Sessions are separate so that you can interact with multiple
@@ -128,7 +135,6 @@ keyspaces from the same cluster definition.
 
 
 ```clojure
-   (alia/execute session "USE alia;")
    (alia/execute session "CREATE TABLE users (user_name varchar,
                                               first_name varchar,
                                               last_name varchar,
@@ -166,7 +172,7 @@ keyspaces from the same cluster definition.
   ;; prepared statement with named parameter(s)
   (def prepared-statement (alia/prepare session "select * from users where user_name= :name limit :lmt;"))
 
-  (alia/execute session prepared-statement {:values {:name "frodo" :lmt 1}})
+  (alia/execute session prepared-statement {:values {:name "frodo" :lmt (int 1)}})
 
 
 ```
@@ -174,27 +180,26 @@ keyspaces from the same cluster definition.
 ### Asynchronous interfaces:
 
 There are currently 3 interfaces to use the asynchronous methods of
-the underlying driver, the main one being **core.async**, another
-using simple functions and an optional **manifold** interfaces is
-also available.
+the underlying driver, the fundamental one being a simple
+`CompletableFuture` API, and then two alternative streaming APIs
+built with **core.async** and **manifold**
 
 
-### Async using function "callbacks"
+### Async returning `CompletableFuture`
 
 ```clojure
-(execute-async session
-               "select * from users;"
-               {:success (fn [rows] ...)
-                :error (fn [e] ...)})
+@(execute-async session "select * from users;")
+
 ```
 
 #### Async using clojure/core.async
 
 
 `qbits.alia.async/execute-chan` has the same signature as the other execute
-functions and as the name implies returns a `clojure/core.async`
-`promise-chan` that will contain a list of rows at some point or an exception
-instance.
+functions and returns a `clojure/core.async` channel of rows, or an exception instance.
+
+The channel supports backpressure, controlled by buffer-sizes and as rows
+are consumed from the channel more rows will be fetched to fill any buffers.
 
 Once you run it you have a couple of options to pull data from it.
 
@@ -228,10 +233,29 @@ and a callback as second:
         (recur)))))
 ```
 
-It also include `execute-chan-buffered`, which allows to run a single
-query in a non-blocking way, returning a channel and streams the rows
-in a controlled manner (respecting fetch-size and/or core async buffer
-size) to it.
+`qbits.alia.async/execute` returns a `promise-chan` with just the first
+page of results
+
+`qbits.alia.async/execute-chan-pages` returns a channel of pages of results,
+also supporting backpressure. The page objects are constructed by the
+`:result-set-fn` option.
+
+
+#### Async using manifold
+
+`qbits.alia.manifold/execute-stream` has the same signature as other execute
+functions and resturns a manifold stream of rows, or an exception instance
+
+As with core.async, the stream supports backpressure and as rows are `take!`en
+from the stream, more rows will be fetched according to available buffers.
+
+`qbits.alia.manifold/execute` returns a `Deferred` with just the first page of
+results
+
+`qbits.alia.manifold/execute-stream-pages` returns a stream of pages of
+results, supporting backpressure. The page objects are constructed by the
+`:result-set-fn` option.
+
 
 And it can do a lot more! Head to the
 [codox generated documentation](http://mpenet.github.com/alia/#docs).
@@ -311,6 +335,6 @@ Do not hesitate to ask your questions there.
 
 ## License
 
-Copyright © 2013-2016 [Max Penet](https://twitter.com/mpenet)
+Copyright © 2013-2020 [Max Penet](https://twitter.com/mpenet), [mccraigmccraig](https://github.com/mccraigmccraig)
 
 Distributed under the Eclipse Public License, the same as Clojure.

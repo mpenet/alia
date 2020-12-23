@@ -2,176 +2,125 @@
   (:require
    [manifold.deferred :as d]
    [manifold.stream :as s]
-   [qbits.alia.codec :as codec]
-   [qbits.alia.codec.default :as default-codec]
-   [qbits.alia :refer [ex->ex-info query->statement set-statement-options!
-                       get-executor]])
+   [qbits.alia :as alia]
+   [qbits.alia.completable-future :as cf]
+   [qbits.alia.result-set :as result-set])
   (:import
-   (com.datastax.driver.core
-    Statement
-    ResultSet
-    ResultSetFuture
-    Session
-    Statement)
-   (com.google.common.util.concurrent
-    Futures
-    FutureCallback)))
+   [com.datastax.oss.driver.api.core.session Session]
+   [com.datastax.oss.driver.api.core CqlSession]
+   [java.util.concurrent CompletionStage]))
 
 (defn execute
-  "Same as execute, but returns a promise and accepts :success
-  and :error handlers via options, you can also pass :executor via the
-  option map for the ResultFuture, it defaults to a cachedThreadPool
-  if you don't.
-
-  For other options refer to `qbits.alia/execute` doc"
-  ([^Session session query {:keys [success error executor consistency
-                                   serial-consistency routing-key
-                                   result-set-fn row-generator codec
-                                   retry-policy tracing? idempotent?
-                                   fetch-size timestamp values paging-state
-                                   read-timeout]}]
-   (let [deferred (d/deferred)]
-     (try
-       (let [codec (or codec default-codec/codec)
-             ^Statement statement (query->statement query values codec)]
-         (set-statement-options! statement routing-key retry-policy
-                                 tracing? idempotent?
-                                 consistency serial-consistency fetch-size
-                                 timestamp paging-state read-timeout)
-         (let [^ResultSetFuture rs-future (.executeAsync session statement)]
-           (d/on-realized deferred (or success (fn [_])) (or error (fn [_])))
-           (Futures/addCallback
-            rs-future
-            (reify FutureCallback
-              (onSuccess [_ result]
-                (try
-                  (d/success! deferred
-                              (codec/result-set (.get rs-future)
-                                                result-set-fn
-                                                row-generator
-                                                codec))
-                  (catch Exception err
-                    (d/error! deferred
-                              (ex->ex-info err {:query statement :values values})))))
-              (onFailure [_ ex]
-                (d/error! deferred
-                          (ex->ex-info ex {:query statement :values values}))))
-            (get-executor executor))))
-       (catch Exception e
-         (d/error! deferred e)))
-     deferred))
+  "similar to `qbits.alia/execute`, but executes async and returns
+   just the first page of results in a `Deferred`"
+  ([^CqlSession session query {:as opts}]
+   (d/chain
+    (alia/execute-async session query opts)
+    :current-page))
   ([^Session session query]
-   (execute session query {})))
+     (execute session query {})))
 
+(defn handle-page-completion-stage
+  [^CompletionStage completion-stage
+   {stream :stream
+    :as opts}]
+  (cf/handle-completion-stage
+   completion-stage
 
-(defn execute-buffered
-  "Allows to execute a query and have rows returned in a
-  manifold stream. Every value in the stream is a single
-  row. By default the query `:fetch-size` inherits from the cluster
-  setting, unless you specify a different `:fetch-size` at query level
-  and the stream inherits fetch size, unless you
-  pass your own `:stream` with its own properties.
-  If you close the stream the streaming process ends.
-  Exceptions are sent to the stream as a value, it's your
-  responsability to handle these how you deem appropriate. For options
-  refer to `qbits.alia/execute` doc"
-  ([^Session session query {:keys [executor consistency serial-consistency
-                                   routing-key retry-policy
-                                   result-set-fn row-generator codec
-                                   tracing? idempotent?
-                                   fetch-size buffer-size stream
-                                   values timestamp
-                                   paging-state read-timeout]}]
+   (fn [{current-page :current-page
+        :as async-result-set-page}]
+
+     (if (some? async-result-set-page)
+
+       (d/chain
+        (s/put! stream current-page)
+        (fn [put?]
+          (cond
+
+            ;; last page put ok and there is another
+            (and put?
+                 (true? (result-set/has-more-pages? async-result-set-page)))
+            (handle-page-completion-stage
+             (result-set/fetch-next-page async-result-set-page)
+             opts)
+
+            ;; last page put ok and was the last
+            put?
+            (s/close! stream)
+
+            ;; bork! last page did not put.
+            ;; maybe the stream was closed?
+            :else
+            (throw
+             (ex-info
+              "qbits.alia.manifold/stream-put!-fail"
+              (merge val (select-keys opts [:statement :values])))))))
+
+       ;; edge-case - when :page-size lines up with result size,
+       ;; the final page is empty, resulting in a nil async-result-set
+       (s/close! stream)))
+
+   (fn [err]
+     (d/finally
+       (s/put! stream err)
+       (fn [] (s/close! stream))))
+
+   opts))
+
+(defn execute-stream-pages
+  "similar to `qbits.alia/execute`, but executes async and returns a
+   `Stream<AliaAsyncResultSetPage>`
+
+   the `:current-page` of each `AliaAsyncResultSetPage` is built by
+   applying `:result-set-fn` (default `clojure.core/seq`) to an
+   `Iterable` + `IReduceInit` supporting version of the `AsyncResultSet`
+
+   supports all the args of `qbits.alia/execute` and:
+
+   - `:page-buffer-size` determines the number of pages to buffer ahead,
+      defaults to 1
+   - `:stream` - optional - the stream to copy records to, defaults to a new
+      stream with buffer size `:page-buffer-size`"
+  ([^CqlSession session query {stream :stream
+                               page-buffer-size :page-buffer-size
+                               :as opts}]
    (let [stream (or stream
-                    (s/stream (or buffer-size
-                                  ;; page-ahead buffering - fetches the next
-                                  ;; page as soon as processing this page starts
-                                  ;; which is a simple delay-avoiding heuristic
-                                  (dec (or fetch-size
-                                           (-> session
-                                               .getCluster
-                                               .getConfiguration
-                                               .getQueryOptions
-                                               .getFetchSize))))))]
-     (try
-       (let [codec (or codec default-codec/codec)
-             ^Statement statement (query->statement query values codec)
-             decode (:decoder codec)
-             row-generator (or row-generator
-                               codec/row-gen->map)
+                    ;; fetch one page ahead by default
+                    (s/stream (or page-buffer-size 1)))
 
-             stuff-available-records
-             (fn [^ResultSet rs]
-               (d/loop []
-                 (d/chain
-                  (d/success-deferred true)
-                  (fn [_]
-                    (if (> (.getAvailableWithoutFetching rs) 0)
-                      (s/put! stream (codec/decode-row (.one rs)
-                                                       row-generator
-                                                       decode))
-                      false))
-                  (fn [ok?]
-                    (if ok?
-                      (d/recur)
-                      rs)))))]
+         page-cs (alia/execute-async session query opts)]
 
-         (set-statement-options! statement routing-key retry-policy
-                                 tracing? idempotent?
-                                 consistency serial-consistency fetch-size
-                                 timestamp paging-state read-timeout)
-         (let [^ResultSetFuture rs-future (.executeAsync session statement)]
-           (Futures/addCallback  rs-future
-                                 (reify FutureCallback
-                                   (onSuccess [_ rs]
-                                     (d/catch
+     (handle-page-completion-stage
+      page-cs
+      (merge opts
+             {:stream stream
+              :statement query}))
 
-                                         (d/loop []
+     stream))
 
-                                           (d/chain
+  ([^CqlSession session query]
+   (execute-stream-pages session query {})))
 
-                                            (d/success-deferred rs)
+(defn ^:private safe-identity
+  "if the page should happen to be an Exception, wrap
+   it in a vector so that it can be concatenated to the
+   value stream"
+  [v]
+  (if (sequential? v) v [v]))
 
-                                            stuff-available-records
+(defn execute-stream
+  "like `execute-stream-pages`, but returns a `Stream<row>`
 
-                                            (fn [^ResultSet rs]
-                                              (if (and (not (s/closed? stream))
-                                                       (not (.isFullyFetched rs)))
-                                                (let [p (d/deferred)]
-                                                  (-> (.fetchMoreResults rs)
-                                                      (Futures/addCallback
-                                                       (reify FutureCallback
-                                                         (onSuccess [_ r]
-                                                           (d/success! p [::success r]))
-                                                         (onFailure [_ ex] (d/success! p [::error ex])))
-                                                       (get-executor executor)))
-                                                  (d/chain
-                                                   p
-                                                   (fn [[k v]]
-                                                     (if (= ::success k)
-                                                       (d/recur)
-                                                       (do
-                                                         (s/put! stream (ex->ex-info
-                                                                         v
-                                                                         {:query statement
-                                                                          :values values}))
-                                                         (s/close! stream))))))
-                                                (do
-                                                  (s/close! stream))))))
+   supports all the args of `execute-stream-pages`"
+  ([^CqlSession session query {:as opts}]
+   (let [stream (execute-stream-pages session query opts)]
 
-                                         Exception
-                                       (fn [ex]
-                                         (s/put! stream (ex->ex-info ex
-                                                                     {:query statement
-                                                                      :values values}))
-                                         (s/close! stream))))
-                                   (onFailure [_ ex]
-                                     (s/put! stream (ex->ex-info ex {:query statement :values values}))
-                                     (s/close! stream)))
-                                 (get-executor executor))))
-       (catch Exception e
-         (s/close! stream)
-         (throw e)))
-     (s/source-only stream)))
-  ([^Session session query]
-   (execute-buffered session query {})))
+     (s/transform
+      (mapcat safe-identity)
+      stream)))
+
+  ([^CqlSession session query]
+   (execute-stream session query {})))
+
+;; backwards compatible fn name
+(def execute-buffered execute-stream)

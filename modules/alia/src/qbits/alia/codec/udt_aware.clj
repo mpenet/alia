@@ -1,25 +1,19 @@
 (ns qbits.alia.codec.udt-aware
   (:require
    [clojure.reflect :as reflect]
-   [qbits.alia.codec :as codec]
+   [clojure.string :as string]
    [qbits.alia.codec.default :as default-codec]
    [qbits.alia.udt :as udt])
   (:import
-   (java.nio ByteBuffer)
-   (com.datastax.driver.core
-    DataType
-    DataType$Name
-    GettableByIndexData
-    ResultSet
-    Row
-    UserType$Field
-    Session
-    SettableByNameData
-    UDTValue
-    TupleType
-    TupleValue)
-   (java.util UUID List Map Set Date)
-   (java.net InetAddress)))
+   [com.datastax.oss.driver.api.core
+    CqlIdentifier]
+   [com.datastax.oss.driver.api.core.type
+    UserDefinedType]
+   [com.datastax.oss.driver.api.core.data
+    UdtValue
+    TupleValue]
+   [java.util List Map Set]
+   ))
 
 (declare codec)
 
@@ -37,34 +31,30 @@
   (register-udt! [this session udt-name record-constructor]
     "Allows to register an udtencoder at codec level, when the
     specified record typed is passed it will automatically be encoded
-    in the appropriate UDTValue")
+    in the appropriate UdtValue")
   (deregister-udt! [this session udt-name record-constructor]
     "Allows to register an udtencoder at codec level, when the
     specified record typed is passed it will automatically be encoded
-    in the appropriate UDTValue")
+    in the appropriate UdtValue")
   (get-udt-codec [this udt-name-or-record-type]))
 
 ;; we use extend to allow end users to compose from these if they
 ;; need/want to. extend-protocol expands to that anyway
 (defn decoders [decode]
-  (merge (default-codec/decoders decode)
-         {:UDTValue
-          #(let [^UDTValue udt-value %
-                udt-type (.getType udt-value)
-                udt-type-iter (.iterator udt-type)
-                len (.size udt-type)]
-            (loop [udt (transient {})
-                   idx' 0]
-              (if (= idx' len)
-                (let [m (persistent! udt)]
-                  (if-let [record-ctor (get-udt-codec codec (.getTypeName udt-type))]
-                    (record-ctor m)
-                    m))
-                (let [^UserType$Field type (.next udt-type-iter)]
-                  (recur (assoc! udt
-                                 (-> type .getName keyword)
-                                 (codec/deserialize udt-value idx' decode))
-                         (unchecked-inc-int idx'))))))}))
+  (let [{default-udt-decoder :UdtValue
+         :as default-decoders} (default-codec/decoders decode)]
+    (merge
+     default-decoders
+     {:UdtValue
+      #(let [^UdtValue udt-value %
+             ^UserDefinedType udt-type (.getType udt-value)
+             r (default-udt-decoder udt-value)]
+
+         (if-let [record-ctor (get-udt-codec
+                               codec
+                               (-> udt-type .getName .asInternal))]
+           (record-ctor r)
+           r))})))
 
 (defn encoders [encode]
   (merge (default-codec/encoders encode)
@@ -76,7 +66,10 @@
 (def default-encoders (encoders #'encode))
 
 (defn record-map-ctor [rec-sym]
-  (let [[_ ns' kls] (re-find #"(.*)\.([^.]*)$" (str (reflect/typename rec-sym)))]
+  (let [[_ ns' kls] (re-find #"(.*)\.([^.]*?)$"
+                             (str (reflect/typename rec-sym)))
+        ;; reverse transform for classnames in namespaces with dashes
+        ns' (string/replace ns' #"_" "-")]
     (resolve (symbol (str ns' "/map->" kls)))))
 
 (defrecord DefaultCodec [encoder decoder udt-registry]
@@ -90,14 +83,19 @@
   (register-udt! [this session udt-name record-ctor]
     ;; we register both ways as we need inverted index depending on if
     ;; it's for decoding/encoding
-    (vswap! udt-registry assoc
-            ;; name -> record-ctor
-            (name udt-name) (record-map-ctor record-ctor)
-            ;; record-type -> udtencoder
-            record-ctor
-            (udt/encoder session
-                         udt-name
-                         codec)))
+    (let [rmctor (record-map-ctor record-ctor)]
+      (when (nil? rmctor)
+        (throw (ex-info
+                "can't find map constructor"
+                {:record-ctor record-ctor})))
+      (vswap! udt-registry assoc
+              ;; name -> record-ctor
+              (name udt-name) rmctor
+              ;; record-type -> udtencoder
+              record-ctor
+              (udt/encoder session
+                           udt-name
+                           codec))))
   (get-udt-codec [this udt-name-or-rec-type]
     (get @udt-registry udt-name-or-rec-type)))
 
@@ -110,7 +108,7 @@
 (extend Map Decoder {:decode (:Map default-decoders)})
 (extend List Decoder {:decode (:List default-decoders)})
 (extend Set Decoder {:decode (:Set default-decoders)})
-(extend UDTValue Decoder {:decode (:UDTValue default-decoders)})
+(extend UdtValue Decoder {:decode (:UdtValue default-decoders)})
 (extend TupleValue Decoder {:decode (:TupleValue default-decoders)})
 (extend Object Decoder {:decode (:Object default-decoders)})
 (extend nil Decoder {:decode (:nil default-decoders)})
