@@ -7,13 +7,16 @@
                              :managed-dependencies
                              :license
                              :url
-                             :scm
                              :deploy-repositories
                              :profiles
                              :description
                              :pedantic?
                              :jar-exclusions
                              :global-vars]}
+
+  :scm {:name "git"
+        :url "https://github.com/mpenet/alia"
+        :dir "../.."}
 
   :dependencies [[org.clojure/clojure]
                  [cc.qbits/commons "0.5.2"]

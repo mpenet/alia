@@ -6,12 +6,15 @@
                              :managed-dependencies
                              :license
                              :url
-                             :scm
                              :deploy-repositories
                              :profiles
                              :pedantic?
                              :jar-exclusions
                              :global-vars]}
+
+  :scm {:name "git"
+        :url "https://github.com/mpenet/alia"
+        :dir "../.."}
 
   :description "Component integration for Alia"
 
