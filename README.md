@@ -1,5 +1,5 @@
 # alia
-[![cljdoc badge](https://cljdoc.xyz/badge/cc.qbits/alia-all)](https://cljdoc.xyz/d/cc.qbits/alia-all/CURRENT)
+[![cljdoc badge](https://cljdoc.org/badge/cc.qbits/alia-all)](https://cljdoc.org/d/cc.qbits/alia-all/CURRENT)
 
 > Coan-Teen, the female death spirit who walks without feet.
 
