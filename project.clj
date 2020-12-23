@@ -4,19 +4,20 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :plugins [[lein-sub "0.3.0"]]
+  :plugins [[lein-sub "0.3.0"]
+            [exoscale/lein-replace "0.1.1"]]
 
   :deploy-repositories [["releases" :clojars]
                         ["snapshots" :clojars]]
 
   :managed-dependencies [[org.clojure/clojure "1.10.1"]
-                         [cc.qbits/alia "5.0.0"]
-                         [cc.qbits/alia-manifold "5.0.0"]
-                         [cc.qbits/alia-async "5.0.0"]
-                         [cc.qbits/alia-joda-time "5.0.0"]
-                         [cc.qbits/alia-java-legacy-time "5.0.0"]
-                         [cc.qbits/alia-spec "5.0.0"]
-                         [cc.qbits/alia-component "5.0.0"]]
+                         [cc.qbits/alia :version]
+                         [cc.qbits/alia-manifold :version]
+                         [cc.qbits/alia-async :version]
+                         [cc.qbits/alia-joda-time :version]
+                         [cc.qbits/alia-java-legacy-time :version]
+                         [cc.qbits/alia-spec :version]
+                         [cc.qbits/alia-component :version]]
 
   :dependencies [[org.clojure/clojure]
                  [cc.qbits/alia]
@@ -37,7 +38,8 @@
 
   :profiles {:dev {:dependencies [[org.xerial.snappy/snappy-java "1.0.5"]
                                   [cc.qbits/hayt "4.1.0"
-                                   :exclusions [org.apache.commons/commons-lang3]]
+                                   :exclusions [org.apache.commons/commons-lang3
+                                                cc.qbits/commons]]
                                   [net.jpountz.lz4/lz4 "1.3.0"]
                                   [clj-time "0.11.0"]
                                   [manifold "0.1.8"]
