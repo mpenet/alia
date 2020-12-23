@@ -19,8 +19,9 @@
         :url "https://github.com/mpenet/alia"
         :dir "../.."}
 
-  :dependencies [[org.clojure/clojure "1.10.1" :scope "provided"]
-                 [cc.qbits/commons "0.5.2"]
+  :exclusions [org.clojure/clojure]
+
+  :dependencies [[cc.qbits/commons "0.5.2"]
                  [com.datastax.oss/java-driver-core-shaded "4.9.0"]]
 
   :codox {:source-uri "https://github.com/mpenet/alia/blob/master/{filepath}#L{line}"

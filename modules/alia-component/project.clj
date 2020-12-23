@@ -17,9 +17,10 @@
         :url "https://github.com/mpenet/alia"
         :dir "../.."}
 
+  :exclusions [org.clojure/clojure]
+
   :description "Component integration for Alia"
 
-  :dependencies [[org.clojure/clojure "1.10.1" :scope "provided"]
-                 [com.stuartsierra/component "0.3.2"]
-                 [cc.qbits/alia :version]
-                 [cc.qbits/alia-spec :version]])
+  :dependencies [[com.stuartsierra/component "0.3.2"]
+                 [cc.qbits/alia]
+                 [cc.qbits/alia-spec]])

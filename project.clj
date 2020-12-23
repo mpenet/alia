@@ -22,15 +22,15 @@
                          [cc.qbits/alia-spec :version]
                          [cc.qbits/alia-component :version]]
 
-  ;; cljdoc needs explicit versions on top-level deps
-  :dependencies [[org.clojure/clojure "1.10.1" :scope "provided"]
-                 [cc.qbits/alia :version]
-                 [cc.qbits/alia-manifold :version]
-                 [cc.qbits/alia-async :version]
-                 [cc.qbits/alia-joda-time :version]
-                 [cc.qbits/alia-java-legacy-time :version]
-                 [cc.qbits/alia-spec :version]
-                 [cc.qbits/alia-component :version]]
+  :exclusions [org.clojure/clojure]
+
+  :dependencies [[cc.qbits/alia]
+                 [cc.qbits/alia-manifold]
+                 [cc.qbits/alia-async]
+                 [cc.qbits/alia-joda-time]
+                 [cc.qbits/alia-java-legacy-time]
+                 [cc.qbits/alia-spec]
+                 [cc.qbits/alia-component]]
 
   :sub ["modules/alia"
         "modules/alia-async"

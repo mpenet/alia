@@ -17,7 +17,8 @@
         :url "https://github.com/mpenet/alia"
         :dir "../.."}
 
+  :exclusions [org.clojure/clojure]
+
   :description "Alia extension for java legacy time codec"
 
-  :dependencies [[org.clojure/clojure "1.10.1" :scope "provided"]
-                 [cc.qbits/alia :version]])
+  :dependencies [[cc.qbits/alia]])

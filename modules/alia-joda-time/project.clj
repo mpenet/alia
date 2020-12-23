@@ -17,8 +17,9 @@
         :url "https://github.com/mpenet/alia"
         :dir "../.."}
 
+  :exclusions [org.clojure/clojure]
+
   :description "Alia extension for joda-time codec"
 
-  :dependencies [[org.clojure/clojure "1.10.1" :scope "provided"]
-                 [cc.qbits/alia :version]
+  :dependencies [[cc.qbits/alia]
                  [clj-time "0.11.0"]])
