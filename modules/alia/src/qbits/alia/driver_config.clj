@@ -6,7 +6,8 @@
     DriverOption
     DriverConfigLoader
     ProgrammaticDriverConfigLoaderBuilder]
-   [java.util List Map]))
+   [java.util List Map]
+   [java.time Duration]))
 
 (defn programmatic-driver-config-loader-builder
   []
@@ -24,6 +25,12 @@
 ;; can't see a way to map .withBytes since the value
 ;; is a Long, just like .withLong
 (extend-protocol IDriverConfigLoaderBuilder
+  Duration
+  (-with-config [d
+                 ^ProgrammaticDriverConfigLoaderBuilder builder
+                 ^DriverOption driver-option]
+    (.withDuration builder driver-option d))
+
   Boolean
   (-with-config [b
                  ^ProgrammaticDriverConfigLoaderBuilder builder
@@ -74,6 +81,7 @@
       (let [cl (-> l (.get 0) class .getName)
             _ (check-element-classes cl l)]
         (case cl
+          "java.time.Duration" (.withDurationList builder driver-option l)
           "java.lang.Boolean" (.withBooleanList builder driver-option l)
           "java.lang.Integer" (.withIntList builder driver-option l)
           "java.lang.Long" (.withLongList builder driver-option l)

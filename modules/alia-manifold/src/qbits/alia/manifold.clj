@@ -10,15 +10,7 @@
    [com.datastax.oss.driver.api.core CqlSession]
    [java.util.concurrent CompletionStage]))
 
-(defn execute
-  "similar to `qbits.alia/execute`, but executes async and returns
-   just the first page of results in a `Deferred`"
-  ([^CqlSession session query {:as opts}]
-   (d/chain
-    (alia/execute-async session query opts)
-    :current-page))
-  ([^Session session query]
-     (execute session query {})))
+
 
 (defn handle-page-completion-stage
   [^CompletionStage completion-stage
@@ -101,6 +93,7 @@
   ([^CqlSession session query]
    (execute-stream-pages session query {})))
 
+
 (defn ^:private safe-identity
   "if the page should happen to be an Exception, wrap
    it in a vector so that it can be concatenated to the
@@ -124,3 +117,26 @@
 
 ;; backwards compatible fn name
 (def execute-buffered execute-stream)
+
+(defn execute
+  "similar to `qbits.alia/execute`, but executes async
+   - returns a `Deferred<records>` with all the records
+     from all pages of results realised in memory
+
+   any errors will error the result Deferred"
+  ([^CqlSession session query {:as opts}]
+   (let [pages-s (execute-stream-pages session query opts)
+         pages-d (s/reduce
+                  (fn [pages page-or-error]
+                    ;; make sure errors get propagated
+                    (if (instance? Throwable page-or-error)
+                      (throw page-or-error)
+                      (conj pages page-or-error)))
+                  []
+                  pages-s)]
+     (d/chain
+      pages-d
+      (fn [pages]
+        (apply concat pages)))))
+  ([^Session session query]
+   (execute session query {})))

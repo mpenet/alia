@@ -39,6 +39,13 @@
    (let [^CqlSessionBuilder sb (cql-session/cql-session-builder config)]
      (.build sb))))
 
+(defn session-async
+  "like `session`, but returns a CompletionStage<CqlSession>"
+  ([] (session-async {}))
+  ([config]
+   (let [^CqlSessionBuilder sb (cql-session/cql-session-builder config)]
+     (.buildAsync sb))))
+
 (defn close
   "close a `CqlSession`"
   [^CqlSession session]
