@@ -63,32 +63,6 @@
 
    opts))
 
-(defn execute
-  "similar to `qbits.alia/execute`, but returns a
-   `clojure.core.async/promise-chan` with just the first page of
-   results. Exceptions are sent to the channel as a
-   value, it's your responsability to handle these how you deem
-   appropriate.
-
-   For options refer to `qbits.alia/execute` doc"
-  ([^CqlSession session query {chan :chan
-                               :as opts}]
-   (let [chan (or chan (async/promise-chan))
-
-         page-cs (alia/execute-async session query opts)]
-
-     (handle-page-completion-stage
-      page-cs
-      (merge opts
-             {:chan chan
-              :statement query
-              ::stop? true}))
-
-     chan))
-
-  ([^Session session query]
-   (execute session query {})))
-
 (defn execute-chan-pages
   "similar to `qbits.alia/execute`, but executes async and returns a
    `clojure.core.async/chan<AliaAsyncResultSetPage>`
@@ -153,3 +127,24 @@
 
 ;; backwards compatible name
 (def execute-buffered execute-chan)
+
+(defn execute
+  "similar to `qbits.alia/execute`, but executes async and returns a
+   `clojure.core.async/promise-chan` with all the records from
+   all pages of results realised in memory
+
+   For options refer to `qbits.alia/execute` doc"
+  ([^CqlSession session query {chan :chan
+                               :as opts}]
+   (let [chan (or chan (async/promise-chan))
+
+         pages-ch (execute-chan-pages session query opts)
+         pages-v-ch (async/reduce conj [] pages-ch)
+         records-v-ch (async/map #(apply concat %) [pages-v-ch])]
+
+     (async/pipe records-v-ch chan)
+
+     chan))
+
+  ([^Session session query]
+   (execute session query {})))
