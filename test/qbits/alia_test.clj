@@ -371,7 +371,7 @@
 
   (testing "errors with execute"
     (is (instance? clojure.lang.ExceptionInfo
-                   (async/<!! (alia.async/execute-chan
+                   (async/<!! (alia.async/execute
                                *session*
                                "slect prout from 1;"))))))
 
