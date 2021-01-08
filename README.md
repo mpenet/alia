@@ -66,7 +66,7 @@ from alia's [modules](https://github.com/mpenet/alia/tree/master/modules):
 
   [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-manifold.svg)](https://clojars.org/cc.qbits/alia-manifold)
 
-* [cc.qbits/alia-joda-time](https://github.com/mpenet/alia/tree/master/modules/alia-java-legacy-time):
+* [cc.qbits/alia-java-legacy-time](https://github.com/mpenet/alia/tree/master/modules/alia-java-legacy-time):
   Codec for java legacy time types.
 
   [![Clojars Project](https://img.shields.io/clojars/v/cc.qbits/alia-java-legacy-time.svg)](https://clojars.org/cc.qbits/alia-java-legacy-time)
