@@ -130,8 +130,10 @@
 
 (defn execute
   "similar to `qbits.alia/execute`, but executes async and returns a
-   `clojure.core.async/promise-chan` with all the records from
+   `clojure.core.async/promise-chan` with a list of all the records from
    all pages of results realised in memory
+
+   any errors will be result in the result channel containing just an Exception
 
    For options refer to `qbits.alia/execute` doc"
   ([^CqlSession session query {chan :chan
@@ -139,8 +141,19 @@
    (let [chan (or chan (async/promise-chan))
 
          pages-ch (execute-chan-pages session query opts)
-         pages-v-ch (async/reduce conj [] pages-ch)
-         records-v-ch (async/map #(apply concat %) [pages-v-ch])]
+         pages-v-ch (async/reduce
+                     (fn [pages page-or-error]
+                       (if (instance? Throwable page-or-error)
+                         (reduced page-or-error)
+                         (conj pages page-or-error)))
+                     []
+                     pages-ch)
+         records-v-ch (async/map
+                       (fn [pages-v-or-error]
+                         (if (instance? Throwable pages-v-or-error)
+                           pages-v-or-error
+                           (apply concat pages-v-or-error)))
+                       [pages-v-ch])]
 
      (async/pipe records-v-ch chan)
 

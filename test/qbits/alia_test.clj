@@ -340,7 +340,7 @@
   ;;                                         (conj ret (async/<! (execute-chan *session* "select * from users limit 1")))))))))))
 
 
-  (testing "errors"
+  (testing "errors with execute-chan"
     (is (instance? clojure.lang.ExceptionInfo
                    (async/<!! (alia.async/execute-chan
                                *session*
@@ -367,7 +367,13 @@
                    (async/<!! (alia.async/execute-chan
                                *session*
                                "select * from users;"
-                               {:page-size :wtf}))))))
+                               {:page-size :wtf})))))
+
+  (testing "errors with execute"
+    (is (instance? clojure.lang.ExceptionInfo
+                   (async/<!! (alia.async/execute-chan
+                               *session*
+                               "slect prout from 1;"))))))
 
 (deftest prepare-test
   (testing "simple"

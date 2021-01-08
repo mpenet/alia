@@ -121,10 +121,19 @@
 (defn execute
   "similar to `qbits.alia/execute`, but executes async
    - returns a `Deferred<records>` with all the records
-     from all pages of results realised in memory"
+     from all pages of results realised in memory
+
+   any errors will error the result Deferred"
   ([^CqlSession session query {:as opts}]
    (let [pages-s (execute-stream-pages session query opts)
-         pages-d (s/reduce conj [] pages-s)]
+         pages-d (s/reduce
+                  (fn [pages page-or-error]
+                    ;; make sure errors get propagated
+                    (if (instance? Throwable page-or-error)
+                      (throw page-or-error)
+                      (conj pages page-or-error)))
+                  []
+                  pages-s)]
      (d/chain
       pages-d
       (fn [pages]
