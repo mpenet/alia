@@ -90,9 +90,9 @@
          (.build builder))
        (.bind statement (to-array (map encoder values))))
      (catch Exception ex
-       (throw (err/ex->ex-info ex {:query statement
-                               :type ::bind-error
-                               :values values}
+       (throw (err/ex->ex-info ex {:statement statement
+                                   :type ::bind-error
+                                   :values values}
                            "Query binding failed"))))))
 
 (defprotocol ^:no-doc PStatement
@@ -147,9 +147,9 @@
       (.prepare session q)
       (catch Exception ex
         (throw (err/ex->ex-info ex
-                            {:type ::prepare-error
-                             :query q}
-                            "Query prepare failed"))))))
+                                {:type ::prepare-error
+                                 :statement q}
+                                "Query prepare failed"))))))
 
 (defn prepare-async
   "Takes a `CqlSession`, a query (raw string or hayt) and
@@ -165,7 +165,7 @@
        (throw
         (err/ex->ex-info ex
                          {:type ::prepare-error
-                          :query q}
+                          :statement q}
                          "xQuery prepare failed"))))))
 
 (defn batch
@@ -326,7 +326,7 @@
                               row-generator
                               codec)
        (catch Exception err
-         (throw (err/ex->ex-info err {:query statement :values values}))))))
+         (throw (err/ex->ex-info err {:statement statement :values values}))))))
   ;; to support old syle api with unrolled args
   ([^CqlSession session query]
    (execute session query {})))
@@ -357,7 +357,7 @@
 
      (catch Exception ex
        (cf/failed-future
-        (err/ex->ex-info ex {:query query :values values})))))
+        (err/ex->ex-info ex {:statement query :values values})))))
 
   ([^CqlSession session query]
    (execute-async session query {})))

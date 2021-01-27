@@ -268,6 +268,6 @@
 
    (fn [err]
      (throw
-      (err/ex->ex-info err {:query statement :values values})))
+      (err/ex->ex-info err {:statement statement :values values})))
 
    opts))
