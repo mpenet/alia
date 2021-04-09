@@ -27,13 +27,13 @@
     (or (ex-cause ex) ex)
     ex))
 
-(defn handle-completion-stage*
+(defn handle-completion-stage
   "java incantation to handle both branches of a completion-stage"
   ([^CompletionStage completion-stage
     on-success
     on-error
     {^Executor executor :executor
-     :as opts}]
+     :as _opts}]
    (let [handler-bifn (reify BiFunction
                         (apply [_ r ex]
                           (if (some? ex)
@@ -46,26 +46,4 @@
   ([^CompletionStage completion-stage
     on-success
     on-error]
-   (handle-completion-stage* completion-stage on-success on-error {})))
-
-(defmacro handle-completion-stage
-  "handle both branches of a completion stage
-
-   it's a macro to capture any exceptions from the completion-stage
-   form and also send them through the `on-error` handler"
-  ([completion-stage
-    on-success
-    on-error
-    opts]
-   `(try
-      (handle-completion-stage* ~completion-stage ~on-success ~on-error ~opts)
-      (catch Exception e#
-        (handle-completion-stage*
-         (failed-future (ex-unwrap e#))
-         ~on-success
-         ~on-error
-         ~opts))))
-  ([completion-stage
-    on-success
-    on-error]
-   `(handle-completion-stage ~completion-stage ~on-success ~on-error {})))
+   (handle-completion-stage completion-stage on-success on-error {})))
