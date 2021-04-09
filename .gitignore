@@ -18,3 +18,5 @@ pom.xml
 .idea
 .lein-env
 /bench.clj
+/.clj-kondo/.cache
+/.clj-kondo/cache
