@@ -3,61 +3,78 @@
    [manifold.deferred :as d]
    [manifold.stream :as s]
    [qbits.alia :as alia]
-   [qbits.alia.completable-future :as cf]
+   [qbits.alia.error :as err]
    [qbits.alia.result-set :as result-set])
   (:import
    [com.datastax.oss.driver.api.core.session Session]
    [com.datastax.oss.driver.api.core CqlSession]
    [java.util.concurrent CompletionStage]))
 
-
-
 (defn handle-page-completion-stage
   [^CompletionStage completion-stage
-   {stream :stream
-    :as opts}]
-  (cf/handle-completion-stage
-   completion-stage
+   {stream :stream :as opts}]
 
-   (fn [{current-page :current-page
-        :as async-result-set-page}]
+  (-> completion-stage
 
-     (if (some? async-result-set-page)
+      (d/chain
 
-       (d/chain
-        (s/put! stream current-page)
-        (fn [put?]
-          (cond
+       (fn [async-result-set-page]
 
-            ;; last page put ok and there is another
-            (and put?
-                 (true? (result-set/has-more-pages? async-result-set-page)))
-            (handle-page-completion-stage
-             (result-set/fetch-next-page async-result-set-page)
-             opts)
+         (d/loop [{current-page :current-page
+                   :as async-result-set-page} async-result-set-page]
 
-            ;; last page put ok and was the last
-            put?
-            (s/close! stream)
+           (if (some? async-result-set-page)
 
-            ;; bork! last page did not put.
-            ;; maybe the stream was closed?
-            :else
-            (throw
-             (ex-info
-              "qbits.alia.manifold/stream-put!-fail"
-              (merge val (select-keys opts [:statement :values])))))))
+             (d/chain
 
-       ;; edge-case - when :page-size lines up with result size,
-       ;; the final page is empty, resulting in a nil async-result-set
-       (s/close! stream)))
+              (do
+                ;; (prn "handle-page-completion-stage - put!-page" stream)
+                (s/put! stream current-page))
 
-   (fn [err]
-     (d/finally
-       (s/put! stream err)
-       (fn [] (s/close! stream))))
+              (fn [put?]
+                (cond
 
-   opts))
+                  ;; last page put ok and there is another
+                  (and put?
+                       (true? (result-set/has-more-pages? async-result-set-page)))
+                  (do
+                    ;; (prn "handle-page-completion-stage - go-again" stream)
+                    (d/chain
+                     (result-set/fetch-next-page async-result-set-page)
+                     (fn [next-async-result-set-page]
+                       (d/recur next-async-result-set-page))))
+
+                  ;; last page put ok and was the last
+                  put?
+                  (do
+                    ;; (prn "handle-page-completion-stage - close!" stream)
+                    (s/close! stream))
+
+                  ;; bork! last page did not put.
+                  ;; maybe the stream was closed?
+                  :else
+                  (do
+                    ;; (prn "handle-page-completion-stage - bork!" stream)
+                    (throw
+                     (ex-info
+                      "qbits.alia.manifold/stream-put!-fail"
+                      (merge val (select-keys opts [:statement :values]))))))))
+
+             ;; edge-case - when :page-size lines up with result size,
+             ;; the final page is empty, resulting in a nil async-result-set
+             (do
+               ;; (prn "handle-page-completion-stage - lined-up close!" stream)
+               (s/close! stream))))))
+
+      (d/catch
+          (fn [err]
+            (d/finally
+              (s/put!
+               stream
+               (err/ex->ex-info
+                err
+                (select-keys opts [:statement :values])))
+              (fn [] (s/close! stream)))))))
 
 (defn execute-stream-pages
   "similar to `qbits.alia/execute`, but executes async and returns a
@@ -78,15 +95,19 @@
                                :as opts}]
    (let [stream (or stream
                     ;; fetch one page ahead by default
-                    (s/stream (or page-buffer-size 1)))
+                    (s/stream (or page-buffer-size 1)))]
 
-         page-cs (alia/execute-async session query opts)]
+     (try
+       (let [page-cs (alia/execute-async session query opts)]
 
-     (handle-page-completion-stage
-      page-cs
-      (merge opts
-             {:stream stream
-              :statement query}))
+         (handle-page-completion-stage
+          page-cs
+          (merge opts
+                 {:stream stream
+                  :statement query})))
+       (catch Exception e
+         (s/close! stream)
+         (throw e)))
 
      stream))
 
