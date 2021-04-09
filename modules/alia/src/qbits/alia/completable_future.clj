@@ -1,11 +1,11 @@
 (ns qbits.alia.completable-future
+  (:require
+   [qbits.alia.error :as err])
   (:import
    [java.util.concurrent
     Executor
     CompletionStage
-    CompletableFuture
-    ExecutionException
-    CompletionException]
+    CompletableFuture]
    [java.util.function BiFunction]))
 
 (defn completed-future
@@ -19,14 +19,6 @@
     (.completeExceptionally f e)
     f))
 
-(defn ex-unwrap
-  "Unwraps exceptions if we have a valid ex-cause present"
-  [ex]
-  (if (or (instance? ExecutionException ex)
-          (instance? CompletionException ex))
-    (or (ex-cause ex) ex)
-    ex))
-
 (defn handle-completion-stage
   "java incantation to handle both branches of a completion-stage"
   ([^CompletionStage completion-stage
@@ -37,7 +29,7 @@
    (let [handler-bifn (reify BiFunction
                         (apply [_ r ex]
                           (if (some? ex)
-                            (on-error (ex-unwrap ex))
+                            (on-error (err/ex-unwrap ex))
                             (on-success r))))]
 
      (if (some? executor)
