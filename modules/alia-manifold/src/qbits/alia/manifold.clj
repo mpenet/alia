@@ -122,16 +122,26 @@
   [v]
   (if (sequential? v) v [v]))
 
+(defn concat-seq-s
+  "concat a stream of seqs onto a stream of plain values"
+  [stream-s]
+  (let [out (s/stream)]
+
+    (s/connect-via
+     stream-s
+     #(s/put-all! out %)
+     out)
+
+    out))
+
 (defn execute-stream
   "like `execute-stream-pages`, but returns a `Stream<row>`
 
    supports all the args of `execute-stream-pages`"
   ([^CqlSession session query {:as opts}]
-   (let [stream (execute-stream-pages session query opts)]
+   (let [page-s (execute-stream-pages session query opts)]
 
-     (s/transform
-      (mapcat safe-identity)
-      stream)))
+     (concat-seq-s page-s)))
 
   ([^CqlSession session query]
    (execute-stream session query {})))
