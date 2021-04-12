@@ -1,4 +1,4 @@
-(defproject cc.qbits/alia-all "5.0.0"
+(defproject cc.qbits/alia-all "5.0.0-alpha1-SNAPSHOT"
   :description "Cassandra CQL3 client for Clojure - datastax/java-driver wrapper"
   :url "https://github.com/mpenet/alia"
   :scm {:name "git"
