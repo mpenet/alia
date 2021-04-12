@@ -115,7 +115,7 @@
    (execute-stream-pages session query {})))
 
 
-(defn ^:private safe-identity
+(defn ^:private coerce-seq
   "if the page should happen to be an Exception, wrap
    it in a vector so that it can be concatenated to the
    value stream"
@@ -129,7 +129,7 @@
 
     (s/connect-via
      stream-s
-     #(s/put-all! out %)
+     #(s/put-all! out (coerce-seq %))
      out)
 
     out))
