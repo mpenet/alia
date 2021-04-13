@@ -1,0 +1,4 @@
+{:lint-as {qbits.alia/when-opt clojure.core/when
+           manifold.deferred/loop clojure.core/loop}
+ :linters {:unresolved-symbol
+           {:exclude [(qbits.alia/when-opt)]}}}

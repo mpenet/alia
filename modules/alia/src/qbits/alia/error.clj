@@ -1,18 +1,25 @@
 (ns qbits.alia.error
   (:import
-   [java.util.concurrent ExecutionException]
+   [java.util.concurrent ExecutionException CompletionException]
    [com.datastax.oss.driver.api.core.cql
-    Statement
     SimpleStatement
     PreparedStatement
     BoundStatement
     BatchStatement]))
 
+(defn ex-unwrap
+  "Unwraps exceptions from j.u.c wrappers if there is an ex-cause"
+  [ex]
+  (if (or (instance? ExecutionException ex)
+          (instance? CompletionException ex))
+    (or (ex-cause ex) ex)
+    ex))
+
 (defprotocol IStatementQuery
   (statement-query [stmt]))
 
 (extend-protocol IStatementQuery
-  SimpleStatement 
+  SimpleStatement
   (statement-query [stmt]
     [:simple (.getQuery stmt)])
   PreparedStatement
@@ -23,7 +30,7 @@
     [:bound (-> stmt .getPreparedStatement .getQuery)])
   BatchStatement
   (statement-query [stmts]
-    [:batch 
+    [:batch
      {:type (str (.getBatchType stmts))}
      (for [stmt stmts] (statement-query stmt))])
   Object
@@ -35,17 +42,15 @@
 
 (defn ^:no-doc ex->ex-info
   "wrap an exception with some context information"
-  ([^Exception ex 
+  ([^Exception ex
     {stmt :statement
-     :as data} 
+     :as data}
     msg]
    (let [stmt-query (statement-query stmt)]
      (ex-info msg
               (merge {:type :qbits.alia/execute
                       :query stmt-query}
                      data)
-              (if (instance? ExecutionException ex)
-                (ex-cause ex)
-                ex))))
+              (ex-unwrap ex))))
   ([ex data]
    (ex->ex-info ex data "Query execution failed")))
