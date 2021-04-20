@@ -13,6 +13,8 @@
    [manifold.stream :as stream])
   (:import
    [java.time Instant]
+   [java.util UUID]
+   [java.nio ByteBuffer]
    [com.datastax.oss.driver.api.core.cql ExecutionInfo]
    [com.datastax.oss.driver.api.core.data UdtValue TupleValue]))
 
@@ -112,7 +114,9 @@
                     id int,
                     text varchar,
                     PRIMARY KEY (id)
-                  );"))
+                  );")
+
+  (alia/execute session "CREATE TABLE IF NOT EXISTS blobs (id uuid, data blob, PRIMARY KEY (id));"))
 
 (defn teardown-test-keyspace
   [session]
@@ -571,3 +575,16 @@
            (-> (try (alia/tuple-encoder *session* :invalid-col :invalid-type) (catch Exception e e))
                ex-data
                :type)))))
+
+(deftest blob-test
+  (testing "basic blob interactions"
+    (let [id (UUID/randomUUID)
+          bytes (byte-array (shuffle (range 256)))
+          insert-statement (alia/prepare *session* "INSERT INTO blobs (id, data) VALUES (?, ?);")]
+      (alia/execute *session* insert-statement {:values [id bytes]})
+      (let [row (->> (alia/execute *session* "SELECT * FROM blobs WHERE id = :id;"
+                         {:values {:id id}})
+                     (first))
+            ^ByteBuffer data (:data row)
+            row-bytes (.array data)]
+        (is (= (vec bytes) (vec row-bytes)))))))
