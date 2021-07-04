@@ -85,7 +85,7 @@
           "java.lang.Boolean" (.withBooleanList builder driver-option l)
           "java.lang.Integer" (.withIntList builder driver-option l)
           "java.lang.Long" (.withLongList builder driver-option l)
-          "jva.lang.Double" (.withDoubleList builder driver-option l)
+          "java.lang.Double" (.withDoubleList builder driver-option l)
           "java.lang.String" (.withStringList builder driver-option l)))
 
       (.withStringList builder driver-option l))))
