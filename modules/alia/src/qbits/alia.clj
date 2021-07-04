@@ -33,6 +33,11 @@
    {:session-keyspace \"alia\"
     :contact-points [\"localhost:9042\"]
     :load-balancing-local-datacenter \"Analytics\"}
+   ```
+   or as a map representing the driver configuration:
+   ```
+   {:basic.contact-points [\"localhost:9042\"]
+    :basic.load-balancing-policy.local-datacenter \"Analytics\"}
    ```"
   ([] (session {}))
   ([config]
