@@ -21,6 +21,10 @@
   (-set-named-parameter! [val settable name]
     (.setBoolean ^SettableByName settable ^String name val))
 
+  Short
+  (-set-named-parameter! [val settable name]
+    (.setShort ^SettableByName settable ^String name val))
+
   Integer
   (-set-named-parameter! [val settable name]
     (.setInt ^SettableByName settable ^String name val))
