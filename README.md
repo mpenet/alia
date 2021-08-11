@@ -33,6 +33,11 @@ Cassandra CQL3 client for Clojure wrapping [datastax/java-driver](https://github
 * **Lazy row decoding by default**, but also **optional cheap user
   controled decoding via IReduce**
 
+## Our Sponsors: ##
+<table><tr>
+<td align="center" width="300" ><a href="https://astra.dev/3fW6XQB"><img src="https://www.datastax.com/sites/default/files/2021-07/astra-negative-square.png" width="90" height="90" alt="Astra DB" /><br />Astra DB</a><br/>Use Clojure with DataStax Astra DB - built on Apache Cassandra.</td>
+</tr></table>
+
 ## Installation
 
 ### Alia
