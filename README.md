@@ -127,6 +127,20 @@ raw queries.
                             :load-balancing-local-datacenter "Analytics"}))
 ```
 
+Example of a complete session using plain text auth.
+
+
+```clojure
+(require '[qbits.alia :as alia])
+
+(def session (alia/session {:session-keyspace "alia"
+                            :contact-points ["localhost:9042"]
+                            :load-balancing-local-datacenter "Analytics"
+                            :auth-provider-user-name "user-name"
+                            :auth-provider-password "password"
+                            :auth-provider-class "PlainTextAuthProvider"}))
+```
+
 Sessions are separate so that you can interact with multiple
 keyspaces from the same cluster definition.
 
