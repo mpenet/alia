@@ -85,7 +85,7 @@
          (doseq [[k x] values]
            (settable-by-name/set-named-parameter!
             builder
-            (name k)
+            (if (keyword? k) (str (.-sym k)) k)
             (encoder x)))
          (.build builder))
        (.bind statement (to-array (map encoder values))))
