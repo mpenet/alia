@@ -118,7 +118,8 @@
         (SimpleStatement/newInstance
          q
          ^Map (reduce-kv (fn [m k v]
-                           (assoc m (name k) (encode v)))
+                           (assoc m (format "\"%s\"" (if (keyword? k) (.-sym ^clojure.lang.Keyword k) k))
+                                  (encode v)))
                          {}
                          values))
 
