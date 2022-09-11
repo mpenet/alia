@@ -116,6 +116,18 @@
                     PRIMARY KEY (id)
                   );")
 
+  (alia/execute session "CREATE TABLE IF NOT EXISTS namespaced (
+                    \"namespaced/id\" int,
+                    \"namespaced/text\" varchar,
+                    PRIMARY KEY (\"namespaced/id\")
+                  );")
+
+  (alia/execute session "CREATE TABLE IF NOT EXISTS reserved (
+                    \"view\" int,
+                    \"all\" varchar,
+                    PRIMARY KEY (\"view\")
+                  );")
+
   (alia/execute session "CREATE TABLE IF NOT EXISTS blobs (id uuid, data blob, PRIMARY KEY (id));"))
 
 (defn teardown-test-keyspace
@@ -487,6 +499,43 @@
                :text "inserted via named bindings"}]
              (alia/execute *session* "SELECT * FROM simple WHERE id = :id;"
                            {:values {:id an-id}})))))
+
+  (testing "reserved-names"
+    (let [prep-write (alia/prepare *session* "INSERT INTO reserved (\"view\", \"all\") VALUES(:\"view\", :\"all\");")
+          prep-read (alia/prepare *session* "SELECT * FROM reserved WHERE \"view\" = :\"view\";")
+          an-id (int 100)]
+
+      (is (= nil
+             (alia/execute *session* prep-write {:values {:view an-id
+                                                          :all "inserted via reserved bindings"}})))
+
+      (is (= [{:view an-id
+               :all "inserted via reserved bindings"}]
+             (alia/execute *session* prep-read {:values {:view an-id}})))
+
+      (is (= [{:view an-id
+               :all "inserted via reserved bindings"}]
+             (alia/execute *session* "SELECT * FROM reserved WHERE \"view\" = :\"view\";"
+                           {:values {:view an-id}})))))
+
+  (testing "namespaced-named-bindings"
+    (let [prep-write (alia/prepare *session* "INSERT INTO namespaced (\"namespaced/id\", \"namespaced/text\") VALUES(:\"namespaced/id\", :\"namespaced/text\");")
+          prep-read (alia/prepare *session* "SELECT * FROM namespaced WHERE \"namespaced/id\" = :\"namespaced/id\";")
+          an-id (int 100)]
+
+
+      (is (= nil
+             (alia/execute *session* prep-write {:values {:namespaced/id an-id
+                                                          :namespaced/text "inserted via namespaced named bindings"}})))
+
+      (is (= [{:namespaced/id an-id
+               :namespaced/text "inserted via namespaced named bindings"}]
+             (alia/execute *session* prep-read {:values {:namespaced/id an-id}})))
+
+      (is (= [{:namespaced/id an-id
+               :namespaced/text "inserted via namespaced named bindings"}]
+             (alia/execute *session* "SELECT * FROM namespaced WHERE \"namespaced/id\" = :\"namespaced/id\";"
+                           {:values {:namespaced/id an-id}})))))
 
   (testing "parameterized set"
     (let [;; s-parameterized-set (prepare  "select * from users where emails=?;")
