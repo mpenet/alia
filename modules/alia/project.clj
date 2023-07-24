@@ -6,7 +6,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure ~clj-version]
                  [cc.qbits/commons "0.5.1"]
-                 [com.datastax.cassandra/cassandra-driver-core "3.10.0"
+                 [com.datastax.cassandra/cassandra-driver-core "3.11.3"
                   :classifier "shaded"
                   :exclusions [io.netty/*]]
                  [org.hdrhistogram/HdrHistogram "2.1.9"]]
