@@ -85,7 +85,7 @@
          (doseq [[k x] values]
            (settable-by-name/set-named-parameter!
             builder
-            (name k)
+            (if (keyword? k) (str (.-sym ^clojure.lang.Keyword k)) k)
             (encoder x)))
          (.build builder))
        (.bind statement (to-array (map encoder values))))
@@ -118,7 +118,8 @@
         (SimpleStatement/newInstance
          q
          ^Map (reduce-kv (fn [m k v]
-                           (assoc m (name k) (encode v)))
+                           (assoc m (format "\"%s\"" (if (keyword? k) (.-sym ^clojure.lang.Keyword k) k))
+                                  (encode v)))
                          {}
                          values))
 
